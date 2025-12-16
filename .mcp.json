@@ -1,6 +1,6 @@
 {
   "dora": {
     "command": "npx",
-    "args": ["-y", "github:chatbot/dora", "start-mcp-server"]
+    "args": ["-y", "github:chatbot-pf/dora", "start-mcp-server"]
   }
 }

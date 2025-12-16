@@ -1,15 +1,24 @@
 {
   "name": "dora",
   "version": "0.1.0",
-  "description": "Bun-based MCP server for JetBrains IDE integration",
+  "description": "MCP server for JetBrains IDE integration",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "bin": {
+    "dora": "dist/cli.js",
+    "start-mcp-server": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
     "typecheck": "bun x tsc --noEmit",
     "test": "bun test",
-    "build": "bun build src/index.ts --outdir dist --target bun"
+    "build": "bun build src/index.ts --outdir dist --target node --minify",
+    "postbuild": "node -e \"const fs=require('fs');const c=fs.readFileSync('dist/index.js','utf8');fs.writeFileSync('dist/cli.js','#!/usr/bin/env node\\n'+c);fs.chmodSync('dist/cli.js',0o755)\"",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
