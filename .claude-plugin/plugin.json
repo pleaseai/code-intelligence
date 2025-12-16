@@ -1,6 +1,8 @@
 {
-  "name": "serena",
-  "description": "Semantic code analysis MCP server providing intelligent code understanding, refactoring suggestions, and codebase navigation through language server protocol integration.",
+  "name": "dora",
+  "version": "0.1.1",
+  "description": "Bun-based MCP server for JetBrains IDE integration",
+  "repository": "https://github.com/chatbot-pf/dora",
   "author": {
     "name": "PassionFactory"
   }

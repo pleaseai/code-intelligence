@@ -1,5 +1,5 @@
 {
-  "serena": {
+  "dora": {
     "command": "npx",
     "args": ["-y", "github:chatbot/dora", "start-mcp-server"]
   }
