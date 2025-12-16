@@ -1,6 +1,6 @@
 {
   "dora": {
-    "command": "npx",
-    "args": ["-y", "github:chatbot-pf/dora"]
+    "command": "bunx",
+    "args": ["github:chatbot-pf/dora"]
   }
 }
