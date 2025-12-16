@@ -5,8 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "dora": "dist/cli.js",
-    "start-mcp-server": "dist/cli.js"
+    "dora": "dist/cli.js"
   },
   "files": [
     "dist"
