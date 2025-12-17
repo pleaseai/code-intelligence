@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
+  DartServer,
   DenoServer,
   getServerById,
   getServersForExtension,
@@ -24,6 +25,7 @@ describe('LSP_SERVERS', () => {
     expect(serverIds).toContain('gopls')
     expect(serverIds).toContain('rust-analyzer')
     expect(serverIds).toContain('kotlin')
+    expect(serverIds).toContain('dart')
   })
 })
 
@@ -141,6 +143,24 @@ describe('KotlinServer', () => {
   })
 })
 
+describe('DartServer', () => {
+  test('has correct id', () => {
+    expect(DartServer.id).toBe('dart')
+  })
+
+  test('supports Dart extension', () => {
+    expect(DartServer.extensions).toContain('.dart')
+  })
+
+  test('has root function', () => {
+    expect(typeof DartServer.root).toBe('function')
+  })
+
+  test('has spawn function', () => {
+    expect(typeof DartServer.spawn).toBe('function')
+  })
+})
+
 describe('getServerById', () => {
   test('returns typescript server', () => {
     const server = getServerById('typescript')
@@ -193,6 +213,14 @@ describe('getServersForExtension', () => {
 
     const serverIds = servers.map(s => s.id)
     expect(serverIds).toContain('kotlin')
+  })
+
+  test('returns servers for .dart extension', () => {
+    const servers = getServersForExtension('.dart')
+    expect(servers.length).toBeGreaterThan(0)
+
+    const serverIds = servers.map(s => s.id)
+    expect(serverIds).toContain('dart')
   })
 
   test('returns empty array for unknown extension', () => {

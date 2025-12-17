@@ -392,6 +392,7 @@ export { createLSPClient, type LSPClientInfo } from './client'
 // Re-export specific items to avoid conflicts
 export { getLanguageId, LANGUAGE_EXTENSIONS } from './language'
 export {
+  DartServer,
   DenoServer,
   getServerById,
   getServersForExtension,
