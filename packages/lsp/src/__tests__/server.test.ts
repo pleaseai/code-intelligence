@@ -3,6 +3,7 @@ import {
   LSP_SERVERS,
   TypescriptServer,
   DenoServer,
+  OxlintServer,
   PyrightServer,
   GoplsServer,
   RustAnalyzerServer,
@@ -17,6 +18,7 @@ describe("LSP_SERVERS", () => {
     const serverIds = LSP_SERVERS.map((s) => s.id);
     expect(serverIds).toContain("typescript");
     expect(serverIds).toContain("deno");
+    expect(serverIds).toContain("oxlint");
     expect(serverIds).toContain("pyright");
     expect(serverIds).toContain("gopls");
     expect(serverIds).toContain("rust-analyzer");
@@ -53,6 +55,37 @@ describe("DenoServer", () => {
     expect(DenoServer.extensions).toContain(".ts");
     expect(DenoServer.extensions).toContain(".tsx");
     expect(DenoServer.extensions).toContain(".js");
+  });
+});
+
+describe("OxlintServer", () => {
+  test("has correct id", () => {
+    expect(OxlintServer.id).toBe("oxlint");
+  });
+
+  test("supports JavaScript/TypeScript extensions", () => {
+    expect(OxlintServer.extensions).toContain(".ts");
+    expect(OxlintServer.extensions).toContain(".tsx");
+    expect(OxlintServer.extensions).toContain(".js");
+    expect(OxlintServer.extensions).toContain(".jsx");
+    expect(OxlintServer.extensions).toContain(".mjs");
+    expect(OxlintServer.extensions).toContain(".cjs");
+    expect(OxlintServer.extensions).toContain(".mts");
+    expect(OxlintServer.extensions).toContain(".cts");
+  });
+
+  test("supports framework-specific extensions", () => {
+    expect(OxlintServer.extensions).toContain(".vue");
+    expect(OxlintServer.extensions).toContain(".astro");
+    expect(OxlintServer.extensions).toContain(".svelte");
+  });
+
+  test("has root function", () => {
+    expect(typeof OxlintServer.root).toBe("function");
+  });
+
+  test("has spawn function", () => {
+    expect(typeof OxlintServer.spawn).toBe("function");
   });
 });
 

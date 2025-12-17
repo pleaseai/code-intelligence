@@ -385,6 +385,7 @@ export {
   LSP_SERVERS,
   TypescriptServer,
   DenoServer,
+  OxlintServer,
   PyrightServer,
   GoplsServer,
   RustAnalyzerServer,
