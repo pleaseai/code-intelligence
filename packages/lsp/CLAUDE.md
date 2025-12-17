@@ -20,13 +20,13 @@ src/
 
 | Server | ID | Extensions | Root Detection |
 |--------|-----|------------|----------------|
-| TypeScript | `typescript` | .ts, .tsx, .js, .jsx | package-lock.json, bun.lock, yarn.lock, pnpm-lock.yaml |
-| Deno | `deno` | .ts, .tsx, .js | deno.json, deno.jsonc |
-| Oxlint | `oxlint` | .ts, .tsx, .js, .jsx, .vue, .astro, .svelte | .oxlintrc.json, package.json |
-| Pyright | `pyright` | .py, .pyi | pyproject.toml, setup.py, requirements.txt |
-| Gopls | `gopls` | .go | go.mod, go.work |
-| Rust Analyzer | `rust-analyzer` | .rs | Cargo.toml |
-| Kotlin | `kotlin` | .kt, .kts | build.gradle.kts, build.gradle, pom.xml |
+| TypeScript | `typescript` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts | package-lock.json, bun.lockb, bun.lock, yarn.lock, pnpm-lock.yaml |
+| Deno | `deno` | .ts, .tsx, .js, .jsx, .mjs | deno.json, deno.jsonc |
+| Oxlint | `oxlint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue, .astro, .svelte | .oxlintrc.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock, package.json |
+| Pyright | `pyright` | .py, .pyi | pyproject.toml, setup.py, requirements.txt, pyrightconfig.json |
+| Gopls | `gopls` | .go | go.work, go.mod, go.sum |
+| Rust Analyzer | `rust-analyzer` | .rs | Cargo.toml, Cargo.lock |
+| Kotlin | `kotlin` | .kt, .kts | build.gradle.kts, build.gradle, settings.gradle.kts, settings.gradle, pom.xml |
 
 ## Adding a New Server
 
@@ -54,15 +54,20 @@ export const MyServer: LSPServerInfo = {
 For servers requiring runtime dependencies:
 
 ```typescript
-const RUNTIME_DEPS = {
-  lsp: { url: '...', version: '...' },
-  runtime: { 'platform-id': { url: '...', path: '...' } },
+const KOTLIN_RUNTIME_DEPS = {
+  kotlinLsp: { url: '...', version: '...' },
+  java: {
+    'win-x64': { url: '...', javaHomePath: '...', javaPath: '...' },
+    'linux-x64': { url: '...', javaHomePath: '...', javaPath: '...' },
+    // ... other platforms
+  } as Record<PlatformId, { url: string, javaHomePath: string, javaPath: string }>,
 }
 
-async function setupDependencies(platform: PlatformId) {
-  const cacheDir = path.join(os.homedir(), '.cache', 'my-lsp')
-  // Download and extract if not exists
-  return { lspPath, runtimePath }
+async function setupKotlinDependencies(platformId: PlatformId) {
+  const cacheDir = path.join(os.homedir(), '.cache', 'dora', 'kotlin-lsp')
+  // Check if exists, download and extract if not
+  // Verify files exist after download
+  return { javaHomePath, kotlinLspPath }
 }
 ```
 

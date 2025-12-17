@@ -90,12 +90,12 @@ async function downloadFile(url: string, dest: string): Promise<void> {
 }
 
 /**
- * Extract a zip archive using Bun's native support
+ * Extract a zip archive using system unzip command
  */
 async function extractZip(zipPath: string, destDir: string): Promise<void> {
   await fs.mkdir(destDir, { recursive: true })
 
-  // Use Bun's built-in unzip capability via shell
+  // Use system unzip command via Bun.spawn
   const proc = Bun.spawn(['unzip', '-o', '-q', zipPath, '-d', destDir], {
     stdout: 'pipe',
     stderr: 'pipe',
@@ -124,7 +124,9 @@ async function downloadAndExtract(url: string, destDir: string): Promise<void> {
   }
   finally {
     // Cleanup temp files
-    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {})
+    await fs.rm(tempDir, { recursive: true, force: true }).catch((err) => {
+      console.warn(`[lsp] Failed to cleanup temp directory ${tempDir}:`, err instanceof Error ? err.message : err)
+    })
   }
 }
 
@@ -509,7 +511,17 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   try {
     await fs.access(javaPath)
   }
-  catch {
+  catch (err) {
+    // Check if it's actually a "not found" error vs other access issues
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (!isNotFound) {
+      console.error(`[kotlin] Cannot access Java at ${javaPath}:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
+
     // Java not found, download it
     console.warn(`[kotlin] Downloading Java 21 for ${platformId}...`)
     try {
@@ -517,7 +529,13 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
 
       // Make Java executable on Unix platforms
       if (!platformId.startsWith('win-')) {
-        await fs.chmod(javaPath, 0o755).catch(() => {})
+        try {
+          await fs.chmod(javaPath, 0o755)
+        }
+        catch (chmodErr) {
+          console.error(`[kotlin] Failed to make Java executable at ${javaPath}:`, chmodErr instanceof Error ? chmodErr.message : chmodErr)
+          return undefined
+        }
       }
     }
     catch (err) {
@@ -530,8 +548,9 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   try {
     await fs.access(javaPath)
   }
-  catch {
-    console.error(`[kotlin] Java executable not found at ${javaPath}`)
+  catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    console.error(`[kotlin] Java executable not accessible at ${javaPath}: ${errorMsg}`)
     return undefined
   }
 
@@ -543,7 +562,17 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   try {
     await fs.access(kotlinLspPath)
   }
-  catch {
+  catch (err) {
+    // Check if it's actually a "not found" error vs other access issues
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (!isNotFound) {
+      console.error(`[kotlin] Cannot access Kotlin LSP at ${kotlinLspPath}:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
+
     // Kotlin LSP not found, download it
     console.warn(`[kotlin] Downloading Kotlin Language Server...`)
     try {
@@ -551,7 +580,13 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
 
       // Make script executable on Unix platforms
       if (!isWindows) {
-        await fs.chmod(kotlinLspPath, 0o755).catch(() => {})
+        try {
+          await fs.chmod(kotlinLspPath, 0o755)
+        }
+        catch (chmodErr) {
+          console.error(`[kotlin] Failed to make Kotlin LSP executable at ${kotlinLspPath}:`, chmodErr instanceof Error ? chmodErr.message : chmodErr)
+          return undefined
+        }
       }
     }
     catch (err) {
@@ -564,8 +599,9 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   try {
     await fs.access(kotlinLspPath)
   }
-  catch {
-    console.error(`[kotlin] Kotlin LSP script not found at ${kotlinLspPath}`)
+  catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    console.error(`[kotlin] Kotlin LSP script not accessible at ${kotlinLspPath}: ${errorMsg}`)
     return undefined
   }
 
@@ -599,21 +635,42 @@ export const KotlinServer: LSPServerInfo = {
     // Setup dependencies (downloads if needed)
     const deps = await setupKotlinDependencies(platformId)
     if (!deps) {
+      console.warn(`[kotlin] Failed to setup Kotlin LSP dependencies. Check previous logs for details.`)
       return undefined
     }
 
     const { javaHomePath, kotlinLspPath } = deps
 
     // Spawn Kotlin LSP with JAVA_HOME
-    const proc = spawn(kotlinLspPath, ['--stdio'], {
-      cwd: root,
-      env: {
-        ...process.env,
-        JAVA_HOME: javaHomePath,
-      },
-    })
+    try {
+      const proc = spawn(kotlinLspPath, ['--stdio'], {
+        cwd: root,
+        env: {
+          ...process.env,
+          JAVA_HOME: javaHomePath,
+        },
+      })
 
-    return { process: proc }
+      // Log spawn errors
+      proc.on('error', (err) => {
+        console.error(`[kotlin] Kotlin LSP process error:`, err)
+      })
+
+      proc.on('exit', (code, signal) => {
+        if (code !== 0 && code !== null) {
+          console.error(`[kotlin] Kotlin LSP exited with code ${code}`)
+        }
+        if (signal) {
+          console.error(`[kotlin] Kotlin LSP killed by signal ${signal}`)
+        }
+      })
+
+      return { process: proc }
+    }
+    catch (err) {
+      console.error(`[kotlin] Failed to spawn Kotlin LSP:`, err)
+      return undefined
+    }
   },
 }
 

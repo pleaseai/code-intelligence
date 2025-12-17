@@ -187,6 +187,14 @@ describe('getServersForExtension', () => {
     expect(serverIds).toContain('kotlin')
   })
 
+  test('returns servers for .kts extension', () => {
+    const servers = getServersForExtension('.kts')
+    expect(servers.length).toBeGreaterThan(0)
+
+    const serverIds = servers.map(s => s.id)
+    expect(serverIds).toContain('kotlin')
+  })
+
   test('returns empty array for unknown extension', () => {
     const servers = getServersForExtension('.unknown')
     expect(servers).toEqual([])
