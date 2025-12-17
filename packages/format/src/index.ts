@@ -2,7 +2,7 @@ import path from "path"
 import z from "zod"
 
 import * as Formatter from "./formatter"
-import { loadConfig, type FormatterConfig } from "../config"
+import { loadConfig, type FormatterConfig } from "./config"
 
 export namespace Format {
   const log = {
@@ -189,3 +189,4 @@ export namespace Format {
 }
 
 export * as Formatter from "./formatter"
+export { loadConfig, type Config, type FormatterConfig } from "./config"

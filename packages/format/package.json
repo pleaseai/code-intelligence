@@ -1,22 +1,18 @@
 {
-  "name": "@pleaseai/dora",
+  "name": "@pleaseai/code-format",
   "version": "0.1.0",
-  "description": "MCP server for JetBrains IDE integration",
+  "description": "Auto-format hooks for AI coding",
   "type": "module",
   "main": "src/index.ts",
-  "bin": {
-    "dora": "src/cli.ts"
+  "exports": {
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "bun --watch run src/cli.ts",
-    "build": "echo 'Build handled by root build:npm'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test ./src"
+    "test": "echo 'No tests yet'"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "@pleaseai/code-lsp": "workspace:*",
-    "zod": "^3.25.0"
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -26,9 +22,9 @@
     "src"
   ],
   "keywords": [
-    "mcp",
-    "jetbrains",
-    "ide",
+    "formatter",
+    "biome",
+    "prettier",
     "ai-coding"
   ],
   "author": "Minsu Lee",

@@ -8,7 +8,7 @@ import { z } from "zod";
 import path from "path";
 import type { Provider, ToolDefinition, ToolResult } from "../provider";
 import type { RegistryConfig } from "../registry";
-import { LSPManager, formatDiagnostic } from "../../lsp";
+import { LSPManager, formatDiagnostic } from "@pleaseai/code-lsp";
 
 /**
  * Tool definitions for LSP provider

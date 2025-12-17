@@ -11,7 +11,7 @@
  * This module re-exports utilities for use in hooks.
  */
 
-export { Format, Formatter } from "../format"
+export { Format, Formatter } from "@pleaseai/code-format"
 export {
   runLSPDiagnostics,
   getDiagnostics,

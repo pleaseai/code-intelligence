@@ -33,6 +33,14 @@
     "packages/dora": {
       "release-type": "node",
       "component": "@pleaseai/dora"
+    },
+    "packages/format": {
+      "release-type": "node",
+      "component": "@pleaseai/code-format"
+    },
+    "packages/lsp": {
+      "release-type": "node",
+      "component": "@pleaseai/code-lsp"
     }
   }
 }

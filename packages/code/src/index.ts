@@ -4,6 +4,5 @@
  * Provides auto-formatting and LSP diagnostics for Claude Code hooks.
  */
 
-export { Format, Formatter } from "./format"
-export { LSPManager, formatDiagnostic } from "./lsp"
-export { loadConfig, type Config, type FormatterConfig } from "./config"
+export { Format, Formatter, loadConfig, type Config, type FormatterConfig } from "@pleaseai/code-format"
+export { LSPManager, formatDiagnostic } from "@pleaseai/code-lsp"

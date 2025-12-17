@@ -1,22 +1,20 @@
 {
-  "name": "@pleaseai/dora",
+  "name": "@pleaseai/code-lsp",
   "version": "0.1.0",
-  "description": "MCP server for JetBrains IDE integration",
+  "description": "LSP client for AI coding tools",
   "type": "module",
   "main": "src/index.ts",
-  "bin": {
-    "dora": "src/cli.ts"
+  "exports": {
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "bun --watch run src/cli.ts",
-    "build": "echo 'Build handled by root build:npm'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test ./src"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "@pleaseai/code-lsp": "workspace:*",
-    "zod": "^3.25.0"
+    "vscode-jsonrpc": "^8.2.1",
+    "vscode-languageserver-types": "^3.17.5",
+    "zod": "^3.25.32"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -26,9 +24,10 @@
     "src"
   ],
   "keywords": [
-    "mcp",
-    "jetbrains",
-    "ide",
+    "lsp",
+    "language-server",
+    "typescript",
+    "python",
     "ai-coding"
   ],
   "author": "Minsu Lee",

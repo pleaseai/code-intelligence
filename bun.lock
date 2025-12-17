@@ -23,6 +23,10 @@
       "bin": {
         "code": "src/cli.ts",
       },
+      "dependencies": {
+        "@pleaseai/code-format": "workspace:*",
+        "@pleaseai/code-lsp": "workspace:*",
+      },
       "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5.7.0",
@@ -36,9 +40,32 @@
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.12.0",
+        "@pleaseai/code-lsp": "workspace:*",
+        "zod": "^3.25.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.7.0",
+      },
+    },
+    "packages/format": {
+      "name": "@pleaseai/code-format",
+      "version": "0.1.0",
+      "dependencies": {
+        "yaml": "^2.8.2",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.7.0",
+      },
+    },
+    "packages/lsp": {
+      "name": "@pleaseai/code-lsp",
+      "version": "0.1.0",
+      "dependencies": {
         "vscode-jsonrpc": "^8.2.1",
         "vscode-languageserver-types": "^3.17.5",
-        "zod": "^3.25.0",
+        "zod": "^3.25.32",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -52,6 +79,10 @@
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.25.0", "", { "dependencies": { "@hono/node-server": "^1.19.7", "ajv": "^8.17.1", "ajv-formats": "^3.0.1", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "eventsource-parser": "^3.0.0", "express": "^5.0.1", "express-rate-limit": "^7.5.0", "jose": "^6.1.1", "json-schema-typed": "^8.0.2", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.25 || ^4.0", "zod-to-json-schema": "^3.25.0" }, "peerDependencies": { "@cfworker/json-schema": "^4.1.1" }, "optionalPeers": ["@cfworker/json-schema"] }, "sha512-z0Zhn/LmQ3yz91dEfd5QgS7DpSjA4pk+3z2++zKgn5L6iDFM9QapsVoAQSbKLvlrFsZk9+ru6yHHWNq2lCYJKQ=="],
 
     "@pleaseai/code": ["@pleaseai/code@workspace:packages/code"],
+
+    "@pleaseai/code-format": ["@pleaseai/code-format@workspace:packages/format"],
+
+    "@pleaseai/code-lsp": ["@pleaseai/code-lsp@workspace:packages/lsp"],
 
     "@pleaseai/dora": ["@pleaseai/dora@workspace:packages/dora"],
 

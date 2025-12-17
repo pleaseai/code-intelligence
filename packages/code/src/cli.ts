@@ -12,7 +12,7 @@
  *   code lsp --stdin       Read hook input from stdin
  */
 
-import { Format } from "./format"
+import { Format } from "@pleaseai/code-format"
 import { runLSPDiagnostics } from "./hooks/lsp"
 import pkg from "../package.json"
 

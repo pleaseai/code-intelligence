@@ -6,7 +6,7 @@
  */
 
 import path from "path"
-import { LSPManager, type Diagnostic } from "../lsp"
+import { LSPManager, type Diagnostic } from "@pleaseai/code-lsp"
 
 const DIAGNOSTICS_MAX_DISPLAY = 5
 const DIAGNOSTICS_WAIT_MS = 1500
