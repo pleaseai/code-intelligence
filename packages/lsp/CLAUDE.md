@@ -35,7 +35,7 @@ src/
 export const MyServer: LSPServerInfo = {
   id: 'my-server',
   extensions: ['.ext'],
-  root: nearestRoot(['config.json']),  // or custom root function
+  root: nearestRoot(['config.json']), // or custom root function
   async spawn(root) {
     const proc = spawn('my-lsp', ['--stdio'], { cwd: root })
     return { process: proc }
