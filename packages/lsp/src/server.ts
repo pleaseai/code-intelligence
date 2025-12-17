@@ -251,8 +251,15 @@ export const OxlintServer: LSPServerInfo = {
       try {
         await fs.access(localBin);
         return localBin;
-      } catch {
-        // Not found locally
+      } catch (err: unknown) {
+        // Only ignore ENOENT (file not found), log other errors
+        const isNotFound =
+          err instanceof Error &&
+          "code" in err &&
+          (err as NodeJS.ErrnoException).code === "ENOENT";
+        if (!isNotFound) {
+          console.error(`[oxlint] Cannot access local binary at ${localBin}:`, err);
+        }
       }
 
       // Check global PATH
@@ -265,15 +272,26 @@ export const OxlintServer: LSPServerInfo = {
     // Try oxlint with --lsp flag first
     const lintBin = await resolveBin("oxlint");
     if (lintBin) {
-      const proc = Bun.spawn([lintBin, "--help"], { stdout: "pipe" });
-      await proc.exited;
-      const help = await new Response(proc.stdout).text();
-      if (help.includes("--lsp")) {
-        return {
-          process: spawn(lintBin, ["--lsp"], {
-            cwd: root,
-          }),
-        };
+      const proc = Bun.spawn([lintBin, "--help"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const exitCode = await proc.exited;
+
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text();
+        console.warn(
+          `[oxlint] Binary at ${lintBin} failed --help (exit ${exitCode}): ${stderr.slice(0, 200)}`
+        );
+      } else {
+        const help = await new Response(proc.stdout).text();
+        if (help.includes("--lsp")) {
+          return {
+            process: spawn(lintBin, ["--lsp"], {
+              cwd: root,
+            }),
+          };
+        }
       }
     }
 
@@ -287,7 +305,11 @@ export const OxlintServer: LSPServerInfo = {
       };
     }
 
-    // Neither found
+    // Neither found - log diagnostic
+    console.warn(
+      `[oxlint] Could not start oxlint LSP server for ${root}. ` +
+        `Install with: npm install -D oxlint`
+    );
     return undefined;
   },
 };
