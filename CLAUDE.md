@@ -124,6 +124,7 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 | Python | pyright-langserver | pyproject.toml, setup.py, requirements.txt |
 | Go | gopls | go.mod, go.work |
 | Rust | rust-analyzer | Cargo.toml |
+| Kotlin | JetBrains Kotlin LSP (auto-download) | build.gradle.kts, build.gradle, pom.xml |
 
 ### Built-in Formatters
 

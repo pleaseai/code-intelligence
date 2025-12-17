@@ -4,6 +4,7 @@ import {
   getServerById,
   getServersForExtension,
   GoplsServer,
+  KotlinServer,
   LSP_SERVERS,
   OxlintServer,
   PyrightServer,
@@ -22,6 +23,7 @@ describe('LSP_SERVERS', () => {
     expect(serverIds).toContain('pyright')
     expect(serverIds).toContain('gopls')
     expect(serverIds).toContain('rust-analyzer')
+    expect(serverIds).toContain('kotlin')
   })
 })
 
@@ -120,6 +122,25 @@ describe('RustAnalyzerServer', () => {
   })
 })
 
+describe('KotlinServer', () => {
+  test('has correct id', () => {
+    expect(KotlinServer.id).toBe('kotlin')
+  })
+
+  test('supports Kotlin extensions', () => {
+    expect(KotlinServer.extensions).toContain('.kt')
+    expect(KotlinServer.extensions).toContain('.kts')
+  })
+
+  test('has root function', () => {
+    expect(typeof KotlinServer.root).toBe('function')
+  })
+
+  test('has spawn function', () => {
+    expect(typeof KotlinServer.spawn).toBe('function')
+  })
+})
+
 describe('getServerById', () => {
   test('returns typescript server', () => {
     const server = getServerById('typescript')
@@ -156,6 +177,14 @@ describe('getServersForExtension', () => {
 
     const serverIds = servers.map(s => s.id)
     expect(serverIds).toContain('gopls')
+  })
+
+  test('returns servers for .kt extension', () => {
+    const servers = getServersForExtension('.kt')
+    expect(servers.length).toBeGreaterThan(0)
+
+    const serverIds = servers.map(s => s.id)
+    expect(serverIds).toContain('kotlin')
   })
 
   test('returns empty array for unknown extension', () => {
