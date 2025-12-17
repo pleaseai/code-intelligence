@@ -25,7 +25,9 @@
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test ./src"
+    "test": "bun test ./test",
+    "test:unit": "bun test ./test/unit",
+    "test:integration": "bun test ./test/integration"
   },
   "dependencies": {
     "vscode-jsonrpc": "^8.2.1",

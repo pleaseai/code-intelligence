@@ -14,7 +14,7 @@ import {
   PyrightServer,
   RustAnalyzerServer,
   TypescriptServer,
-} from '../server'
+} from '../../src/server'
 
 describe('LSP_SERVERS', () => {
   test('contains expected servers', () => {

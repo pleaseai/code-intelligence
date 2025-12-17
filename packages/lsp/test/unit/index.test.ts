@@ -6,7 +6,7 @@ import {
   LANGUAGE_EXTENSIONS,
   LSPManager,
   SymbolKind,
-} from '../index'
+} from '../../src/index'
 
 describe('LSPManager', () => {
   test('creates manager with project path', () => {
