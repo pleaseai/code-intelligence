@@ -396,6 +396,7 @@ export {
   getServerById,
   getServersForExtension,
   GoplsServer,
+  KotlinServer,
   LSP_SERVERS,
   type LSPServerHandle,
   type LSPServerInfo,

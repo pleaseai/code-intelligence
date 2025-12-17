@@ -7,3 +7,6 @@
 [submodule "ref/opencode"]
 	path = ref/opencode
 	url = https://github.com/sst/opencode.git
+[submodule "ref/multispy"]
+	path = ref/multispy
+	url = https://github.com/microsoft/multilspy.git
