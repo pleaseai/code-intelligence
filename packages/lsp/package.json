@@ -1,12 +1,28 @@
 {
   "name": "@pleaseai/code-lsp",
+  "type": "module",
   "version": "0.1.0",
   "description": "LSP client for AI coding tools",
-  "type": "module",
-  "main": "src/index.ts",
+  "author": "Minsu Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chatbot-pf/code-please"
+  },
+  "keywords": [
+    "lsp",
+    "language-server",
+    "typescript",
+    "python",
+    "ai-coding"
+  ],
   "exports": {
     ".": "./src/index.ts"
   },
+  "main": "src/index.ts",
+  "files": [
+    "src"
+  ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test ./src"
@@ -19,21 +35,5 @@
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.7.0"
-  },
-  "files": [
-    "src"
-  ],
-  "keywords": [
-    "lsp",
-    "language-server",
-    "typescript",
-    "python",
-    "ai-coding"
-  ],
-  "author": "Minsu Lee",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/chatbot-pf/code-please"
   }
 }

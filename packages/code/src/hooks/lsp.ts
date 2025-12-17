@@ -5,8 +5,9 @@
  * Based on OpenCode LSP integration approach.
  */
 
-import path from "path"
-import { LSPManager, type Diagnostic } from "@pleaseai/code-lsp"
+import type { Diagnostic } from '@pleaseai/code-lsp'
+import path from 'node:path'
+import { LSPManager } from '@pleaseai/code-lsp'
 
 const DIAGNOSTICS_MAX_DISPLAY = 5
 const DIAGNOSTICS_WAIT_MS = 1500
@@ -14,11 +15,11 @@ const DIAGNOSTICS_WAIT_MS = 1500
 /**
  * Diagnostic severity mapping
  */
-const SEVERITY_MAP: Record<number, { icon: string; name: string }> = {
-  1: { icon: "✗", name: "error" },
-  2: { icon: "⚠", name: "warning" },
-  3: { icon: "ℹ", name: "info" },
-  4: { icon: "💡", name: "hint" },
+const SEVERITY_MAP: Record<number, { icon: string, name: string }> = {
+  1: { icon: '✗', name: 'error' },
+  2: { icon: '⚠', name: 'warning' },
+  3: { icon: 'ℹ', name: 'info' },
+  4: { icon: '💡', name: 'hint' },
 }
 
 /**
@@ -27,7 +28,7 @@ const SEVERITY_MAP: Record<number, { icon: string; name: string }> = {
 function formatDiagnostic(
   diagnostic: Diagnostic,
   filePath: string,
-  projectDir: string
+  projectDir: string,
 ): string {
   const severity = diagnostic.severity ?? 1
   const { icon } = SEVERITY_MAP[severity] ?? SEVERITY_MAP[1]!
@@ -35,8 +36,8 @@ function formatDiagnostic(
   const line = diagnostic.range.start.line + 1
   const col = diagnostic.range.start.character + 1
 
-  const code = diagnostic.code ? ` [${diagnostic.code}]` : ""
-  const message = diagnostic.message.split("\n")[0] // First line only
+  const code = diagnostic.code ? ` [${diagnostic.code}]` : ''
+  const message = diagnostic.message.split('\n')[0] // First line only
 
   return `  ${icon} ${relativePath}:${line}:${col}${code}: ${message}`
 }
@@ -46,7 +47,7 @@ function formatDiagnostic(
  */
 export function formatDiagnosticsReport(
   diagnostics: Record<string, Diagnostic[]>,
-  projectDir: string
+  projectDir: string,
 ): string | null {
   let errorCount = 0
   let warningCount = 0
@@ -55,8 +56,10 @@ export function formatDiagnosticsReport(
   for (const [filePath, diags] of Object.entries(diagnostics)) {
     for (const diag of diags) {
       const severity = diag.severity ?? 1
-      if (severity === 1) errorCount++
-      if (severity === 2) warningCount++
+      if (severity === 1)
+        errorCount++
+      if (severity === 2)
+        warningCount++
 
       if (lines.length < DIAGNOSTICS_MAX_DISPLAY) {
         lines.push(formatDiagnostic(diag, filePath, projectDir))
@@ -65,13 +68,16 @@ export function formatDiagnosticsReport(
   }
 
   const total = errorCount + warningCount
-  if (total === 0) return null
+  if (total === 0)
+    return null
 
   // Build summary line
   const parts: string[] = []
-  if (errorCount > 0) parts.push(`${errorCount} error${errorCount > 1 ? "s" : ""}`)
-  if (warningCount > 0) parts.push(`${warningCount} warning${warningCount > 1 ? "s" : ""}`)
-  const summary = `✗ ${parts.join(", ")} found`
+  if (errorCount > 0)
+    parts.push(`${errorCount} error${errorCount > 1 ? 's' : ''}`)
+  if (warningCount > 0)
+    parts.push(`${warningCount} warning${warningCount > 1 ? 's' : ''}`)
+  const summary = `✗ ${parts.join(', ')} found`
 
   // Add overflow indicator
   const overflow = total - lines.length
@@ -79,7 +85,7 @@ export function formatDiagnosticsReport(
     lines.push(`  ... and ${overflow} more`)
   }
 
-  return [summary, ...lines].join("\n")
+  return [summary, ...lines].join('\n')
 }
 
 /**
@@ -87,7 +93,7 @@ export function formatDiagnosticsReport(
  */
 export async function getDiagnostics(
   filePath: string,
-  projectDir: string
+  projectDir: string,
 ): Promise<Record<string, Diagnostic[]>> {
   const manager = new LSPManager(projectDir)
 
@@ -96,10 +102,11 @@ export async function getDiagnostics(
     await manager.touchFile(filePath, true)
 
     // Small additional delay for diagnostics to settle
-    await new Promise((resolve) => setTimeout(resolve, DIAGNOSTICS_WAIT_MS))
+    await new Promise(resolve => setTimeout(resolve, DIAGNOSTICS_WAIT_MS))
 
     return await manager.diagnostics()
-  } finally {
+  }
+  finally {
     await manager.shutdown()
   }
 }
@@ -109,7 +116,7 @@ export async function getDiagnostics(
  */
 export async function runLSPDiagnostics(
   filePath: string,
-  projectDir: string
+  projectDir: string,
 ): Promise<string | null> {
   const diagnostics = await getDiagnostics(filePath, projectDir)
   return formatDiagnosticsReport(diagnostics, projectDir)

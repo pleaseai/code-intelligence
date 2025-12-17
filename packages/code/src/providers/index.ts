@@ -2,5 +2,5 @@
  * Providers module exports
  */
 
-export * from "./provider"
-export * from "./lsp"
+export * from './lsp'
+export * from './provider'

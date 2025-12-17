@@ -1,17 +1,18 @@
-import path from "path"
-import YAML from "yaml"
-import { ConfigSchema, defaultConfig, type Config } from "./schema"
+import type { Config } from './schema'
+import path from 'node:path'
+import YAML from 'yaml'
+import { ConfigSchema, defaultConfig } from './schema'
 
 /**
  * Configuration file names to search for (in order of priority)
  */
 const CONFIG_FILES = [
-  "opencode.json",
-  "dora.json",
-  ".please/config.yml",
-  ".please/config.yaml",
-  ".dora/config.yml",
-  ".dora/config.yaml",
+  'opencode.json',
+  'dora.json',
+  '.please/config.yml',
+  '.please/config.yaml',
+  '.dora/config.yml',
+  '.dora/config.yaml',
 ]
 
 /**
@@ -19,7 +20,7 @@ const CONFIG_FILES = [
  */
 async function findConfigFile(
   startDir: string,
-  stopDir?: string
+  stopDir?: string,
 ): Promise<string | null> {
   let currentDir = startDir
   const root = stopDir ?? path.parse(startDir).root
@@ -43,16 +44,17 @@ async function findConfigFile(
  */
 function parseConfigContent(content: string, filePath: string): unknown {
   const ext = path.extname(filePath).toLowerCase()
-  if (ext === ".json") {
+  if (ext === '.json') {
     return JSON.parse(content)
   }
-  if (ext === ".yml" || ext === ".yaml") {
+  if (ext === '.yml' || ext === '.yaml') {
     return YAML.parse(content)
   }
   // Try JSON first, then YAML
   try {
     return JSON.parse(content)
-  } catch {
+  }
+  catch {
     return YAML.parse(content)
   }
 }
@@ -100,9 +102,11 @@ export function mergeConfig(base: Config, source: Partial<Config>): Config {
   if (source.formatter !== undefined) {
     if (source.formatter === false) {
       merged.formatter = false
-    } else if (base.formatter === false) {
+    }
+    else if (base.formatter === false) {
       merged.formatter = source.formatter
-    } else {
+    }
+    else {
       merged.formatter = {
         ...(base.formatter ?? {}),
         ...source.formatter,

@@ -24,3 +24,9 @@ bun.lockb
 Thumbs.db
 .turbo/
 
+# Lint
+.eslintcache
+
+# Coverage
+coverage/
+

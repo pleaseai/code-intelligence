@@ -12,9 +12,11 @@
  *   code lsp --stdin       Read hook input from stdin
  */
 
-import { Format } from "@pleaseai/code-format"
-import { runLSPDiagnostics } from "./hooks/lsp"
-import pkg from "../package.json"
+import { Buffer } from 'node:buffer'
+import process from 'node:process'
+import { Format } from '@pleaseai/code-format'
+import pkg from '../package.json'
+import { runLSPDiagnostics } from './hooks/lsp'
 
 const VERSION = pkg.version
 
@@ -42,18 +44,20 @@ function parseArgs(argv: string[]): ParsedArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!
-    if (arg.startsWith("--")) {
-      const [key, value] = arg.slice(2).split("=")
+    if (arg.startsWith('--')) {
+      const [key, value] = arg.slice(2).split('=')
       flags[key!] = value ?? true
-    } else if (arg.startsWith("-")) {
+    }
+    else if (arg.startsWith('-')) {
       flags[arg.slice(1)] = true
-    } else {
+    }
+    else {
       positional.push(arg)
     }
   }
 
   return {
-    command: positional[0] ?? "help",
+    command: positional[0] ?? 'help',
     args: positional.slice(1),
     flags,
   }
@@ -64,16 +68,17 @@ async function readStdinJson(): Promise<HookInput> {
   for await (const chunk of Bun.stdin.stream()) {
     chunks.push(chunk as Buffer)
   }
-  const text = Buffer.concat(chunks).toString("utf-8").trim()
+  const text = Buffer.concat(chunks).toString('utf-8').trim()
 
   if (!text) {
-    throw new Error("No input received from stdin")
+    throw new Error('No input received from stdin')
   }
 
   try {
     return JSON.parse(text)
-  } catch {
-    throw new Error("Invalid JSON input from stdin")
+  }
+  catch {
+    throw new Error('Invalid JSON input from stdin')
   }
 }
 
@@ -86,12 +91,14 @@ async function formatCommand(filePath: string, projectDir: string, isHookMode: b
     if (success) {
       console.log(JSON.stringify({ suppressOutput: true }))
     }
-  } else {
+  }
+  else {
     // CLI mode: human-readable output
     if (success) {
       console.log(JSON.stringify({ success: true, file: filePath }))
-    } else {
-      console.log(JSON.stringify({ success: false, file: filePath, reason: "no formatter" }))
+    }
+    else {
+      console.log(JSON.stringify({ success: false, file: filePath, reason: 'no formatter' }))
     }
   }
 }
@@ -104,11 +111,12 @@ async function lspCommand(filePath: string, projectDir: string, isHookMode: bool
       // Hook mode: output as additionalContext for Claude Code
       console.log(JSON.stringify({
         hookSpecificOutput: {
-          hookEventName: "PostToolUse",
+          hookEventName: 'PostToolUse',
           additionalContext: `[code lsp]: ${report}`,
         },
       }))
-    } else {
+    }
+    else {
       // CLI mode: direct output
       console.log(report)
       process.exit(1)
@@ -149,65 +157,65 @@ Environment:
 async function main(): Promise<void> {
   const { command, args, flags } = parseArgs(process.argv)
 
-  const projectDir =
-    (flags["project"] as string) ??
-    process.env["CODE_PROJECT_PATH"] ??
-    process.cwd()
+  const projectDir
+    = (flags.project as string)
+      ?? process.env.CODE_PROJECT_PATH
+      ?? process.cwd()
 
   switch (command) {
-    case "format": {
-      const isHookMode = flags["stdin"] === true
+    case 'format': {
+      const isHookMode = flags.stdin === true
       let file = args[0]
       let dir = projectDir
 
       if (isHookMode) {
         const input = await readStdinJson()
         if (!input?.tool_input?.file_path) {
-          throw new Error("Missing file_path in tool_input")
+          throw new Error('Missing file_path in tool_input')
         }
         file = input.tool_input.file_path
-        dir = process.env["CLAUDE_PROJECT_DIR"] || input.cwd || projectDir
+        dir = process.env.CLAUDE_PROJECT_DIR || input.cwd || projectDir
       }
 
       if (!file) {
-        console.error("Usage: code format <file> | code format --stdin")
+        console.error('Usage: code format <file> | code format --stdin')
         process.exit(1)
       }
       await formatCommand(file, dir, isHookMode)
       break
     }
 
-    case "lsp": {
-      const isHookMode = flags["stdin"] === true
+    case 'lsp': {
+      const isHookMode = flags.stdin === true
       let file = args[0]
       let dir = projectDir
 
       if (isHookMode) {
         const input = await readStdinJson()
         if (!input?.tool_input?.file_path) {
-          throw new Error("Missing file_path in tool_input")
+          throw new Error('Missing file_path in tool_input')
         }
         file = input.tool_input.file_path
-        dir = process.env["CLAUDE_PROJECT_DIR"] || input.cwd || projectDir
+        dir = process.env.CLAUDE_PROJECT_DIR || input.cwd || projectDir
       }
 
       if (!file) {
-        console.error("Usage: code lsp <file> | code lsp --stdin")
+        console.error('Usage: code lsp <file> | code lsp --stdin')
         process.exit(1)
       }
       await lspCommand(file, dir, isHookMode)
       break
     }
 
-    case "version":
-    case "-v":
-    case "--version":
+    case 'version':
+    case '-v':
+    case '--version':
       versionCommand()
       break
 
-    case "help":
-    case "-h":
-    case "--help":
+    case 'help':
+    case '-h':
+    case '--help':
       helpCommand()
       break
 
@@ -219,6 +227,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("[code] Error:", error)
+  console.error('[code] Error:', error)
   process.exit(1)
 })

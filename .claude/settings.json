@@ -4,7 +4,8 @@
       "Bash(bun run build)",
       "Bash(bun run test)",
       "Bash(bun run lint)",
-      "Bash(bun run lint:fix:*)"
+      "Bash(bun run lint:fix:*)",
+      "mcp__github__issue_write"
     ],
     "deny": [],
     "ask": []
