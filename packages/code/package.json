@@ -1,6 +1,6 @@
 {
   "name": "@pleaseai/code",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Auto-format and type-check hooks for AI coding",
   "type": "module",
   "main": "src/index.ts",
