@@ -4,11 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Monorepo with two packages:
+Monorepo with four packages:
 
 **@pleaseai/code** (`packages/code`) - CLI tool for AI-assisted coding:
 - Auto-formatting hooks for Claude Code (Write/Edit tool triggers)
 - LSP diagnostics for real-time type checking feedback
+
+**@pleaseai/code-format** (`packages/format`) - Formatter orchestration:
+- Auto-format hooks for AI coding
+- Support for multiple formatters (biome, prettier, gofmt, etc.)
+
+**@pleaseai/code-lsp** (`packages/lsp`) - LSP client implementation:
+- LSP client for AI coding tools
+- Support for multiple language servers
 
 **@pleaseai/dora** (`packages/dora`) - MCP server for JetBrains IDE integration:
 - Symbol finding and navigation via Serena plugin
@@ -62,11 +70,28 @@ dora help               # Show help
 ```
 packages/code/
 ├── cli.ts           # CLI entry point (format, lsp commands)
-├── format/          # Formatter orchestration
-├── lsp/             # LSP client implementation
-├── config/          # Config loading
 ├── hooks/           # Claude Code hook handlers
+├── launcher/        # CLI launcher
 └── providers/lsp/   # LSP provider
+```
+
+### packages/format
+
+```
+packages/format/
+├── index.ts         # Public API
+├── formatter.ts     # Formatter definitions (biome, prettier, etc.)
+└── config/          # Config loading (dora.json, opencode.json)
+```
+
+### packages/lsp
+
+```
+packages/lsp/
+├── index.ts         # Public API
+├── client.ts        # LSP client implementation
+├── server.ts        # LSP server definitions
+└── language.ts      # Language detection
 ```
 
 ### packages/dora
@@ -78,7 +103,6 @@ packages/dora/
 ├── client/          # JetBrains HTTP client
 ├── providers/       # JetBrains + LSP providers
 ├── tools/           # MCP tool implementations
-├── lsp/             # LSP client implementation
 └── errors/          # Error handling
 ```
 
@@ -95,6 +119,7 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 | Language | Server | Root Detection |
 |----------|--------|----------------|
 | TypeScript/JavaScript | typescript-language-server | package-lock.json, bun.lock, etc. |
+| TypeScript/JavaScript | oxlint | .oxlintrc.json, package.json |
 | Deno | deno lsp | deno.json, deno.jsonc |
 | Python | pyright-langserver | pyproject.toml, setup.py, requirements.txt |
 | Go | gopls | go.mod, go.work |
@@ -102,7 +127,7 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 
 ### Built-in Formatters
 
-biome, prettier, dprint, gofmt, goimports, rustfmt, black, ruff, stylua, shfmt, nixfmt, zig fmt, swift-format, clang-format
+biome, prettier, gofmt, mix (Elixir), zig fmt, clang-format, ktlint (Kotlin), ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam
 
 ### Name Path Convention (JetBrains)
 
