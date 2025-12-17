@@ -214,11 +214,113 @@ export const RustAnalyzerServer: LSPServerInfo = {
 };
 
 /**
+ * Oxlint Language Server
+ * Based on opencode PR #5570
+ */
+export const OxlintServer: LSPServerInfo = {
+  id: "oxlint",
+  extensions: [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".mts",
+    ".cts",
+    ".vue",
+    ".astro",
+    ".svelte",
+  ],
+  root: nearestRoot([
+    ".oxlintrc.json",
+    "package-lock.json",
+    "bun.lockb",
+    "bun.lock",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "package.json",
+  ]),
+  async spawn(root) {
+    const ext = process.platform === "win32" ? ".cmd" : "";
+
+    const resolveBin = async (
+      binName: string
+    ): Promise<string | undefined> => {
+      const localBin = path.join(root, "node_modules", ".bin", binName + ext);
+      try {
+        await fs.access(localBin);
+        return localBin;
+      } catch (err: unknown) {
+        // Only ignore ENOENT (file not found), log other errors
+        const isNotFound =
+          err instanceof Error &&
+          "code" in err &&
+          (err as NodeJS.ErrnoException).code === "ENOENT";
+        if (!isNotFound) {
+          console.error(`[oxlint] Cannot access local binary at ${localBin}:`, err);
+        }
+      }
+
+      // Check global PATH
+      const globalBin = Bun.which(binName);
+      if (globalBin) return globalBin;
+
+      return undefined;
+    };
+
+    // Try oxlint with --lsp flag first
+    const lintBin = await resolveBin("oxlint");
+    if (lintBin) {
+      const proc = Bun.spawn([lintBin, "--help"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const exitCode = await proc.exited;
+
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text();
+        console.warn(
+          `[oxlint] Binary at ${lintBin} failed --help (exit ${exitCode}): ${stderr.slice(0, 200)}`
+        );
+      } else {
+        const help = await new Response(proc.stdout).text();
+        if (help.includes("--lsp")) {
+          return {
+            process: spawn(lintBin, ["--lsp"], {
+              cwd: root,
+            }),
+          };
+        }
+      }
+    }
+
+    // Fallback to oxc_language_server
+    const serverBin = await resolveBin("oxc_language_server");
+    if (serverBin) {
+      return {
+        process: spawn(serverBin, [], {
+          cwd: root,
+        }),
+      };
+    }
+
+    // Neither found - log diagnostic
+    console.warn(
+      `[oxlint] Could not start oxlint LSP server for ${root}. ` +
+        `Install with: npm install -D oxlint`
+    );
+    return undefined;
+  },
+};
+
+/**
  * All available LSP servers
  */
 export const LSP_SERVERS: LSPServerInfo[] = [
   DenoServer, // Deno first, higher priority for Deno projects
   TypescriptServer,
+  OxlintServer,
   PyrightServer,
   GoplsServer,
   RustAnalyzerServer,
