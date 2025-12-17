@@ -101,6 +101,7 @@ Create `dora.json` or `opencode.json` in your project root:
 | Python                | pyright                    | pyproject.toml, requirements.txt |
 | Go                    | gopls                      | go.mod                           |
 | Rust                  | rust-analyzer              | Cargo.toml                       |
+| Kotlin                | JetBrains Kotlin LSP       | build.gradle.kts, pom.xml        |
 
 ### Formatters
 
