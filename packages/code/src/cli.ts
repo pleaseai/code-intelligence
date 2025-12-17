@@ -61,19 +61,21 @@ function parseArgs(argv: string[]): ParsedArgs {
   }
 }
 
-async function readStdinJson(): Promise<HookInput | null> {
+async function readStdinJson(): Promise<HookInput> {
   const chunks: Buffer[] = []
   for await (const chunk of Bun.stdin.stream()) {
     chunks.push(chunk as Buffer)
   }
   const text = Buffer.concat(chunks).toString("utf-8").trim()
 
-  if (!text) return null
+  if (!text) {
+    throw new Error("No input received from stdin")
+  }
 
   try {
     return JSON.parse(text)
   } catch {
-    return null
+    throw new Error("Invalid JSON input from stdin")
   }
 }
 
@@ -182,7 +184,7 @@ async function main(): Promise<void> {
       if (isHookMode) {
         const input = await readStdinJson()
         if (!input?.tool_input?.file_path) {
-          process.exit(0)
+          throw new Error("Missing file_path in tool_input")
         }
         file = input.tool_input.file_path
         dir = process.env["CLAUDE_PROJECT_DIR"] || input.cwd || projectDir
@@ -204,7 +206,7 @@ async function main(): Promise<void> {
       if (isHookMode) {
         const input = await readStdinJson()
         if (!input?.tool_input?.file_path) {
-          process.exit(0)
+          throw new Error("Missing file_path in tool_input")
         }
         file = input.tool_input.file_path
         dir = process.env["CLAUDE_PROJECT_DIR"] || input.cwd || projectDir
@@ -231,13 +233,9 @@ async function main(): Promise<void> {
       break
 
     default:
-      // If first arg looks like a path, treat as project path for serve
-      if (command && !command.startsWith("-")) {
-        await serveCommand(command, timeout)
-      } else {
-        helpCommand()
-        process.exit(1)
-      }
+      console.error(`Unknown command: ${command}`)
+      helpCommand()
+      process.exit(1)
   }
 }
 
