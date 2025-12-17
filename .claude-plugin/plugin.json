@@ -1,8 +1,8 @@
 {
-  "name": "dora",
+  "name": "code-please",
   "version": "0.1.1",
-  "description": "Bun-based MCP server for JetBrains IDE integration",
-  "repository": "https://github.com/chatbot-pf/dora",
+  "description": "MCP server and CLI tool for AI-assisted coding with auto-formatting and LSP diagnostics",
+  "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
     "name": "PassionFactory"
   }

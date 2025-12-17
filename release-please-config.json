@@ -21,13 +21,11 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "component": "dora"
+      "component": "code-please"
     },
     "packages/code": {
       "release-type": "node",
       "component": "@pleaseai/code"
     }
-  },
-  "linked-versions": true,
-  "group-pull-request-title-pattern": "chore: release ${version}"
+  }
 }
