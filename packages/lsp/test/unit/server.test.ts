@@ -14,6 +14,7 @@ import {
   PyrightServer,
   RustAnalyzerServer,
   TypescriptServer,
+  VueServer,
 } from '../../src/server'
 
 describe('LSP_SERVERS', () => {
@@ -29,6 +30,7 @@ describe('LSP_SERVERS', () => {
     expect(serverIds).toContain('rust-analyzer')
     expect(serverIds).toContain('kotlin')
     expect(serverIds).toContain('dart')
+    expect(serverIds).toContain('vue')
   })
 })
 
@@ -282,6 +284,140 @@ describe('DartServer', () => {
   })
 })
 
+describe('VueServer', () => {
+  test('has correct id', () => {
+    expect(VueServer.id).toBe('vue')
+  })
+
+  test('supports Vue extension', () => {
+    expect(VueServer.extensions).toContain('.vue')
+  })
+
+  test('has root function', () => {
+    expect(typeof VueServer.root).toBe('function')
+  })
+
+  test('has spawn function', () => {
+    expect(typeof VueServer.spawn).toBe('function')
+  })
+
+  test('root function detects package.json', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-test-'))
+    try {
+      // Create package.json
+      await fs.writeFile(path.join(tempDir, 'package.json'), '{"name": "test-vue-app"}\n')
+
+      // Create a nested source file
+      const srcDir = path.join(tempDir, 'src')
+      await fs.mkdir(srcDir)
+      const vueFile = path.join(srcDir, 'App.vue')
+      await fs.writeFile(vueFile, '<template><div>Test</div></template>')
+
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function excludes deno projects', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-deno-'))
+    try {
+      // Create package.json
+      await fs.writeFile(path.join(tempDir, 'package.json'), '{"name": "test"}')
+      // Create deno.json (exclusion marker)
+      await fs.writeFile(path.join(tempDir, 'deno.json'), '{}')
+
+      const vueFile = path.join(tempDir, 'App.vue')
+      await fs.writeFile(vueFile, '<template></template>')
+
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBeUndefined()
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function excludes deno.jsonc projects', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-deno-jsonc-'))
+    try {
+      // Create package.json
+      await fs.writeFile(path.join(tempDir, 'package.json'), '{"name": "test"}')
+      // Create deno.jsonc (exclusion marker)
+      await fs.writeFile(path.join(tempDir, 'deno.jsonc'), '{}')
+
+      const vueFile = path.join(tempDir, 'App.vue')
+      await fs.writeFile(vueFile, '<template></template>')
+
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBeUndefined()
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects lock files', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-lock-'))
+    try {
+      // Create lock file without package.json
+      await fs.writeFile(path.join(tempDir, 'bun.lock'), '')
+
+      const vueFile = path.join(tempDir, 'App.vue')
+      await fs.writeFile(vueFile, '<template></template>')
+
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects nested monorepo package', async () => {
+    // Simulates a monorepo with nested Vue packages
+    // root/
+    //   package.json (root package)
+    //   packages/
+    //     vue-app/
+    //       package.json (inner package)
+    //       src/
+    //         App.vue
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-monorepo-'))
+    try {
+      // Create root package.json
+      await fs.writeFile(path.join(tempDir, 'package.json'), '{"name": "root"}\n')
+
+      // Create nested package structure
+      const innerPkgDir = path.join(tempDir, 'packages', 'vue-app')
+      await fs.mkdir(innerPkgDir, { recursive: true })
+      await fs.writeFile(path.join(innerPkgDir, 'package.json'), '{"name": "vue-app"}\n')
+
+      const srcDir = path.join(innerPkgDir, 'src')
+      await fs.mkdir(srcDir)
+      const vueFile = path.join(srcDir, 'App.vue')
+      await fs.writeFile(vueFile, '<template></template>')
+
+      // Should find the inner package's package.json, not root
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBe(innerPkgDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('spawn function returns promise', () => {
+    // Verify spawn returns a promise (don't actually call it to avoid downloads)
+    const spawnFn = VueServer.spawn
+    expect(typeof spawnFn).toBe('function')
+    // Verify it's an async function by checking the constructor name
+    expect(spawnFn.constructor.name).toBe('AsyncFunction')
+  })
+})
+
 describe('getServerById', () => {
   test('returns typescript server', () => {
     const server = getServerById('typescript')
@@ -342,6 +478,14 @@ describe('getServersForExtension', () => {
 
     const serverIds = servers.map(s => s.id)
     expect(serverIds).toContain('dart')
+  })
+
+  test('returns servers for .vue extension', () => {
+    const servers = getServersForExtension('.vue')
+    expect(servers.length).toBeGreaterThan(0)
+
+    const serverIds = servers.map(s => s.id)
+    expect(serverIds).toContain('vue')
   })
 
   test('returns empty array for unknown extension', () => {

@@ -1,0 +1,20 @@
+{
+  "name": "test-vue-app",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test Vue project for LSP integration tests",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build"
+  },
+  "dependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

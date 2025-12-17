@@ -854,16 +854,29 @@ export const DartServer: LSPServerInfo = {
 // =============================================================================
 
 /**
- * Vue LSP runtime dependency configuration
- * Uses @vue/language-server with hybrid mode and companion TypeScript server
+ * Vue Language Server runtime dependency configuration
+ * Uses @vue/language-server with Full Hybrid Mode and companion TypeScript server
+ *
+ * Architecture (matching Python reference):
+ * - Vue LS handles .vue files with hybridMode: true
+ * - Companion TypeScript LS with @vue/typescript-plugin for cross-file references
  */
 const VUE_RUNTIME_DEPS = {
-  version: '2.2.0',
-  dependencies: {
-    '@vue/language-server': '2.2.0',
-    '@vue/typescript-plugin': '2.2.0',
-    'typescript-language-server': '4.3.3',
-    'typescript': '5.7.2',
+  vueLanguageServer: {
+    package: '@vue/language-server',
+    version: '2.2.0',
+  },
+  vueTypeScriptPlugin: {
+    package: '@vue/typescript-plugin',
+    version: '2.2.0',
+  },
+  typescript: {
+    package: 'typescript',
+    version: '5.7.2',
+  },
+  typeScriptLanguageServer: {
+    package: 'typescript-language-server',
+    version: '4.3.3',
   },
 }
 
@@ -875,52 +888,80 @@ function getVueResourcesDir(): string {
 }
 
 /**
- * Setup Vue runtime dependencies using npm
- * Installs to ~/.cache/dora/vue-lsp/ if not already present
+ * Get combined version string for version marker file
  */
-async function setupVueDependencies(): Promise<string | undefined> {
+function getVueExpectedVersion(): string {
+  return [
+    VUE_RUNTIME_DEPS.vueLanguageServer.version,
+    VUE_RUNTIME_DEPS.vueTypeScriptPlugin.version,
+    VUE_RUNTIME_DEPS.typescript.version,
+    VUE_RUNTIME_DEPS.typeScriptLanguageServer.version,
+  ].join('_')
+}
+
+/**
+ * Setup Vue runtime dependencies using npm
+ * Installs to ~/.cache/dora/vue-lsp/ if not already present or version mismatch
+ *
+ * @returns Object with paths to executables and tsdk, or undefined on failure
+ */
+async function setupVueDependencies(): Promise<{
+  vueServerPath: string
+  tsServerPath: string
+  tsdkPath: string
+  vuePluginPath: string
+} | undefined> {
   const resourcesDir = getVueResourcesDir()
-  const packageJsonPath = path.join(resourcesDir, 'package.json')
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const vueServerPath = path.join(resourcesDir, 'node_modules', '.bin', `vue-language-server${ext}`)
+  const tsServerPath = path.join(resourcesDir, 'node_modules', '.bin', `typescript-language-server${ext}`)
+  const tsdkPath = path.join(resourcesDir, 'node_modules', 'typescript', 'lib')
+  const vuePluginPath = path.join(resourcesDir, 'node_modules', '@vue', 'typescript-plugin')
+
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = getVueExpectedVersion()
+
+  // Check if installation is needed
+  let needsInstall = false
 
   try {
-    // Check if package.json exists (indicator that npm install has been run)
-    await fs.access(packageJsonPath)
-
-    // Verify node_modules exists and has required packages
-    const vueServerPath = path.join(resourcesDir, 'node_modules', '@vue', 'language-server')
     await fs.access(vueServerPath)
+    await fs.access(tsServerPath)
 
-    return resourcesDir
-  }
-  catch (err) {
-    const isNotFound = err instanceof Error
-      && 'code' in err
-      && (err as NodeJS.ErrnoException).code === 'ENOENT'
-
-    if (!isNotFound) {
-      console.error(`[vue] Cannot access Vue LSP at ${resourcesDir}:`, err instanceof Error ? err.message : err)
-      return undefined
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        console.warn(`[vue] Version mismatch: installed=${installedVersion.trim()}, expected=${expectedVersion}`)
+        needsInstall = true
+      }
     }
+    catch {
+      // No version file, needs install
+      needsInstall = true
+    }
+  }
+  catch {
+    // Executables not found
+    needsInstall = true
+  }
 
-    // Vue dependencies not found, install them
-    console.warn(`[vue] Setting up Vue Language Server dependencies at ${resourcesDir}...`)
+  if (needsInstall) {
+    console.warn('[vue] Installing Vue Language Server dependencies...')
 
     try {
       await fs.mkdir(resourcesDir, { recursive: true })
 
-      // Create minimal package.json
-      const packageJson = {
-        name: 'dora-vue-lsp',
-        version: VUE_RUNTIME_DEPS.version,
-        private: true,
-        dependencies: VUE_RUNTIME_DEPS.dependencies,
-      }
+      // Install all packages with specific versions
+      const packages = [
+        `${VUE_RUNTIME_DEPS.vueLanguageServer.package}@${VUE_RUNTIME_DEPS.vueLanguageServer.version}`,
+        `${VUE_RUNTIME_DEPS.vueTypeScriptPlugin.package}@${VUE_RUNTIME_DEPS.vueTypeScriptPlugin.version}`,
+        `${VUE_RUNTIME_DEPS.typescript.package}@${VUE_RUNTIME_DEPS.typescript.version}`,
+        `${VUE_RUNTIME_DEPS.typeScriptLanguageServer.package}@${VUE_RUNTIME_DEPS.typeScriptLanguageServer.version}`,
+      ]
 
-      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2))
-
-      // Run npm install
-      console.warn(`[vue] Running npm install...`)
-      const proc = await Bun.spawn(['npm', 'install', '--omit=optional'], {
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, ...packages], {
         cwd: resourcesDir,
         stdout: 'pipe',
         stderr: 'pipe',
@@ -929,53 +970,102 @@ async function setupVueDependencies(): Promise<string | undefined> {
       const exitCode = await proc.exited
       if (exitCode !== 0) {
         const stderr = await new Response(proc.stderr).text()
-        console.error(`[vue] npm install failed (exit ${exitCode}): ${stderr}`)
+        console.error(`[vue] npm install failed with exit code ${exitCode}: ${stderr}`)
         return undefined
       }
 
-      console.warn(`[vue] Vue Language Server dependencies installed successfully`)
-      return resourcesDir
+      // Write version marker
+      await fs.writeFile(versionFile, expectedVersion)
+      console.warn('[vue] Vue Language Server dependencies installed successfully')
     }
     catch (err) {
-      console.error(`[vue] Failed to setup Vue dependencies:`, err)
+      console.error('[vue] Failed to install dependencies:', err)
       return undefined
     }
   }
+
+  // Verify all paths exist
+  try {
+    await fs.access(vueServerPath)
+    await fs.access(tsServerPath)
+    await fs.access(tsdkPath)
+    await fs.access(vuePluginPath)
+  }
+  catch (err) {
+    console.error('[vue] One or more required files not found after installation:', err)
+    return undefined
+  }
+
+  return { vueServerPath, tsServerPath, tsdkPath, vuePluginPath }
 }
 
 /**
  * Vue Language Server
  * Uses @vue/language-server with Full Hybrid Mode
- * Spawns dual servers: Vue LS + companion TypeScript LS
+ *
+ * Architecture (matching Python reference vue_language_server.py):
+ * - Vue LS runs with hybridMode: true
+ * - In hybrid mode, Vue LS delegates TypeScript operations to companion server
+ * - The companion TypeScript server uses @vue/typescript-plugin for Vue awareness
+ *
+ * Initialization options:
+ * - vue.hybridMode: true - Enable hybrid mode for Vue LS
+ * - typescript.tsdk: path to TypeScript lib directory
  */
 export const VueServer: LSPServerInfo = {
   id: 'vue',
   extensions: ['.vue'],
-  root: nearestRoot(['package.json', 'tsconfig.json']),
+  root: nearestRoot(
+    [
+      'package.json',
+      'package-lock.json',
+      'bun.lockb',
+      'bun.lock',
+      'pnpm-lock.yaml',
+      'yarn.lock',
+    ],
+    ['deno.json', 'deno.jsonc'], // Exclude Deno projects
+  ),
   async spawn(root) {
-    // Setup dependencies first
-    const resourcesDir = await setupVueDependencies()
-    if (!resourcesDir) {
-      console.warn(`[vue] Failed to setup Vue LSP dependencies. Check previous logs for details.`)
+    // Check for node/npm availability
+    const node = Bun.which('node')
+    const npm = Bun.which('npm')
+
+    if (!node || !npm) {
+      console.warn('[vue] Node.js and npm are required for Vue Language Server')
       return undefined
     }
 
+    // Setup dependencies (npm install if needed)
+    const deps = await setupVueDependencies()
+    if (!deps) {
+      console.warn('[vue] Failed to setup Vue LSP dependencies. Check previous logs for details.')
+      return undefined
+    }
+
+    const { vueServerPath, tsdkPath } = deps
+
     try {
-      const vueServerPath = path.join(resourcesDir, 'node_modules', '.bin', 'vue-language-server')
       const proc = spawn(vueServerPath, ['--stdio'], {
         cwd: root,
-        env: {
-          ...process.env,
-          // Enable Vue LSP hybrid mode via environment variable if needed
-          VUE_HYBRID_MODE: 'true',
-        },
       })
 
       attachLSPProcessHandlers(proc, 'vue')
-      return { process: proc }
+
+      return {
+        process: proc,
+        initialization: {
+          vue: {
+            hybridMode: true,
+          },
+          typescript: {
+            tsdk: tsdkPath,
+          },
+        },
+      }
     }
     catch (err) {
-      console.error(`[vue] Failed to spawn Vue LSP:`, err)
+      console.error('[vue] Failed to spawn Vue Language Server:', err)
       return undefined
     }
   },
@@ -986,6 +1076,7 @@ export const VueServer: LSPServerInfo = {
  */
 export const LSP_SERVERS: LSPServerInfo[] = [
   DenoServer, // Deno first, higher priority for Deno projects
+  VueServer, // Vue before TypeScript for .vue files
   TypescriptServer,
   OxlintServer,
   PyrightServer,
@@ -993,7 +1084,6 @@ export const LSP_SERVERS: LSPServerInfo[] = [
   RustAnalyzerServer,
   KotlinServer,
   DartServer,
-  VueServer,
 ]
 
 /**
