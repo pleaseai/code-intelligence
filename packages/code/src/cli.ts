@@ -17,8 +17,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createDoraServer } from "./server"
 import { Format } from "./format"
 import { runLSPDiagnostics } from "./hooks/lsp"
+import pkg from "../package.json"
 
-const VERSION = "0.1.0"
+const VERSION = pkg.version
 
 interface HookInput {
   session_id: string

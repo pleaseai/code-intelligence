@@ -21,7 +21,10 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "component": "code-please"
+      "component": "code-please",
+      "extra-files": [
+        ".claude-plugin/plugin.json"
+      ]
     },
     "packages/code": {
       "release-type": "node",
