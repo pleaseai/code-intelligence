@@ -4,8 +4,7 @@
   "description": "Auto-format and type-check hooks for AI coding",
   "type": "module",
   "workspaces": [
-    "packages/*",
-    "npm/*"
+    "packages/*"
   ],
   "scripts": {
     "start": "bun run packages/code/src/cli.ts",
