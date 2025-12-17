@@ -23,19 +23,19 @@ bun run build:npm    # Generate npm packages for distribution
 ## CLI Commands
 
 ```bash
-dora serve              # Start MCP server (default)
-dora format <file>      # Format a file using configured formatters
-dora format --stdin     # Format via Claude Code hook (JSON input)
-dora lsp <file>         # Get LSP diagnostics for a file
-dora lsp --stdin        # LSP diagnostics via Claude Code hook
-dora version            # Show version
-dora help               # Show help
+code serve              # Start MCP server (default)
+code format <file>      # Format a file using configured formatters
+code format --stdin     # Format via Claude Code hook (JSON input)
+code lsp <file>         # Get LSP diagnostics for a file
+code lsp --stdin        # LSP diagnostics via Claude Code hook
+code version            # Show version
+code help               # Show help
 ```
 
 ## Environment Variables
 
-- `DORA_PROJECT_PATH` - Project path (defaults to argv[2] or cwd)
-- `DORA_TIMEOUT` - Request timeout in ms (default: 30000)
+- `CODE_PROJECT_PATH` - Project path (defaults to argv[2] or cwd)
+- `CODE_TIMEOUT` - Request timeout in ms (default: 30000)
 - `CLAUDE_PROJECT_DIR` - Used in hook mode to determine project directory
 
 ## Architecture

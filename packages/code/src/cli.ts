@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
 /**
- * Dora CLI - Entry Point
+ * Code CLI - Entry Point
  *
  * Commands:
- *   dora [serve]           Start MCP server (default)
- *   dora format <file>     Format a file
- *   dora lsp <file>        Get LSP diagnostics for a file
- *   dora version           Show version
+ *   code [serve]           Start MCP server (default)
+ *   code format <file>     Format a file
+ *   code lsp <file>        Get LSP diagnostics for a file
+ *   code version           Show version
  *
  * Hook mode (--stdin):
- *   dora format --stdin    Read hook input from stdin
- *   dora lsp --stdin       Read hook input from stdin
+ *   code format --stdin    Read hook input from stdin
+ *   code lsp --stdin       Read hook input from stdin
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
@@ -81,13 +81,13 @@ async function readStdinJson(): Promise<HookInput> {
 }
 
 async function serveCommand(projectPath: string, timeout: number): Promise<void> {
-  console.error(`[dora] Starting MCP server for project: ${projectPath}`)
+  console.error(`[code] Starting MCP server for project: ${projectPath}`)
 
   const server = await createDoraServer({ projectPath, timeout })
   const transport = new StdioServerTransport()
 
   await server.connect(transport)
-  console.error("[dora] MCP server connected and ready")
+  console.error("[code] MCP server connected and ready")
 }
 
 async function formatCommand(filePath: string, projectDir: string, isHookMode: boolean): Promise<void> {
@@ -118,7 +118,7 @@ async function lspCommand(filePath: string, projectDir: string, isHookMode: bool
       console.log(JSON.stringify({
         hookSpecificOutput: {
           hookEventName: "PostToolUse",
-          additionalContext: `[dora lsp]: ${report}`,
+          additionalContext: `[code lsp]: ${report}`,
         },
       }))
     } else {
@@ -131,15 +131,15 @@ async function lspCommand(filePath: string, projectDir: string, isHookMode: bool
 }
 
 function versionCommand(): void {
-  console.log(`dora ${VERSION}`)
+  console.log(`code ${VERSION}`)
 }
 
 function helpCommand(): void {
   console.log(`
-dora - MCP server for JetBrains IDE integration
+code - MCP server and CLI for AI-assisted coding
 
 Usage:
-  dora [command] [options]
+  code [command] [options]
 
 Commands:
   serve              Start MCP server (default)
@@ -153,8 +153,8 @@ Options:
   --timeout=<ms>     Request timeout in ms (default: 30000)
 
 Environment:
-  DORA_PROJECT_PATH  Project path
-  DORA_TIMEOUT       Request timeout in ms
+  CODE_PROJECT_PATH  Project path
+  CODE_TIMEOUT       Request timeout in ms
 `)
 }
 
@@ -163,13 +163,13 @@ async function main(): Promise<void> {
 
   const projectDir =
     (flags["project"] as string) ??
-    process.env["DORA_PROJECT_PATH"] ??
+    process.env["CODE_PROJECT_PATH"] ??
     process.cwd()
 
   const timeout = flags["timeout"]
     ? parseInt(flags["timeout"] as string, 10)
-    : process.env["DORA_TIMEOUT"]
-      ? parseInt(process.env["DORA_TIMEOUT"], 10)
+    : process.env["CODE_TIMEOUT"]
+      ? parseInt(process.env["CODE_TIMEOUT"], 10)
       : 30000
 
   switch (command) {
@@ -192,7 +192,7 @@ async function main(): Promise<void> {
       }
 
       if (!file) {
-        console.error("Usage: dora format <file> | dora format --stdin")
+        console.error("Usage: code format <file> | code format --stdin")
         process.exit(1)
       }
       await formatCommand(file, dir, isHookMode)
@@ -214,7 +214,7 @@ async function main(): Promise<void> {
       }
 
       if (!file) {
-        console.error("Usage: dora lsp <file> | dora lsp --stdin")
+        console.error("Usage: code lsp <file> | code lsp --stdin")
         process.exit(1)
       }
       await lspCommand(file, dir, isHookMode)
@@ -241,6 +241,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("[dora] Error:", error)
+  console.error("[code] Error:", error)
   process.exit(1)
 })

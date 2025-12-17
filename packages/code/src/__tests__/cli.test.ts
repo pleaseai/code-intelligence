@@ -9,7 +9,7 @@ describe("CLI", () => {
   describe("version", () => {
     test("prints version", async () => {
       const result = await $`bun run ${CLI_PATH} version`.text()
-      expect(result).toMatch(/dora \d+\.\d+\.\d+/)
+      expect(result).toMatch(/code \d+\.\d+\.\d+/)
     })
   })
 

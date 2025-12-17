@@ -55,13 +55,13 @@ cp node_modules/@pleaseai/code/hooks/hooks.json .claude/
 
 ```bash
 # Format a file
-dora format src/index.ts
+code format src/index.ts
 
 # Get LSP diagnostics
-dora lsp src/index.ts
+code lsp src/index.ts
 
 # Start MCP server
-dora serve
+code serve
 ```
 
 ## Configuration
@@ -129,8 +129,8 @@ dora serve --project=/path/to/project
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DORA_PROJECT_PATH` | Project directory | cwd |
-| `DORA_TIMEOUT` | Request timeout (ms) | 30000 |
+| `CODE_PROJECT_PATH` | Project directory | cwd |
+| `CODE_TIMEOUT` | Request timeout (ms) | 30000 |
 
 ## Development
 
