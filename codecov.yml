@@ -16,21 +16,21 @@ component_management:
 
   individual_components:
     - component_id: code
-      name: "@pleaseai/code"
+      name: '@pleaseai/code'
       paths:
         - packages/code/src/**
 
     - component_id: code-format
-      name: "@pleaseai/code-format"
+      name: '@pleaseai/code-format'
       paths:
         - packages/format/src/**
 
     - component_id: code-lsp
-      name: "@pleaseai/code-lsp"
+      name: '@pleaseai/code-lsp'
       paths:
         - packages/lsp/src/**
 
     - component_id: dora
-      name: "@pleaseai/dora"
+      name: '@pleaseai/dora'
       paths:
         - packages/dora/src/**
