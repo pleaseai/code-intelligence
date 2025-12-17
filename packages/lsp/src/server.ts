@@ -849,6 +849,138 @@ export const DartServer: LSPServerInfo = {
   },
 }
 
+// =============================================================================
+// Vue Language Server
+// =============================================================================
+
+/**
+ * Vue LSP runtime dependency configuration
+ * Uses @vue/language-server with hybrid mode and companion TypeScript server
+ */
+const VUE_RUNTIME_DEPS = {
+  version: '2.2.0',
+  dependencies: {
+    '@vue/language-server': '2.2.0',
+    '@vue/typescript-plugin': '2.2.0',
+    'typescript-language-server': '4.3.3',
+    'typescript': '5.7.2',
+  },
+}
+
+/**
+ * Get the Vue LSP resources directory
+ */
+function getVueResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'vue-lsp')
+}
+
+/**
+ * Setup Vue runtime dependencies using npm
+ * Installs to ~/.cache/dora/vue-lsp/ if not already present
+ */
+async function setupVueDependencies(): Promise<string | undefined> {
+  const resourcesDir = getVueResourcesDir()
+  const packageJsonPath = path.join(resourcesDir, 'package.json')
+
+  try {
+    // Check if package.json exists (indicator that npm install has been run)
+    await fs.access(packageJsonPath)
+
+    // Verify node_modules exists and has required packages
+    const vueServerPath = path.join(resourcesDir, 'node_modules', '@vue', 'language-server')
+    await fs.access(vueServerPath)
+
+    return resourcesDir
+  }
+  catch (err) {
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (!isNotFound) {
+      console.error(`[vue] Cannot access Vue LSP at ${resourcesDir}:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
+
+    // Vue dependencies not found, install them
+    console.warn(`[vue] Setting up Vue Language Server dependencies at ${resourcesDir}...`)
+
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      // Create minimal package.json
+      const packageJson = {
+        name: 'dora-vue-lsp',
+        version: VUE_RUNTIME_DEPS.version,
+        private: true,
+        dependencies: VUE_RUNTIME_DEPS.dependencies,
+      }
+
+      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2))
+
+      // Run npm install
+      console.warn(`[vue] Running npm install...`)
+      const proc = await Bun.spawn(['npm', 'install', '--omit=optional'], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        console.error(`[vue] npm install failed (exit ${exitCode}): ${stderr}`)
+        return undefined
+      }
+
+      console.warn(`[vue] Vue Language Server dependencies installed successfully`)
+      return resourcesDir
+    }
+    catch (err) {
+      console.error(`[vue] Failed to setup Vue dependencies:`, err)
+      return undefined
+    }
+  }
+}
+
+/**
+ * Vue Language Server
+ * Uses @vue/language-server with Full Hybrid Mode
+ * Spawns dual servers: Vue LS + companion TypeScript LS
+ */
+export const VueServer: LSPServerInfo = {
+  id: 'vue',
+  extensions: ['.vue'],
+  root: nearestRoot(['package.json', 'tsconfig.json']),
+  async spawn(root) {
+    // Setup dependencies first
+    const resourcesDir = await setupVueDependencies()
+    if (!resourcesDir) {
+      console.warn(`[vue] Failed to setup Vue LSP dependencies. Check previous logs for details.`)
+      return undefined
+    }
+
+    try {
+      const vueServerPath = path.join(resourcesDir, 'node_modules', '.bin', 'vue-language-server')
+      const proc = spawn(vueServerPath, ['--stdio'], {
+        cwd: root,
+        env: {
+          ...process.env,
+          // Enable Vue LSP hybrid mode via environment variable if needed
+          VUE_HYBRID_MODE: 'true',
+        },
+      })
+
+      attachLSPProcessHandlers(proc, 'vue')
+      return { process: proc }
+    }
+    catch (err) {
+      console.error(`[vue] Failed to spawn Vue LSP:`, err)
+      return undefined
+    }
+  },
+}
+
 /**
  * All available LSP servers
  */
@@ -861,6 +993,7 @@ export const LSP_SERVERS: LSPServerInfo[] = [
   RustAnalyzerServer,
   KotlinServer,
   DartServer,
+  VueServer,
 ]
 
 /**

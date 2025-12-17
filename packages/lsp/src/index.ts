@@ -405,4 +405,5 @@ export {
   PyrightServer,
   RustAnalyzerServer,
   TypescriptServer,
+  VueServer,
 } from './server'
