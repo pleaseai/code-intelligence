@@ -1,0 +1,19 @@
+{
+  "session_id": "20251217-oxc-formatter-support",
+  "feature_name": "Add oxc formatter (oxfmt) support to packages/format",
+  "created_at": "2025-12-17T10:00:00Z",
+  "updated_at": "2025-12-17T10:00:00Z",
+  "status": "in_progress",
+  "current_phase": 1,
+  "phases": [
+    { "number": 1, "name": "Discovery", "status": "in_progress", "started_at": "2025-12-17T10:00:00Z" },
+    { "number": 2, "name": "Codebase Exploration", "status": "pending" },
+    { "number": 3, "name": "Clarifying Questions", "status": "pending" },
+    { "number": 4, "name": "Architecture Design", "status": "pending" },
+    { "number": 5, "name": "GitHub Issue & PR", "status": "pending" },
+    { "number": 6, "name": "Implementation", "status": "pending" },
+    { "number": 7, "name": "Quality Review", "status": "pending" },
+    { "number": 8, "name": "PR Finalization", "status": "pending" }
+  ],
+  "tasks": []
+}

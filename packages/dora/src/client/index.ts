@@ -1,3 +1,3 @@
-export { JetBrainsClient } from "./jetbrains-client";
-export { discoverPort, clearPortCache } from "./port-discovery";
-export { transformResponse, toSnakeCase } from "./response-transformer";
+export { JetBrainsClient } from './jetbrains-client'
+export { clearPortCache, discoverPort } from './port-discovery'
+export { toSnakeCase, transformResponse } from './response-transformer'

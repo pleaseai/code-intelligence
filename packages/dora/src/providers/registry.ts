@@ -2,38 +2,38 @@
  * Provider registry for managing and selecting backends
  */
 
-import type { Provider, ProviderType } from "./provider";
+import type { Provider, ProviderType } from './provider'
 
 /**
  * Registry configuration
  */
 export interface RegistryConfig {
-  projectPath: string;
-  timeout?: number;
+  projectPath: string
+  timeout?: number
 }
 
 /**
  * Provider factory function type
  */
-export type ProviderFactory = (config: RegistryConfig) => Provider;
+export type ProviderFactory = (config: RegistryConfig) => Provider
 
 /**
  * Registry for managing provider instances
  */
 export class ProviderRegistry {
-  private factories = new Map<ProviderType, ProviderFactory>();
-  private activeProvider: Provider | null = null;
-  private config: RegistryConfig;
+  private factories = new Map<ProviderType, ProviderFactory>()
+  private activeProvider: Provider | null = null
+  private config: RegistryConfig
 
   constructor(config: RegistryConfig) {
-    this.config = config;
+    this.config = config
   }
 
   /**
    * Register a provider factory
    */
   register(type: ProviderType, factory: ProviderFactory): void {
-    this.factories.set(type, factory);
+    this.factories.set(type, factory)
   }
 
   /**
@@ -42,28 +42,30 @@ export class ProviderRegistry {
    */
   async getProvider(): Promise<Provider> {
     if (this.activeProvider?.isConnected()) {
-      return this.activeProvider;
+      return this.activeProvider
     }
 
     // Try providers in order of preference
-    const preferredOrder: ProviderType[] = ["jetbrains-mcp", "lsp"];
+    const preferredOrder: ProviderType[] = ['jetbrains-mcp', 'lsp']
 
     for (const type of preferredOrder) {
-      const factory = this.factories.get(type);
-      if (!factory) continue;
+      const factory = this.factories.get(type)
+      if (!factory)
+        continue
 
-      const provider = factory(this.config);
+      const provider = factory(this.config)
       try {
-        await provider.connect();
-        this.activeProvider = provider;
-        return provider;
-      } catch {
+        await provider.connect()
+        this.activeProvider = provider
+        return provider
+      }
+      catch {
         // Try next provider
-        continue;
+        continue
       }
     }
 
-    throw new Error("No provider available. Ensure JetBrains IDE is running.");
+    throw new Error('No provider available. Ensure JetBrains IDE is running.')
   }
 
   /**
@@ -71,8 +73,8 @@ export class ProviderRegistry {
    */
   async disconnect(): Promise<void> {
     if (this.activeProvider) {
-      await this.activeProvider.disconnect();
-      this.activeProvider = null;
+      await this.activeProvider.disconnect()
+      this.activeProvider = null
     }
   }
 
@@ -80,6 +82,6 @@ export class ProviderRegistry {
    * Get registered provider types
    */
   getRegisteredTypes(): ProviderType[] {
-    return Array.from(this.factories.keys());
+    return Array.from(this.factories.keys())
   }
 }

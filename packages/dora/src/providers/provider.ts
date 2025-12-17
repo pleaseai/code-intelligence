@@ -2,24 +2,24 @@
  * Provider interface for tool backends (JetBrains MCP, LSP, etc.)
  */
 
-import type { z } from "zod";
+import type { z } from 'zod'
 
 /**
  * Tool definition exposed by a provider
  */
 export interface ToolDefinition {
-  name: string;
-  description: string;
-  inputSchema: z.ZodType;
+  name: string
+  description: string
+  inputSchema: z.ZodType
 }
 
 /**
  * Result of a tool call
  */
 export interface ToolResult {
-  [key: string]: unknown;
-  content: Array<{ type: "text"; text: string }>;
-  isError?: boolean;
+  [key: string]: unknown
+  content: Array<{ type: 'text', text: string }>
+  isError?: boolean
 }
 
 /**
@@ -27,19 +27,19 @@ export interface ToolResult {
  */
 export interface Provider {
   /** Provider name for identification */
-  readonly name: string;
+  readonly name: string
 
   /** Connect to the backend */
-  connect(): Promise<void>;
+  connect: () => Promise<void>
 
   /** Disconnect from the backend */
-  disconnect(): Promise<void>;
+  disconnect: () => Promise<void>
 
   /** Check if currently connected */
-  isConnected(): boolean;
+  isConnected: () => boolean
 
   /** Get list of available tools */
-  listTools(): ToolDefinition[];
+  listTools: () => ToolDefinition[]
 
   /**
    * Call a tool with given arguments
@@ -47,10 +47,10 @@ export interface Provider {
    * @param args Tool arguments
    * @returns Tool result
    */
-  callTool(name: string, args: unknown): Promise<ToolResult>;
+  callTool: (name: string, args: unknown) => Promise<ToolResult>
 }
 
 /**
  * Provider type enumeration
  */
-export type ProviderType = "jetbrains-mcp" | "lsp";
+export type ProviderType = 'jetbrains-mcp' | 'lsp'

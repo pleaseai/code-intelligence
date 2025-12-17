@@ -1,13 +1,13 @@
 export {
-  FIND_SYMBOL_DESCRIPTION,
-  executeFindSymbol,
-} from "./find-symbol";
-export {
-  FIND_REFERENCING_DESCRIPTION,
   executeFindReferencingSymbols,
-} from "./find-referencing";
+  FIND_REFERENCING_DESCRIPTION,
+} from './find-referencing'
 export {
-  GET_SYMBOLS_OVERVIEW_DESCRIPTION,
+  executeFindSymbol,
+  FIND_SYMBOL_DESCRIPTION,
+} from './find-symbol'
+export {
   executeGetSymbolsOverview,
-} from "./get-symbols-overview";
-export { limitLength } from "./utils";
+  GET_SYMBOLS_OVERVIEW_DESCRIPTION,
+} from './get-symbols-overview'
+export { limitLength } from './utils'

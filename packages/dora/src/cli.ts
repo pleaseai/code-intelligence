@@ -8,9 +8,10 @@
  *   dora help          Show help
  */
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { createDoraServer } from "./server"
-import pkg from "../package.json"
+import process from 'node:process'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import pkg from '../package.json'
+import { createDoraServer } from './server'
 
 const VERSION = pkg.version
 
@@ -27,18 +28,20 @@ function parseArgs(argv: string[]): ParsedArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!
-    if (arg.startsWith("--")) {
-      const [key, value] = arg.slice(2).split("=")
+    if (arg.startsWith('--')) {
+      const [key, value] = arg.slice(2).split('=')
       flags[key!] = value ?? true
-    } else if (arg.startsWith("-")) {
+    }
+    else if (arg.startsWith('-')) {
       flags[arg.slice(1)] = true
-    } else {
+    }
+    else {
       positional.push(arg)
     }
   }
 
   return {
-    command: positional[0] ?? "serve",
+    command: positional[0] ?? 'serve',
     args: positional.slice(1),
     flags,
   }
@@ -51,7 +54,7 @@ async function serveCommand(projectPath: string, timeout: number): Promise<void>
   const transport = new StdioServerTransport()
 
   await server.connect(transport)
-  console.error("[dora] MCP server connected and ready")
+  console.error('[dora] MCP server connected and ready')
 }
 
 function versionCommand(): void {
@@ -83,31 +86,31 @@ Environment:
 async function main(): Promise<void> {
   const { command, flags } = parseArgs(process.argv)
 
-  const projectDir =
-    (flags["project"] as string) ??
-    process.env["DORA_PROJECT_PATH"] ??
-    process.cwd()
+  const projectDir
+    = (flags.project as string)
+      ?? process.env.DORA_PROJECT_PATH
+      ?? process.cwd()
 
-  const timeout = flags["timeout"]
-    ? parseInt(flags["timeout"] as string, 10)
-    : process.env["DORA_TIMEOUT"]
-      ? parseInt(process.env["DORA_TIMEOUT"], 10)
+  const timeout = flags.timeout
+    ? Number.parseInt(flags.timeout as string, 10)
+    : process.env.DORA_TIMEOUT
+      ? Number.parseInt(process.env.DORA_TIMEOUT, 10)
       : 30000
 
   switch (command) {
-    case "serve":
+    case 'serve':
       await serveCommand(projectDir, timeout)
       break
 
-    case "version":
-    case "-v":
-    case "--version":
+    case 'version':
+    case '-v':
+    case '--version':
       versionCommand()
       break
 
-    case "help":
-    case "-h":
-    case "--help":
+    case 'help':
+    case '-h':
+    case '--help':
       helpCommand()
       break
 
@@ -119,6 +122,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("[dora] Error:", error)
+  console.error('[dora] Error:', error)
   process.exit(1)
 })
