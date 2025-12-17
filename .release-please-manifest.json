@@ -1,4 +1,5 @@
 {
   ".": "0.1.1",
-  "packages/code": "0.1.1"
+  "packages/code": "0.1.1",
+  "packages/dora": "0.1.0"
 }

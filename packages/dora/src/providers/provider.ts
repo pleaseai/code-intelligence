@@ -1,5 +1,5 @@
 /**
- * Provider interface for tool backends (LSP, etc.)
+ * Provider interface for tool backends (JetBrains MCP, LSP, etc.)
  */
 
 import type { z } from "zod";
@@ -53,4 +53,4 @@ export interface Provider {
 /**
  * Provider type enumeration
  */
-export type ProviderType = "lsp"
+export type ProviderType = "jetbrains-mcp" | "lsp";

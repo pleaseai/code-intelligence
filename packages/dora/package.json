@@ -1,0 +1,41 @@
+{
+  "name": "@pleaseai/dora",
+  "version": "0.1.0",
+  "description": "MCP server for JetBrains IDE integration",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "dora": "src/cli.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch run src/cli.ts",
+    "build": "echo 'Build handled by root build:npm'",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test ./src"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "vscode-jsonrpc": "^8.2.1",
+    "vscode-languageserver-types": "^3.17.5",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "src"
+  ],
+  "keywords": [
+    "mcp",
+    "jetbrains",
+    "ide",
+    "ai-coding"
+  ],
+  "author": "Minsu Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chatbot-pf/code-please"
+  }
+}

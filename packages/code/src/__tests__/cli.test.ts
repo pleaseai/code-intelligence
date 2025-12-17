@@ -17,7 +17,6 @@ describe("CLI", () => {
     test("prints help", async () => {
       const result = await $`bun run ${CLI_PATH} help`.text()
       expect(result).toContain("Usage:")
-      expect(result).toContain("serve")
       expect(result).toContain("format")
       expect(result).toContain("lsp")
     })

@@ -7,14 +7,8 @@
 import { z } from "zod";
 import path from "path";
 import type { Provider, ToolDefinition, ToolResult } from "../provider";
+import type { RegistryConfig } from "../registry";
 import { LSPManager, formatDiagnostic } from "../../lsp";
-
-/**
- * LSP Provider configuration
- */
-export interface LSPProviderConfig {
-  projectPath: string;
-}
 
 /**
  * Tool definitions for LSP provider
@@ -76,10 +70,10 @@ export class LSPProvider implements Provider {
   readonly name = "lsp";
 
   private manager: LSPManager | null = null;
-  private config: LSPProviderConfig;
+  private config: RegistryConfig;
   private connected = false;
 
-  constructor(config: LSPProviderConfig) {
+  constructor(config: RegistryConfig) {
     this.config = config;
   }
 
@@ -261,6 +255,6 @@ export class LSPProvider implements Provider {
 /**
  * Factory function for creating LSPProvider
  */
-export function createLSPProvider(config: LSPProviderConfig): LSPProvider {
+export function createLSPProvider(config: RegistryConfig): LSPProvider {
   return new LSPProvider(config);
 }

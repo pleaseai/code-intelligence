@@ -1,0 +1,199 @@
+import { describe, expect, test, afterEach } from "bun:test";
+import { spawn } from "child_process";
+import path from "path";
+import { createLSPClient, type LSPClientInfo } from "../client";
+
+function spawnFakeServer() {
+  const serverPath = path.join(__dirname, "fixture/fake-lsp-server.js");
+  return {
+    process: spawn(process.execPath, [serverPath], {
+      stdio: "pipe",
+    }),
+  };
+}
+
+describe("LSPClient", () => {
+  let client: LSPClientInfo | null = null;
+
+  afterEach(async () => {
+    if (client) {
+      await client.shutdown();
+      client = null;
+    }
+  });
+
+  test("creates client and initializes connection", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    expect(client).toBeDefined();
+    expect(client.serverID).toBe("fake");
+    expect(client.root).toBe(process.cwd());
+    expect(client.connection).toBeDefined();
+  });
+
+  test("handles workspace/workspaceFolders request", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    // Trigger the request via notification
+    await client.connection.sendNotification("test/trigger", {
+      method: "workspace/workspaceFolders",
+    });
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(client.connection).toBeDefined();
+  });
+
+  test("handles client/registerCapability request", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    await client.connection.sendNotification("test/trigger", {
+      method: "client/registerCapability",
+    });
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(client.connection).toBeDefined();
+  });
+
+  test("handles client/unregisterCapability request", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    await client.connection.sendNotification("test/trigger", {
+      method: "client/unregisterCapability",
+    });
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(client.connection).toBeDefined();
+  });
+
+  test("opens file and receives diagnostics", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    // Create a temporary test file
+    const testFile = path.join(process.cwd(), "package.json");
+    await client.notify.open({ path: testFile });
+
+    // Wait for diagnostics
+    await new Promise((r) => setTimeout(r, 200));
+
+    expect(client.diagnostics.size).toBeGreaterThan(0);
+  });
+
+  test("sends hover request", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    const result = await client.connection.sendRequest("textDocument/hover", {
+      textDocument: { uri: "file:///test.ts" },
+      position: { line: 0, character: 5 },
+    });
+
+    expect(result).toBeDefined();
+    expect((result as { contents: { value: string } }).contents.value).toContain(
+      "Test hover"
+    );
+  });
+
+  test("sends workspace symbol request", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    const result = (await client.connection.sendRequest("workspace/symbol", {
+      query: "test",
+    })) as Array<{ name: string }>;
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]!.name).toBe("testFunction");
+  });
+
+  test("sends document symbol request", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    const result = (await client.connection.sendRequest(
+      "textDocument/documentSymbol",
+      {
+        textDocument: { uri: "file:///test.ts" },
+      }
+    )) as Array<{ name: string }>;
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]!.name).toBe("TestClass");
+  });
+
+  test("shuts down cleanly", async () => {
+    const handle = spawnFakeServer();
+
+    client = await createLSPClient({
+      serverID: "fake",
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    });
+
+    await client.shutdown();
+    client = null; // Prevent double shutdown in afterEach
+
+    // Process should be killed
+    expect(handle.process.killed).toBe(true);
+  });
+});

@@ -29,6 +29,10 @@
     "packages/code": {
       "release-type": "node",
       "component": "@pleaseai/code"
+    },
+    "packages/dora": {
+      "release-type": "node",
+      "component": "@pleaseai/dora"
     }
   }
 }

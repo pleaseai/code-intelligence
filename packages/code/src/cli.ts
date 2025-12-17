@@ -3,7 +3,6 @@
  * Code CLI - Entry Point
  *
  * Commands:
- *   code [serve]           Start MCP server (default)
  *   code format <file>     Format a file
  *   code lsp <file>        Get LSP diagnostics for a file
  *   code version           Show version
@@ -13,8 +12,6 @@
  *   code lsp --stdin       Read hook input from stdin
  */
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { createDoraServer } from "./server"
 import { Format } from "./format"
 import { runLSPDiagnostics } from "./hooks/lsp"
 import pkg from "../package.json"
@@ -56,7 +53,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   }
 
   return {
-    command: positional[0] ?? "serve",
+    command: positional[0] ?? "help",
     args: positional.slice(1),
     flags,
   }
@@ -78,16 +75,6 @@ async function readStdinJson(): Promise<HookInput> {
   } catch {
     throw new Error("Invalid JSON input from stdin")
   }
-}
-
-async function serveCommand(projectPath: string, timeout: number): Promise<void> {
-  console.error(`[code] Starting MCP server for project: ${projectPath}`)
-
-  const server = await createDoraServer({ projectPath, timeout })
-  const transport = new StdioServerTransport()
-
-  await server.connect(transport)
-  console.error("[code] MCP server connected and ready")
 }
 
 async function formatCommand(filePath: string, projectDir: string, isHookMode: boolean): Promise<void> {
@@ -136,25 +123,26 @@ function versionCommand(): void {
 
 function helpCommand(): void {
   console.log(`
-code - MCP server and CLI for AI-assisted coding
+code - CLI for AI-assisted coding
 
 Usage:
-  code [command] [options]
+  code <command> [options]
 
 Commands:
-  serve              Start MCP server (default)
   format <file>      Format a file using configured formatters
   lsp <file>         Get LSP diagnostics for a file
   version            Show version
   help               Show this help
 
+Hook mode (for Claude Code):
+  code format --stdin    Format file from hook input
+  code lsp --stdin       Get diagnostics from hook input
+
 Options:
   --project=<path>   Project directory (default: cwd)
-  --timeout=<ms>     Request timeout in ms (default: 30000)
 
 Environment:
   CODE_PROJECT_PATH  Project path
-  CODE_TIMEOUT       Request timeout in ms
 `)
 }
 
@@ -166,17 +154,7 @@ async function main(): Promise<void> {
     process.env["CODE_PROJECT_PATH"] ??
     process.cwd()
 
-  const timeout = flags["timeout"]
-    ? parseInt(flags["timeout"] as string, 10)
-    : process.env["CODE_TIMEOUT"]
-      ? parseInt(process.env["CODE_TIMEOUT"], 10)
-      : 30000
-
   switch (command) {
-    case "serve":
-      await serveCommand(projectDir, timeout)
-      break
-
     case "format": {
       const isHookMode = flags["stdin"] === true
       let file = args[0]
