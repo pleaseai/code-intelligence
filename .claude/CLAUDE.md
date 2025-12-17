@@ -4,7 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Dora is an MCP (Model Context Protocol) server that provides JetBrains IDE integration. It communicates with a JetBrains plugin (Serena) to provide symbol finding and navigation capabilities.
+Dora is an MCP (Model Context Protocol) server and CLI tool for AI-assisted coding. It provides:
+- **JetBrains IDE integration** via Serena plugin for symbol finding and navigation
+- **Auto-formatting hooks** for Claude Code (Write/Edit tool triggers)
+- **LSP diagnostics** for real-time type checking feedback
 
 ## Build & Development Commands
 
@@ -14,40 +17,75 @@ bun run dev          # Development mode with watch
 bun run typecheck    # Type check with TypeScript
 bun run test         # Run tests with Bun
 bun run start        # Start the MCP server
+bun run build:npm    # Generate npm packages for distribution
+```
+
+## CLI Commands
+
+```bash
+dora serve              # Start MCP server (default)
+dora format <file>      # Format a file using configured formatters
+dora format --stdin     # Format via Claude Code hook (JSON input)
+dora lsp <file>         # Get LSP diagnostics for a file
+dora lsp --stdin        # LSP diagnostics via Claude Code hook
+dora version            # Show version
+dora help               # Show help
 ```
 
 ## Environment Variables
 
 - `DORA_PROJECT_PATH` - Project path (defaults to argv[2] or cwd)
 - `DORA_TIMEOUT` - Request timeout in ms (default: 30000)
+- `CLAUDE_PROJECT_DIR` - Used in hook mode to determine project directory
 
 ## Architecture
 
 ### Communication Flow
 
 ```
-Claude/MCP Client <-> StdioTransport <-> McpServer <-> JetBrainsClient <-> JetBrains IDE (Serena Plugin)
+Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
+                                                        ├── JetBrainsProvider <-> JetBrains IDE (Serena Plugin)
+                                                        └── LSPProvider <-> Language Servers
 ```
 
 ### Key Components
 
-**Entry Point** (`src/index.ts`): Initializes the MCP server with stdio transport. Configures project path and timeout from environment/arguments.
+**Entry Point** (`src/cli.ts`): CLI with commands for serve, format, lsp, version, help. Supports `--stdin` for Claude Code hook integration.
 
-**Server** (`src/server.ts`): Creates the MCP server and registers three tools:
-- `jet_brains_find_symbol` - Find symbols by name path pattern
-- `jet_brains_find_referencing_symbols` - Find references to a symbol
-- `jet_brains_get_symbols_overview` - Get overview of symbols in a file
+**Server** (`src/server.ts`): Creates the MCP server and registers tools from providers.
 
-Uses lazy client initialization - discovers IDE port on first tool use.
+**Providers** (`src/providers/`):
+- `JetBrainsProvider` - Symbol finding via JetBrains IDE
+- `LSPProvider` - Diagnostics via language servers
+
+**LSP Layer** (`src/lsp/`):
+- `client.ts` - JSON-RPC client for LSP protocol
+- `server.ts` - Server definitions (TypeScript, Deno, Pyright, gopls, rust-analyzer)
+- `language.ts` - File extension to language ID mapping
+
+**Format Layer** (`src/format/`):
+- `index.ts` - Format orchestration with config loading
+- `formatter.ts` - Built-in formatter definitions (biome, prettier, dprint, etc.)
+
+**Config** (`src/config/`): Loads configuration from `opencode.json`, `dora.json`, or `.please/config.yml`
 
 **Client Layer** (`src/client/`):
 - `JetBrainsClient` - HTTP client for JetBrains plugin API (127.0.0.1)
-- `port-discovery.ts` - Scans ports 24226-24245 to find running IDE instance matching project path
-- `response-transformer.ts` - Converts camelCase API responses to snake_case
+- `port-discovery.ts` - Scans ports 24226-24245 to find running IDE
 
-**Tool Layer** (`src/tools/`): Each tool has its own file with description constant and execute function. Parameters defined with Zod schemas in `src/types/tool-params.ts`.
+### Supported Language Servers
 
-**Error Handling** (`src/errors/`): Custom error hierarchy with `DoraError` base class and specific errors for connection, API, timeout, and server-not-found cases.
+| Language | Server | Root Detection |
+|----------|--------|----------------|
+| TypeScript/JavaScript | typescript-language-server | package-lock.json, bun.lock, etc. |
+| Deno | deno lsp | deno.json, deno.jsonc |
+| Python | pyright-langserver | pyproject.toml, setup.py, requirements.txt |
+| Go | gopls | go.mod, go.work |
+| Rust | rust-analyzer | Cargo.toml |
+
+### Built-in Formatters
+
+biome, prettier, dprint, gofmt, goimports, rustfmt, black, ruff, stylua, shfmt, nixfmt, zig fmt, swift-format, clang-format
 
 ### Name Path Convention
 
