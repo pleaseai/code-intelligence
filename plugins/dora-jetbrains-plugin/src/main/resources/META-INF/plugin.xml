@@ -1,0 +1,40 @@
+<idea-plugin>
+    <id>com.dora.mcp</id>
+    <name>Dora MCP Server</name>
+    <vendor email="support@dora.dev" url="https://github.com/dora">Dora</vendor>
+    <version>0.1.0</version>
+
+    <description><![CDATA[
+        <p>MCP (Model Context Protocol) server for AI-powered code navigation.</p>
+
+        <h3>Features</h3>
+        <ul>
+            <li><b>find_symbol</b> - Find symbols by name pattern across the codebase</li>
+            <li><b>find_references</b> - Find all references to a symbol</li>
+            <li><b>get_symbols_overview</b> - Get top-level symbols in a file</li>
+        </ul>
+
+        <h3>API Endpoints</h3>
+        <ul>
+            <li>GET/POST <code>/api/dora/list_tools</code> - List available tools</li>
+            <li>GET/POST <code>/api/dora/{tool_name}</code> - Execute a tool</li>
+        </ul>
+
+        <p>Based on JetBrains MCP Server Plugin (Apache 2.0 License).</p>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <h3>0.1.0</h3>
+        <ul>
+            <li>Initial release with symbol navigation tools</li>
+        </ul>
+    ]]></change-notes>
+
+    <!-- Platform dependency -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Register MCP REST service -->
+        <httpRequestHandler implementation="com.dora.mcp.core.McpService"/>
+    </extensions>
+</idea-plugin>

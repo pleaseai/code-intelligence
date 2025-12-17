@@ -1,0 +1,21 @@
+<idea-plugin>
+  <idea-version since-build="242" until-build="253.*" />
+  <id>com.dora.mcp</id>
+  <name>Dora MCP Server</name>
+  <vendor email="support@dora.dev" url="https://github.com/dora">Dora</vendor>
+  <version>0.1.0</version>
+  <description><![CDATA[MCP server for AI-powered code navigation.
+- find_symbol: Find symbols by name pattern
+- find_references: Find references to a symbol
+- get_symbols_overview: Get file's top-level symbols]]></description>
+  <change-notes><![CDATA[<h3>0.1.0</h3>
+        <ul>
+            <li>Initial release with symbol navigation tools</li>
+        </ul>]]></change-notes>
+  <!-- Platform dependency -->
+  <depends>com.intellij.modules.platform</depends>
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Register MCP REST service -->
+    <httpRequestHandler implementation="com.dora.mcp.core.McpService" />
+  </extensions>
+</idea-plugin>

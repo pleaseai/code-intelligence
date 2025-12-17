@@ -1,3 +1,9 @@
 [submodule "ref/serena"]
 	path = ref/serena
 	url = https://github.com/oraios/serena
+[submodule "ref/mcp-server-plugin"]
+	path = ref/mcp-server-plugin
+	url = https://github.com/JetBrains/mcp-server-plugin
+[submodule "ref/opencode"]
+	path = ref/opencode
+	url = https://github.com/sst/opencode.git

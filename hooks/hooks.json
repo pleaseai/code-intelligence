@@ -1,0 +1,22 @@
+{
+  "description": "Automatic code formatting and LSP diagnostics after file edits",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @pleaseai/code format --stdin",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "npx @pleaseai/code lsp --stdin",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

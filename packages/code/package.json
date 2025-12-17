@@ -1,0 +1,37 @@
+{
+  "name": "@pleaseai/code",
+  "version": "0.1.0",
+  "description": "Auto-format and type-check hooks for AI coding",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "code": "src/cli.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch run src/cli.ts",
+    "build": "echo 'Build handled by root build:npm'",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test ./src"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "src",
+    "hooks"
+  ],
+  "keywords": [
+    "claude-code",
+    "hooks",
+    "formatter",
+    "lsp",
+    "ai-coding"
+  ],
+  "author": "Minsu Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pleaseai/code"
+  }
+}

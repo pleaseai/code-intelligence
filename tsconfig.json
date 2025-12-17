@@ -11,8 +11,7 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
-    "types": ["bun-types"],
+    "types": ["bun"],
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
@@ -22,6 +21,6 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src/**/*"],
+  "include": ["packages/code/src/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "ref"]
 }

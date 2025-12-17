@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
 
-# Build output (dist is tracked for npx github: support)
-# dist/
+# Build output
+npm/*
+!npm/.gitkeep
+dist/
 
 # IDE
 .idea/

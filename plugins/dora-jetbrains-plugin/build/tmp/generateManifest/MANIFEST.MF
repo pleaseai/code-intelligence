@@ -1,0 +1,12 @@
+Created-By: Gradle 8.11.1
+Version: 0.1.0
+Build-JVM: 17.0.14 (BellSoft 17.0.14+10-LTS)
+Build-OS: Linux 6.12.54-linuxkit amd64
+Build-Plugin: IntelliJ Platform Gradle Plugin
+Build-Plugin-Version: 2.2.0
+Platform-Type: IC
+Platform-Version: 2024.2
+Platform-Build: 242.20224.300
+Kotlin-Available: true
+Kotlin-Stdlib-Bundled: false
+Kotlin-Version: 1.9.24

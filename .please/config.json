@@ -1,0 +1,86 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@pleaseai/config@1.1.1/dist/schema.json",
+  "formatter": {
+    "prettier": {
+      "command": [
+        "bun",
+        "x",
+        "prettier",
+        "--write",
+        "$FILE"
+      ],
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".json",
+        ".md"
+      ],
+      "environment": {
+        "BUN_BE_BUN": "1"
+      }
+    },
+    "biome": {
+      "disabled": true
+    },
+    "gofmt": {
+      "command": [
+        "gofmt",
+        "-w",
+        "$FILE"
+      ],
+      "extensions": [
+        ".go"
+      ]
+    }
+  },
+  "code_review": {
+    "disable": false,
+    "comment_severity_threshold": "MEDIUM",
+    "max_review_comments": -1,
+    "pull_request_opened": {
+      "help": false,
+      "summary": true,
+      "code_review": true,
+      "include_drafts": true
+    }
+  },
+  "issue_workflow": {
+    "disable": false,
+    "issue_opened": {
+      "post_dev_help": true
+    },
+    "triage": {
+      "auto": true,
+      "manual": true,
+      "update_issue_type": true
+    },
+    "investigate": {
+      "enabled": true,
+      "org_members_only": true,
+      "auto_on_bug_label": false
+    },
+    "fix": {
+      "enabled": true,
+      "org_members_only": true,
+      "require_investigation": false,
+      "auto_create_pr": true,
+      "auto_run_tests": true
+    }
+  },
+  "code_workspace": {
+    "enabled": true
+  },
+  "lsp": {},
+  "ignore_patterns": [],
+  "language": "en",
+  "integrations": {
+    "notion": {
+      "enabled": false
+    },
+    "slack": {
+      "enabled": false
+    }
+  }
+}

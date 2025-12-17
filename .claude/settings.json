@@ -8,5 +8,19 @@
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run \"$CLAUDE_PROJECT_DIR/hooks/format-hook.ts\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }
