@@ -1,6 +1,6 @@
 {
   "name": "code-please",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Auto-format and type-check hooks for AI coding",
   "type": "module",
   "workspaces": [
