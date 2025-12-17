@@ -222,6 +222,64 @@ describe('DartServer', () => {
     // Verify it's an async function by checking the constructor name
     expect(spawnFn.constructor.name).toBe('AsyncFunction')
   })
+
+  test('root function detects nested monorepo package', async () => {
+    // Simulates a monorepo with nested Dart packages
+    // root/
+    //   pubspec.yaml (root package)
+    //   packages/
+    //     inner_app/
+    //       pubspec.yaml (inner package)
+    //       lib/
+    //         main.dart
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-monorepo-'))
+    try {
+      // Create root pubspec.yaml
+      await fs.writeFile(path.join(tempDir, 'pubspec.yaml'), 'name: root_app\n')
+
+      // Create nested package structure
+      const innerPkgDir = path.join(tempDir, 'packages', 'inner_app')
+      await fs.mkdir(innerPkgDir, { recursive: true })
+      await fs.writeFile(path.join(innerPkgDir, 'pubspec.yaml'), 'name: inner_app\n')
+
+      const libDir = path.join(innerPkgDir, 'lib')
+      await fs.mkdir(libDir)
+      const dartFile = path.join(libDir, 'main.dart')
+      await fs.writeFile(dartFile, '// inner package code')
+
+      // Should find the inner package's pubspec.yaml, not root
+      const root = await DartServer.root(dartFile, tempDir)
+      expect(root).toBe(innerPkgDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function finds nearest pubspec in deep nesting', async () => {
+    // Simulates deep directory structure
+    // root/
+    //   pubspec.yaml
+    //   src/
+    //     features/
+    //       auth/
+    //         login.dart
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-deep-'))
+    try {
+      await fs.writeFile(path.join(tempDir, 'pubspec.yaml'), 'name: deep_app\n')
+
+      const deepDir = path.join(tempDir, 'src', 'features', 'auth')
+      await fs.mkdir(deepDir, { recursive: true })
+      const dartFile = path.join(deepDir, 'login.dart')
+      await fs.writeFile(dartFile, '// login feature')
+
+      const root = await DartServer.root(dartFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
 })
 
 describe('getServerById', () => {
