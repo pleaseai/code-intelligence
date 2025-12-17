@@ -131,6 +131,32 @@ async function downloadAndExtract(url: string, destDir: string): Promise<void> {
 }
 
 // =============================================================================
+// Process Lifecycle Utilities
+// =============================================================================
+
+/**
+ * Attach error and exit event handlers to an LSP process
+ * Centralizes logging for process lifecycle events
+ */
+function attachLSPProcessHandlers(
+  proc: ChildProcessWithoutNullStreams,
+  serverId: string,
+): void {
+  proc.on('error', (err) => {
+    console.error(`[${serverId}] LSP process error:`, err)
+  })
+
+  proc.on('exit', (code, signal) => {
+    if (code !== 0 && code !== null) {
+      console.error(`[${serverId}] LSP exited with code ${code}`)
+    }
+    if (signal) {
+      console.error(`[${serverId}] LSP killed by signal ${signal}`)
+    }
+  })
+}
+
+// =============================================================================
 // Root Detection Utilities
 // =============================================================================
 
@@ -651,20 +677,7 @@ export const KotlinServer: LSPServerInfo = {
         },
       })
 
-      // Log spawn errors
-      proc.on('error', (err) => {
-        console.error(`[kotlin] Kotlin LSP process error:`, err)
-      })
-
-      proc.on('exit', (code, signal) => {
-        if (code !== 0 && code !== null) {
-          console.error(`[kotlin] Kotlin LSP exited with code ${code}`)
-        }
-        if (signal) {
-          console.error(`[kotlin] Kotlin LSP killed by signal ${signal}`)
-        }
-      })
-
+      attachLSPProcessHandlers(proc, 'kotlin')
       return { process: proc }
     }
     catch (err) {
@@ -718,6 +731,11 @@ function getDartResourcesDir(): string {
 /**
  * Setup Dart runtime dependencies
  * Downloads Dart SDK if not available and dart is not in PATH
+ *
+ * Unlike setupKotlinDependencies which returns { javaHomePath, kotlinLspPath },
+ * this returns only the binary path because:
+ * - Dart SDK is self-contained (no separate JRE dependency)
+ * - No environment variables (like JAVA_HOME) required for execution
  */
 async function setupDartDependencies(platformId: PlatformId): Promise<string | undefined> {
   const config = DART_RUNTIME_DEPS.platforms[platformId]
@@ -795,19 +813,7 @@ export const DartServer: LSPServerInfo = {
           cwd: root,
         })
 
-        proc.on('error', (err) => {
-          console.error(`[dart] Dart LSP process error:`, err)
-        })
-
-        proc.on('exit', (code, signal) => {
-          if (code !== 0 && code !== null) {
-            console.error(`[dart] Dart LSP exited with code ${code}`)
-          }
-          if (signal) {
-            console.error(`[dart] Dart LSP killed by signal ${signal}`)
-          }
-        })
-
+        attachLSPProcessHandlers(proc, 'dart')
         return { process: proc }
       }
       catch (err) {
@@ -833,19 +839,7 @@ export const DartServer: LSPServerInfo = {
         cwd: root,
       })
 
-      proc.on('error', (err) => {
-        console.error(`[dart] Dart LSP process error:`, err)
-      })
-
-      proc.on('exit', (code, signal) => {
-        if (code !== 0 && code !== null) {
-          console.error(`[dart] Dart LSP exited with code ${code}`)
-        }
-        if (signal) {
-          console.error(`[dart] Dart LSP killed by signal ${signal}`)
-        }
-      })
-
+      attachLSPProcessHandlers(proc, 'dart')
       return { process: proc }
     }
     catch (err) {

@@ -1,3 +1,6 @@
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, test } from 'bun:test'
 import {
   DartServer,
@@ -158,6 +161,66 @@ describe('DartServer', () => {
 
   test('has spawn function', () => {
     expect(typeof DartServer.spawn).toBe('function')
+  })
+
+  test('root function detects pubspec.yaml', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-test-'))
+    try {
+      // Create pubspec.yaml
+      await fs.writeFile(path.join(tempDir, 'pubspec.yaml'), 'name: test_app\n')
+
+      // Create a nested source file
+      const libDir = path.join(tempDir, 'lib')
+      await fs.mkdir(libDir)
+      const dartFile = path.join(libDir, 'main.dart')
+      await fs.writeFile(dartFile, '// test')
+
+      const root = await DartServer.root(dartFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects pubspec.lock', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-test-'))
+    try {
+      // Create pubspec.lock only
+      await fs.writeFile(path.join(tempDir, 'pubspec.lock'), 'packages:\n')
+
+      const dartFile = path.join(tempDir, 'main.dart')
+      await fs.writeFile(dartFile, '// test')
+
+      const root = await DartServer.root(dartFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function returns projectPath when no pubspec found', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-test-'))
+    try {
+      // No pubspec files
+      const dartFile = path.join(tempDir, 'main.dart')
+      await fs.writeFile(dartFile, '// test')
+
+      const root = await DartServer.root(dartFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('spawn function returns promise', () => {
+    // Verify spawn returns a promise (don't actually call it to avoid downloads)
+    const spawnFn = DartServer.spawn
+    expect(typeof spawnFn).toBe('function')
+    // Verify it's an async function by checking the constructor name
+    expect(spawnFn.constructor.name).toBe('AsyncFunction')
   })
 })
 
