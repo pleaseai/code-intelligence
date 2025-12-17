@@ -52,14 +52,19 @@ jobs:
       - name: Run tests
         run: bun run test
 
-      - name: Run tests with coverage
+      - name: Generate coverage reports
         run: |
           cd packages/lsp && bun test --coverage --coverage-reporter=lcov
+          cd ../code && bun test --coverage --coverage-reporter=lcov || true
+          cd ../dora && bun test --coverage --coverage-reporter=lcov || true
         continue-on-error: true
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/lsp/coverage/lcov.info
+          files: |
+            ./packages/lsp/coverage/lcov.info
+            ./packages/code/coverage/lcov.info
+            ./packages/dora/coverage/lcov.info
           fail_ci_if_error: false
