@@ -131,6 +131,32 @@ async function downloadAndExtract(url: string, destDir: string): Promise<void> {
 }
 
 // =============================================================================
+// Process Lifecycle Utilities
+// =============================================================================
+
+/**
+ * Attach error and exit event handlers to an LSP process
+ * Centralizes logging for process lifecycle events
+ */
+function attachLSPProcessHandlers(
+  proc: ChildProcessWithoutNullStreams,
+  serverId: string,
+): void {
+  proc.on('error', (err) => {
+    console.error(`[${serverId}] LSP process error:`, err)
+  })
+
+  proc.on('exit', (code, signal) => {
+    if (code !== 0 && code !== null) {
+      console.error(`[${serverId}] LSP exited with code ${code}`)
+    }
+    if (signal) {
+      console.error(`[${serverId}] LSP killed by signal ${signal}`)
+    }
+  })
+}
+
+// =============================================================================
 // Root Detection Utilities
 // =============================================================================
 
@@ -651,24 +677,173 @@ export const KotlinServer: LSPServerInfo = {
         },
       })
 
-      // Log spawn errors
-      proc.on('error', (err) => {
-        console.error(`[kotlin] Kotlin LSP process error:`, err)
-      })
-
-      proc.on('exit', (code, signal) => {
-        if (code !== 0 && code !== null) {
-          console.error(`[kotlin] Kotlin LSP exited with code ${code}`)
-        }
-        if (signal) {
-          console.error(`[kotlin] Kotlin LSP killed by signal ${signal}`)
-        }
-      })
-
+      attachLSPProcessHandlers(proc, 'kotlin')
       return { process: proc }
     }
     catch (err) {
       console.error(`[kotlin] Failed to spawn Kotlin LSP:`, err)
+      return undefined
+    }
+  },
+}
+
+// =============================================================================
+// Dart Language Server
+// =============================================================================
+
+/**
+ * Dart SDK runtime dependency configuration
+ * Uses official Dart SDK with built-in language server
+ */
+const DART_RUNTIME_DEPS = {
+  version: '3.7.1',
+  platforms: {
+    'win-x64': {
+      url: 'https://storage.googleapis.com/dart-archive/channels/stable/release/3.7.1/sdk/dartsdk-windows-x64-release.zip',
+      binaryPath: 'dart-sdk/bin/dart.exe',
+    },
+    'linux-x64': {
+      url: 'https://storage.googleapis.com/dart-archive/channels/stable/release/3.7.1/sdk/dartsdk-linux-x64-release.zip',
+      binaryPath: 'dart-sdk/bin/dart',
+    },
+    'linux-arm64': {
+      url: 'https://storage.googleapis.com/dart-archive/channels/stable/release/3.7.1/sdk/dartsdk-linux-arm64-release.zip',
+      binaryPath: 'dart-sdk/bin/dart',
+    },
+    'osx-x64': {
+      url: 'https://storage.googleapis.com/dart-archive/channels/stable/release/3.7.1/sdk/dartsdk-macos-x64-release.zip',
+      binaryPath: 'dart-sdk/bin/dart',
+    },
+    'osx-arm64': {
+      url: 'https://storage.googleapis.com/dart-archive/channels/stable/release/3.7.1/sdk/dartsdk-macos-arm64-release.zip',
+      binaryPath: 'dart-sdk/bin/dart',
+    },
+  } as Record<PlatformId, { url: string, binaryPath: string }>,
+}
+
+/**
+ * Get the Dart LSP resources directory
+ */
+function getDartResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'dart-lsp')
+}
+
+/**
+ * Setup Dart runtime dependencies
+ * Downloads Dart SDK if not available and dart is not in PATH
+ *
+ * Unlike setupKotlinDependencies which returns { javaHomePath, kotlinLspPath },
+ * this returns only the binary path because:
+ * - Dart SDK is self-contained (no separate JRE dependency)
+ * - No environment variables (like JAVA_HOME) required for execution
+ */
+async function setupDartDependencies(platformId: PlatformId): Promise<string | undefined> {
+  const config = DART_RUNTIME_DEPS.platforms[platformId]
+
+  if (!config) {
+    console.warn(`[dart] Unsupported platform: ${platformId}`)
+    return undefined
+  }
+
+  const resourcesDir = getDartResourcesDir()
+  const dartPath = path.join(resourcesDir, config.binaryPath)
+
+  try {
+    await fs.access(dartPath)
+    return dartPath
+  }
+  catch (err) {
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (!isNotFound) {
+      console.error(`[dart] Cannot access Dart at ${dartPath}:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
+
+    // Dart not found, download it
+    console.warn(`[dart] Downloading Dart SDK ${DART_RUNTIME_DEPS.version} for ${platformId}...`)
+    try {
+      await downloadAndExtract(config.url, resourcesDir)
+
+      // Make dart executable on Unix platforms
+      if (!platformId.startsWith('win-')) {
+        try {
+          await fs.chmod(dartPath, 0o755)
+        }
+        catch (chmodErr) {
+          console.error(`[dart] Failed to make Dart executable at ${dartPath}:`, chmodErr instanceof Error ? chmodErr.message : chmodErr)
+          return undefined
+        }
+      }
+    }
+    catch (downloadErr) {
+      console.error(`[dart] Failed to download Dart SDK:`, downloadErr)
+      return undefined
+    }
+  }
+
+  // Verify Dart exists
+  try {
+    await fs.access(dartPath)
+    return dartPath
+  }
+  catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    console.error(`[dart] Dart executable not accessible at ${dartPath}: ${errorMsg}`)
+    return undefined
+  }
+}
+
+/**
+ * Dart Language Server
+ * Uses official Dart SDK with system-first fallback and auto-download
+ */
+export const DartServer: LSPServerInfo = {
+  id: 'dart',
+  extensions: ['.dart'],
+  root: nearestRoot(['pubspec.yaml', 'pubspec.lock']),
+  async spawn(root) {
+    // Try system dart first
+    const systemDart = Bun.which('dart')
+    if (systemDart) {
+      try {
+        const proc = spawn(systemDart, ['language-server', '--client-id', 'dora.dart', '--client-version', '1.0'], {
+          cwd: root,
+        })
+
+        attachLSPProcessHandlers(proc, 'dart')
+        return { process: proc }
+      }
+      catch (err) {
+        console.warn(`[dart] Failed to spawn system Dart LSP, trying auto-download:`, err)
+      }
+    }
+
+    // Fallback to auto-download
+    const platformId = getPlatformId()
+    if (!platformId) {
+      console.warn(`[dart] Unsupported platform: ${process.platform}-${process.arch}`)
+      return undefined
+    }
+
+    const dartPath = await setupDartDependencies(platformId)
+    if (!dartPath) {
+      console.warn(`[dart] Failed to setup Dart SDK. Check previous logs for details.`)
+      return undefined
+    }
+
+    try {
+      const proc = spawn(dartPath, ['language-server', '--client-id', 'dora.dart', '--client-version', '1.0'], {
+        cwd: root,
+      })
+
+      attachLSPProcessHandlers(proc, 'dart')
+      return { process: proc }
+    }
+    catch (err) {
+      console.error(`[dart] Failed to spawn Dart LSP:`, err)
       return undefined
     }
   },
@@ -685,6 +860,7 @@ export const LSP_SERVERS: LSPServerInfo[] = [
   GoplsServer,
   RustAnalyzerServer,
   KotlinServer,
+  DartServer,
 ]
 
 /**

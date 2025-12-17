@@ -125,6 +125,7 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 | Go | gopls | go.mod, go.work |
 | Rust | rust-analyzer | Cargo.toml |
 | Kotlin | JetBrains Kotlin LSP (auto-download) | build.gradle.kts, build.gradle, pom.xml |
+| Dart | dart language-server (auto-download) | pubspec.yaml, pubspec.lock |
 
 ### Built-in Formatters
 

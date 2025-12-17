@@ -1,0 +1,36 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+
+  individual_components:
+    - component_id: code
+      name: '@pleaseai/code'
+      paths:
+        - packages/code/src/**
+
+    - component_id: code-format
+      name: '@pleaseai/code-format'
+      paths:
+        - packages/format/src/**
+
+    - component_id: code-lsp
+      name: '@pleaseai/code-lsp'
+      paths:
+        - packages/lsp/src/**
+
+    - component_id: dora
+      name: '@pleaseai/dora'
+      paths:
+        - packages/dora/src/**

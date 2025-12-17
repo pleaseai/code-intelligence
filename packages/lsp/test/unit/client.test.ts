@@ -1,11 +1,11 @@
-import type { LSPClientInfo } from '../client'
+import type { LSPClientInfo } from '../../src/client'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { afterEach, describe, expect, test } from 'bun:test'
-import { createLSPClient } from '../client'
+import { createLSPClient } from '../../src/client'
 
 function spawnFakeServer() {
-  const serverPath = path.join(__dirname, 'fixture/fake-lsp-server.js')
+  const serverPath = path.join(import.meta.dir, '../fixture/fake-lsp-server.js')
   return {
     process: spawn(process.execPath, [serverPath], {
       stdio: 'pipe',
