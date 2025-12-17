@@ -1,10 +1,12 @@
 {
-  "grep": {
-    "type": "http",
-    "url": "https://mcp.grep.app"
-  },
-  "websearch-exa": {
-    "type": "http",
-    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa"
+  "mcpServers": {
+    "grep": {
+      "type": "http",
+      "url": "https://mcp.grep.app"
+    },
+    "websearch-exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp?tools=web_search_exa"
+    }
   }
 }
