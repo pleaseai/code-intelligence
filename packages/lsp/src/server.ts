@@ -937,14 +937,36 @@ async function setupVueDependencies(): Promise<{
         needsInstall = true
       }
     }
-    catch {
-      // No version file, needs install
-      needsInstall = true
+    catch (err) {
+      const isNotFound = err instanceof Error
+        && 'code' in err
+        && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+      if (isNotFound) {
+        // Version file doesn't exist, needs install
+        needsInstall = true
+      }
+      else {
+        // Unexpected error reading version file - log it but proceed with reinstall
+        console.warn(`[vue] Unexpected error reading version file:`, err instanceof Error ? err.message : err)
+        needsInstall = true
+      }
     }
   }
-  catch {
-    // Executables not found
-    needsInstall = true
+  catch (err) {
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (isNotFound) {
+      // Executables not found, needs install
+      needsInstall = true
+    }
+    else {
+      // Unexpected error accessing executables
+      console.error(`[vue] Cannot access Vue LSP executables:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
   }
 
   if (needsInstall) {
@@ -974,8 +996,13 @@ async function setupVueDependencies(): Promise<{
         return undefined
       }
 
-      // Write version marker
-      await fs.writeFile(versionFile, expectedVersion)
+      // Write version marker (non-fatal if this fails)
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        console.warn(`[vue] Failed to write version marker file:`, writeErr instanceof Error ? writeErr.message : writeErr, '- Dependencies will be reinstalled on next run')
+      }
       console.warn('[vue] Vue Language Server dependencies installed successfully')
     }
     catch (err) {
@@ -985,15 +1012,21 @@ async function setupVueDependencies(): Promise<{
   }
 
   // Verify all paths exist
-  try {
-    await fs.access(vueServerPath)
-    await fs.access(tsServerPath)
-    await fs.access(tsdkPath)
-    await fs.access(vuePluginPath)
-  }
-  catch (err) {
-    console.error('[vue] One or more required files not found after installation:', err)
-    return undefined
+  const requiredPaths = [
+    { path: vueServerPath, name: 'vue-language-server' },
+    { path: tsServerPath, name: 'typescript-language-server' },
+    { path: tsdkPath, name: 'TypeScript SDK' },
+    { path: vuePluginPath, name: '@vue/typescript-plugin' },
+  ]
+
+  for (const { path: filePath, name } of requiredPaths) {
+    try {
+      await fs.access(filePath)
+    }
+    catch (err) {
+      console.error(`[vue] Required file not found after installation: ${name} at ${filePath}:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
   }
 
   return { vueServerPath, tsServerPath, tsdkPath, vuePluginPath }

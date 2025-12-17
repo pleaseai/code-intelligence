@@ -409,6 +409,39 @@ describe('VueServer', () => {
     }
   })
 
+  test('root function returns projectPath when no package.json found', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-no-pkg-'))
+    try {
+      // No package.json files
+      const vueFile = path.join(tempDir, 'App.vue')
+      await fs.writeFile(vueFile, '<template></template>')
+
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function finds nearest package.json in deep nesting', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vue-deep-'))
+    try {
+      await fs.writeFile(path.join(tempDir, 'package.json'), '{"name": "deep-app"}\n')
+
+      const deepDir = path.join(tempDir, 'src', 'features', 'auth', 'components')
+      await fs.mkdir(deepDir, { recursive: true })
+      const vueFile = path.join(deepDir, 'LoginForm.vue')
+      await fs.writeFile(vueFile, '<template></template>')
+
+      const root = await VueServer.root(vueFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
   test('spawn function returns promise', () => {
     // Verify spawn returns a promise (don't actually call it to avoid downloads)
     const spawnFn = VueServer.spawn
