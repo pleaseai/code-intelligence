@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/chatbot-pf/code-please/compare/v0.1.1...v0.1.2) (2025-12-17)
+
+
+### Bug Fixes
+
+* correct .mcp.json structure with mcpServers wrapper ([cf9c1ac](https://github.com/chatbot-pf/code-please/commit/cf9c1ac99d195cf4b762bea7e6ea5bfdd9653f2c))
+
 ## [0.1.1](https://github.com/chatbot-pf/code-please/compare/v0.1.0...v0.1.1) (2025-12-17)
 
 
