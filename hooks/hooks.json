@@ -1,5 +1,4 @@
 {
-  "description": "Automatic code formatting and LSP diagnostics after file edits",
   "hooks": {
     "PostToolUse": [
       {
