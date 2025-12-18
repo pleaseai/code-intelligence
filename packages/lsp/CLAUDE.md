@@ -4,7 +4,7 @@ LSP (Language Server Protocol) client implementation for AI coding tools.
 
 ## Overview
 
-This package provides a unified interface for interacting with multiple language servers, enabling real-time diagnostics, hover information, and symbol navigation.
+This package provides a unified interface for interacting with multiple language servers, enabling real-time diagnostics, code navigation, completions, and symbol navigation.
 
 ## Architecture
 
@@ -22,11 +22,13 @@ src/
 |--------|-----|------------|----------------|
 | TypeScript | `typescript` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts | package-lock.json, bun.lockb, bun.lock, yarn.lock, pnpm-lock.yaml |
 | Deno | `deno` | .ts, .tsx, .js, .jsx, .mjs | deno.json, deno.jsonc |
+| Vue | `vue` | .vue | package.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
 | Oxlint | `oxlint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue, .astro, .svelte | .oxlintrc.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock, package.json |
 | Pyright | `pyright` | .py, .pyi | pyproject.toml, setup.py, requirements.txt, pyrightconfig.json |
 | Gopls | `gopls` | .go | go.work, go.mod, go.sum |
 | Rust Analyzer | `rust-analyzer` | .rs | Cargo.toml, Cargo.lock |
 | Kotlin | `kotlin` | .kt, .kts | build.gradle.kts, build.gradle, settings.gradle.kts, settings.gradle, pom.xml |
+| Dart | `dart` | .dart | pubspec.yaml, pubspec.lock |
 
 ## Adding a New Server
 
@@ -89,12 +91,38 @@ const diags = await manager.diagnostics()
 // Get hover info
 const hover = await manager.hover({ file, line, character })
 
+// Go to definition
+const defs = await manager.definition({ file, line, character })
+
+// Find all references
+const refs = await manager.references({ file, line, character, includeDeclaration: true })
+
+// Get code completions
+const completions = await manager.completion({ file, line, character })
+
 // Search symbols
 const symbols = await manager.workspaceSymbol('query')
+
+// Get document symbols
+const docSymbols = await manager.documentSymbol(uri)
 
 // Cleanup
 await manager.shutdown()
 ```
+
+### LSPManager Methods
+
+| Method | LSP Request | Description |
+|--------|-------------|-------------|
+| `touchFile()` | `textDocument/didOpen` | Open file in LSP servers |
+| `diagnostics()` | `textDocument/publishDiagnostics` | Get all diagnostics |
+| `hover()` | `textDocument/hover` | Get hover information |
+| `definition()` | `textDocument/definition` | Go to definition |
+| `references()` | `textDocument/references` | Find all references |
+| `completion()` | `textDocument/completion` | Get code completions |
+| `workspaceSymbol()` | `workspace/symbol` | Search workspace symbols |
+| `documentSymbol()` | `textDocument/documentSymbol` | Get document symbols |
+| `shutdown()` | `shutdown` | Close all clients |
 
 ### Server Utilities
 

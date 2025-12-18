@@ -60,6 +60,64 @@ export const LocationLinkSchema = z.object({
 export type LocationLink = z.infer<typeof LocationLinkSchema>
 
 /**
+ * Completion item kind mapping
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionItemKind
+ */
+export enum CompletionItemKind {
+  Text = 1,
+  Method = 2,
+  Function = 3,
+  Constructor = 4,
+  Field = 5,
+  Variable = 6,
+  Class = 7,
+  Interface = 8,
+  Module = 9,
+  Property = 10,
+  Unit = 11,
+  Value = 12,
+  Enum = 13,
+  Keyword = 14,
+  Snippet = 15,
+  Color = 16,
+  File = 17,
+  Reference = 18,
+  Folder = 19,
+  EnumMember = 20,
+  Constant = 21,
+  Struct = 22,
+  Event = 23,
+  Operator = 24,
+  TypeParameter = 25,
+}
+
+/**
+ * LSP CompletionItem schema
+ * A completion item represents a text snippet that is proposed to complete text being typed.
+ */
+export const CompletionItemSchema = z.object({
+  label: z.string(),
+  kind: z.number().optional(),
+  detail: z.string().optional(),
+  documentation: z.union([z.string(), z.object({ kind: z.string(), value: z.string() })]).optional(),
+  sortText: z.string().optional(),
+  filterText: z.string().optional(),
+  insertText: z.string().optional(),
+  insertTextFormat: z.number().optional(),
+})
+export type CompletionItem = z.infer<typeof CompletionItemSchema>
+
+/**
+ * LSP CompletionList schema
+ * Represents a collection of completion items to be presented in the editor.
+ */
+export const CompletionListSchema = z.object({
+  isIncomplete: z.boolean(),
+  items: z.array(CompletionItemSchema),
+})
+export type CompletionList = z.infer<typeof CompletionListSchema>
+
+/**
  * LSP Symbol schema
  */
 export const SymbolSchema = z.object({
@@ -457,6 +515,73 @@ export class LSPManager {
     )
 
     return results.flat()
+  }
+
+  /**
+   * Get code completion suggestions at the given position
+   *
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion
+   */
+  async completion(input: {
+    file: string
+    line: number
+    character: number
+  }): Promise<CompletionItem[]> {
+    const clients = await this.getClients(input.file)
+
+    const results = await Promise.all(
+      clients.map(client =>
+        client.connection
+          .sendRequest('textDocument/completion', {
+            textDocument: {
+              uri: pathToFileURL(input.file).href,
+            },
+            position: {
+              line: input.line,
+              character: input.character,
+            },
+          })
+          .then((result: unknown) => this.normalizeCompletions(result))
+          .catch(() => []),
+      ),
+    )
+
+    return results.flat()
+  }
+
+  /**
+   * Normalize completion response to CompletionItem[]
+   * Handles CompletionList and CompletionItem[] responses
+   */
+  private normalizeCompletions(result: unknown): CompletionItem[] {
+    if (!result)
+      return []
+
+    // CompletionList format
+    if (this.isCompletionList(result)) {
+      return result.items
+    }
+
+    // Direct CompletionItem[] format
+    if (Array.isArray(result)) {
+      return result.filter((item): item is CompletionItem =>
+        typeof item === 'object' && item !== null && 'label' in item,
+      )
+    }
+
+    return []
+  }
+
+  /**
+   * Type guard for CompletionList
+   */
+  private isCompletionList(obj: unknown): obj is CompletionList {
+    return (
+      typeof obj === 'object'
+      && obj !== null
+      && 'items' in obj
+      && Array.isArray((obj as CompletionList).items)
+    )
   }
 
   /**
