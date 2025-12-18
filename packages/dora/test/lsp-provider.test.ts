@@ -48,6 +48,7 @@ describe('LSPProvider', () => {
     expect(toolNames).toContain('lsp_hover')
     expect(toolNames).toContain('lsp_workspace_symbol')
     expect(toolNames).toContain('lsp_document_symbol')
+    expect(toolNames).toContain('lsp_references')
     expect(toolNames).toContain('lsp_status')
   })
 
