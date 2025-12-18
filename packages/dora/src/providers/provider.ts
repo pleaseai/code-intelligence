@@ -53,4 +53,5 @@ export interface Provider {
 /**
  * Provider type enumeration
  */
-export type ProviderType = 'jetbrains-mcp' | 'lsp'
+export type ProviderType = 'lsp' | 'file'
+// TBD: 'jetbrains-mcp' - JetBrains IDE integration via code-please plugin

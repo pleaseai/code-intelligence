@@ -1,5 +1,9 @@
 /**
  * Provider registry for managing and selecting backends
+ *
+ * TBD: Dynamic provider registration and selection
+ * - JetBrains MCP integration (via code-please plugin)
+ * - Automatic fallback between providers
  */
 
 import type { Provider, ProviderType } from './provider'
@@ -19,6 +23,9 @@ export type ProviderFactory = (config: RegistryConfig) => Provider
 
 /**
  * Registry for managing provider instances
+ *
+ * Currently disabled - providers are directly instantiated in server.ts
+ * Will be re-enabled when JetBrains MCP integration is implemented.
  */
 export class ProviderRegistry {
   private factories = new Map<ProviderType, ProviderFactory>()
@@ -46,7 +53,8 @@ export class ProviderRegistry {
     }
 
     // Try providers in order of preference
-    const preferredOrder: ProviderType[] = ['jetbrains-mcp', 'lsp']
+    // TBD: Add 'jetbrains-mcp' when implemented
+    const preferredOrder: ProviderType[] = ['lsp', 'file']
 
     for (const type of preferredOrder) {
       const factory = this.factories.get(type)
@@ -65,7 +73,7 @@ export class ProviderRegistry {
       }
     }
 
-    throw new Error('No provider available. Ensure JetBrains IDE is running.')
+    throw new Error('No provider available.')
   }
 
   /**
