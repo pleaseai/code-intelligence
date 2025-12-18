@@ -84,6 +84,7 @@ await manager.shutdown()
 | Rust | rust-analyzer | No |
 | Kotlin | JetBrains Kotlin LSP | Yes |
 | Dart | dart language-server | Yes |
+| Prisma | @prisma/language-server | Yes |
 | Linting | oxlint | No |
 
 ## API Reference

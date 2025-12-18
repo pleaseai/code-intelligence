@@ -102,6 +102,9 @@ Create `dora.json` or `opencode.json` in your project root:
 | Go                    | gopls                      | go.mod                           |
 | Rust                  | rust-analyzer              | Cargo.toml                       |
 | Kotlin                | JetBrains Kotlin LSP       | build.gradle.kts, pom.xml        |
+| Dart                  | dart language-server       | pubspec.yaml                     |
+| Prisma                | @prisma/language-server    | schema.prisma                    |
+| Vue                   | @vue/language-server       | package.json (with vue)          |
 
 ### Formatters
 
