@@ -20,19 +20,44 @@ import { LSP_SERVERS } from './server'
 export type Diagnostic = VSCodeDiagnostic
 
 /**
+ * LSP Position schema
+ */
+export const PositionSchema = z.object({
+  line: z.number(),
+  character: z.number(),
+})
+export type Position = z.infer<typeof PositionSchema>
+
+/**
  * LSP Range schema
  */
 export const RangeSchema = z.object({
-  start: z.object({
-    line: z.number(),
-    character: z.number(),
-  }),
-  end: z.object({
-    line: z.number(),
-    character: z.number(),
-  }),
+  start: PositionSchema,
+  end: PositionSchema,
 })
 export type Range = z.infer<typeof RangeSchema>
+
+/**
+ * LSP Location schema
+ * Represents a location inside a resource (file URI + range)
+ */
+export const LocationSchema = z.object({
+  uri: z.string(),
+  range: RangeSchema,
+})
+export type Location = z.infer<typeof LocationSchema>
+
+/**
+ * LSP LocationLink schema
+ * Used by some servers for definition responses with origin information
+ */
+export const LocationLinkSchema = z.object({
+  originSelectionRange: RangeSchema.optional(),
+  targetUri: z.string(),
+  targetRange: RangeSchema,
+  targetSelectionRange: RangeSchema,
+})
+export type LocationLink = z.infer<typeof LocationLinkSchema>
 
 /**
  * LSP Symbol schema
@@ -359,6 +384,140 @@ export class LSPManager {
     )
 
     return results.flat().filter(Boolean) as (DocumentSymbol | Symbol)[]
+  }
+
+  /**
+   * Go to definition
+   * Returns the location(s) where the symbol at the given position is defined
+   *
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_definition
+   */
+  async definition(input: {
+    file: string
+    line: number
+    character: number
+  }): Promise<Location[]> {
+    const clients = await this.getClients(input.file)
+
+    const results = await Promise.all(
+      clients.map(client =>
+        client.connection
+          .sendRequest('textDocument/definition', {
+            textDocument: {
+              uri: pathToFileURL(input.file).href,
+            },
+            position: {
+              line: input.line,
+              character: input.character,
+            },
+          })
+          .then((result: unknown) => this.normalizeLocations(result))
+          .catch(() => []),
+      ),
+    )
+
+    return results.flat()
+  }
+
+  /**
+   * Find all references to the symbol at the given position
+   *
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_references
+   */
+  async references(input: {
+    file: string
+    line: number
+    character: number
+    includeDeclaration?: boolean
+  }): Promise<Location[]> {
+    const clients = await this.getClients(input.file)
+
+    const results = await Promise.all(
+      clients.map(client =>
+        client.connection
+          .sendRequest('textDocument/references', {
+            textDocument: {
+              uri: pathToFileURL(input.file).href,
+            },
+            position: {
+              line: input.line,
+              character: input.character,
+            },
+            context: {
+              includeDeclaration: input.includeDeclaration ?? false,
+            },
+          })
+          .then((result: unknown) => {
+            if (!result || !Array.isArray(result))
+              return []
+            return result as Location[]
+          })
+          .catch(() => []),
+      ),
+    )
+
+    return results.flat()
+  }
+
+  /**
+   * Normalize definition response to Location[]
+   * Handles Location, Location[], and LocationLink[] responses
+   */
+  private normalizeLocations(result: unknown): Location[] {
+    if (!result)
+      return []
+
+    // Single Location
+    if (this.isLocation(result)) {
+      return [result]
+    }
+
+    // Array of Location or LocationLink
+    if (Array.isArray(result)) {
+      return result
+        .map((item) => {
+          if (this.isLocation(item)) {
+            return item
+          }
+          if (this.isLocationLink(item)) {
+            // Convert LocationLink to Location
+            return {
+              uri: item.targetUri,
+              range: item.targetSelectionRange,
+            }
+          }
+          return null
+        })
+        .filter((x): x is Location => x !== null)
+    }
+
+    return []
+  }
+
+  /**
+   * Type guard for Location
+   */
+  private isLocation(obj: unknown): obj is Location {
+    return (
+      typeof obj === 'object'
+      && obj !== null
+      && 'uri' in obj
+      && 'range' in obj
+      && typeof (obj as Location).uri === 'string'
+    )
+  }
+
+  /**
+   * Type guard for LocationLink
+   */
+  private isLocationLink(obj: unknown): obj is LocationLink {
+    return (
+      typeof obj === 'object'
+      && obj !== null
+      && 'targetUri' in obj
+      && 'targetRange' in obj
+      && 'targetSelectionRange' in obj
+    )
   }
 
   /**
