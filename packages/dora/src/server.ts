@@ -21,7 +21,7 @@ export async function createDoraServer(
 ): Promise<McpServer> {
   const server = new McpServer({
     name: 'dora',
-    version: '0.2.0',
+    version: '0.1.0',
   })
 
   // Initialize providers
