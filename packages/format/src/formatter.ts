@@ -331,3 +331,23 @@ export const gleam: Info = {
     return Bun.which('gleam') !== null
   },
 }
+
+export const prisma: Info = {
+  name: 'prisma',
+  command: [bunExecutable(), 'x', 'prisma', 'format', '--schema', '$FILE'],
+  environment: {
+    BUN_BE_BUN: '1',
+  },
+  extensions: ['.prisma'],
+  async enabled(projectDir: string) {
+    // Check for schema.prisma or prisma/schema.prisma
+    const schemaFiles = ['schema.prisma', 'prisma/schema.prisma']
+    for (const schema of schemaFiles) {
+      const found = await findUp(schema, projectDir)
+      if (found.length > 0) {
+        return true
+      }
+    }
+    return false
+  },
+}

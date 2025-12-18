@@ -126,10 +126,12 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 | Rust | rust-analyzer | Cargo.toml |
 | Kotlin | JetBrains Kotlin LSP (auto-download) | build.gradle.kts, build.gradle, pom.xml |
 | Dart | dart language-server (auto-download) | pubspec.yaml, pubspec.lock |
+| Prisma | @prisma/language-server (auto-download) | schema.prisma, prisma/schema.prisma |
+| Vue | @vue/language-server (auto-download) | package.json (with vue) |
 
 ### Built-in Formatters
 
-biome, prettier, gofmt, mix (Elixir), zig fmt, clang-format, ktlint (Kotlin), ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam
+biome, prettier, gofmt, mix (Elixir), zig fmt, clang-format, ktlint (Kotlin), ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam, prisma
 
 ### Name Path Convention (JetBrains)
 
