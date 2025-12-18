@@ -1,168 +1,42 @@
 {
-  "session_id": "20251218-rename-symbol-lsp",
-  "feature_name": "Add Rename Symbol support to @pleaseai/code-lsp",
-  "created_at": "2025-12-18T10:00:00Z",
-  "updated_at": "2025-12-18T07:43:59.732Z",
-  "status": "completed",
-  "current_phase": 8,
-  "issue_number": 18,
-  "branch": "18-featlsp-add-rename-symbol-support",
+  "session_id": "20251218-prisma-lsp",
+  "feature_name": "Add Prisma Language Server support to @pleaseai/code-lsp",
+  "created_at": "2025-12-18T12:00:00Z",
+  "updated_at": "2025-12-18T12:30:00Z",
+  "status": "in_progress",
+  "current_phase": 6,
+  "issue_number": 22,
+  "branch": "22-featlsp-add-prisma-language-server-support",
   "spec": {
-    "path": "specs/001-rename-symbol/spec.md",
-    "number": 1,
-    "short_name": "rename-symbol",
-    "created_at": "2025-12-18T10:25:00Z",
-    "clarified_at": "2025-12-18T10:30:00Z"
+    "path": "specs/002-prisma-lsp/spec.md",
+    "number": 2,
+    "short_name": "prisma-lsp",
+    "created_at": "2025-12-18T12:15:00Z"
   },
   "checkpoint_config": {
     "mode": "auto",
     "push_strategy": "batch",
     "validation_required": true
   },
-  "ralph_config": {
-    "enabled": false,
-    "max_iterations": 50,
-    "completion_promise": "ALL_PHASE6_TASKS_COMPLETED",
-    "current_iteration": 0,
-    "started_at": "2025-12-18T10:50:00Z"
-  },
   "phases": [
-    {
-      "number": 1,
-      "name": "Discovery",
-      "status": "completed",
-      "started_at": "2025-12-18T10:00:00Z",
-      "completed_at": "2025-12-18T10:05:00Z"
-    },
-    {
-      "number": 2,
-      "name": "Codebase Exploration",
-      "status": "completed",
-      "started_at": "2025-12-18T10:05:00Z",
-      "completed_at": "2025-12-18T10:20:00Z"
-    },
-    {
-      "number": 3,
-      "name": "Specification & Clarification",
-      "status": "completed",
-      "started_at": "2025-12-18T10:20:00Z",
-      "completed_at": "2025-12-18T10:30:00Z"
-    },
-    {
-      "number": 4,
-      "name": "Architecture Design",
-      "status": "completed",
-      "started_at": "2025-12-18T10:30:00Z",
-      "completed_at": "2025-12-18T10:45:00Z"
-    },
-    {
-      "number": 5,
-      "name": "GitHub Issue & PR",
-      "status": "completed",
-      "started_at": "2025-12-18T10:45:00Z",
-      "completed_at": "2025-12-18T10:50:00Z"
-    },
-    {
-      "number": 6,
-      "name": "Implementation",
-      "status": "completed",
-      "started_at": "2025-12-18T10:50:00Z",
-      "completed_at": "2025-12-18T11:30:00Z"
-    },
-    {
-      "number": 7,
-      "name": "Quality Review",
-      "status": "completed",
-      "started_at": "2025-12-18T11:30:00Z",
-      "completed_at": "2025-12-18T11:45:00Z"
-    },
-    {
-      "number": 8,
-      "name": "PR Finalization",
-      "status": "completed",
-      "started_at": "2025-12-18T11:45:00Z",
-      "completed_at": "2025-12-18T11:50:00Z"
-    }
+    { "number": 1, "name": "Discovery", "status": "completed", "started_at": "2025-12-18T12:00:00Z", "completed_at": "2025-12-18T12:05:00Z" },
+    { "number": 2, "name": "Codebase Exploration", "status": "completed", "started_at": "2025-12-18T12:05:00Z", "completed_at": "2025-12-18T12:15:00Z" },
+    { "number": 3, "name": "Specification & Clarification", "status": "completed", "started_at": "2025-12-18T12:15:00Z", "completed_at": "2025-12-18T12:20:00Z" },
+    { "number": 4, "name": "Architecture Design", "status": "completed", "started_at": "2025-12-18T12:20:00Z", "completed_at": "2025-12-18T12:25:00Z" },
+    { "number": 5, "name": "GitHub Issue & PR", "status": "completed", "started_at": "2025-12-18T12:25:00Z", "completed_at": "2025-12-18T12:30:00Z" },
+    { "number": 6, "name": "Implementation", "status": "in_progress", "started_at": "2025-12-18T12:30:00Z" },
+    { "number": 7, "name": "Quality Review", "status": "pending" },
+    { "number": 8, "name": "PR Finalization", "status": "pending" }
   ],
   "tasks": [
-    {
-      "id": "T001",
-      "title": "Add type schemas (TextEdit, WorkspaceEdit, PrepareRenameResult)",
-      "phase": 6,
-      "status": "completed",
-      "parallel": true,
-      "dependencies": []
-    },
-    {
-      "id": "T002",
-      "title": "Add rename capability to client initialization",
-      "phase": 6,
-      "status": "completed",
-      "parallel": true,
-      "dependencies": []
-    },
-    {
-      "id": "T003",
-      "title": "Add normalization methods",
-      "phase": 6,
-      "status": "completed",
-      "parallel": false,
-      "dependencies": [
-        "T001"
-      ]
-    },
-    {
-      "id": "T004",
-      "title": "Add prepareRename() method",
-      "phase": 6,
-      "status": "completed",
-      "parallel": false,
-      "dependencies": [
-        "T001",
-        "T003"
-      ]
-    },
-    {
-      "id": "T005",
-      "title": "Add rename() method",
-      "phase": 6,
-      "status": "completed",
-      "parallel": false,
-      "dependencies": [
-        "T001",
-        "T003"
-      ]
-    },
-    {
-      "id": "T006",
-      "title": "Update CLAUDE.md documentation",
-      "phase": 6,
-      "status": "completed",
-      "parallel": false,
-      "dependencies": [
-        "T004",
-        "T005"
-      ]
-    },
-    {
-      "id": "T007",
-      "title": "Add unit tests for normalization",
-      "phase": 6,
-      "status": "completed",
-      "parallel": true,
-      "dependencies": []
-    },
-    {
-      "id": "T008",
-      "title": "Add integration tests",
-      "phase": 6,
-      "status": "completed",
-      "parallel": false,
-      "dependencies": [
-        "T004",
-        "T005"
-      ]
-    }
+    { "id": "T001", "title": "Add .prisma language mapping to language.ts", "phase": 6, "status": "completed", "parallel": true, "dependencies": [] },
+    { "id": "T002", "title": "Add PRISMA_RUNTIME_DEPS configuration", "phase": 6, "status": "completed", "parallel": true, "dependencies": [] },
+    { "id": "T003", "title": "Add setupPrismaDependencies() function", "phase": 6, "status": "completed", "parallel": false, "dependencies": ["T002"] },
+    { "id": "T004", "title": "Add PrismaServer definition", "phase": 6, "status": "completed", "parallel": false, "dependencies": ["T002", "T003"] },
+    { "id": "T005", "title": "Add PrismaServer to LSP_SERVERS array", "phase": 6, "status": "completed", "parallel": false, "dependencies": ["T004"] },
+    { "id": "T006", "title": "Export PrismaServer from index.ts", "phase": 6, "status": "completed", "parallel": false, "dependencies": ["T004"] },
+    { "id": "T007", "title": "Add unit tests for PrismaServer", "phase": 6, "status": "completed", "parallel": false, "dependencies": ["T004"] },
+    { "id": "T008", "title": "Update CLAUDE.md documentation", "phase": 6, "status": "completed", "parallel": false, "dependencies": ["T004"] }
   ],
   "checkpoints": []
 }

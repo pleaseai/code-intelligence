@@ -29,6 +29,7 @@ src/
 | Rust Analyzer | `rust-analyzer` | .rs | Cargo.toml, Cargo.lock |
 | Kotlin | `kotlin` | .kt, .kts | build.gradle.kts, build.gradle, settings.gradle.kts, settings.gradle, pom.xml |
 | Dart | `dart` | .dart | pubspec.yaml, pubspec.lock |
+| Prisma | `prisma` | .prisma | schema.prisma, prisma/schema.prisma |
 
 ## Adding a New Server
 

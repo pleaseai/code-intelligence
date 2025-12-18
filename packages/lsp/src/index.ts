@@ -900,6 +900,7 @@ export {
   type LSPServerHandle,
   type LSPServerInfo,
   OxlintServer,
+  PrismaServer,
   PyrightServer,
   RustAnalyzerServer,
   TypescriptServer,

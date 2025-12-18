@@ -116,6 +116,7 @@ export const LANGUAGE_EXTENSIONS: Record<string, string> = {
   '.hcl': 'hcl',
   '.kt': 'kotlin',
   '.kts': 'kotlin',
+  '.prisma': 'prisma',
 } as const
 
 /**
