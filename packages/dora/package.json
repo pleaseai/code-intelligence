@@ -2,7 +2,7 @@
   "name": "@pleaseai/dora",
   "type": "module",
   "version": "0.1.3",
-  "description": "MCP server for JetBrains IDE integration",
+  "description": "MCP server for AI-assisted coding with LSP and file tools",
   "author": "Minsu Lee",
   "license": "MIT",
   "repository": {
@@ -11,8 +11,7 @@
   },
   "keywords": [
     "mcp",
-    "jetbrains",
-    "ide",
+    "lsp",
     "ai-coding"
   ],
   "main": "src/index.ts",
@@ -26,7 +25,7 @@
     "dev": "bun --watch run src/cli.ts",
     "build": "echo 'Build handled by root build:npm'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test ./src"
+    "test": "bun test ./test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

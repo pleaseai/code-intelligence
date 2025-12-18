@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'bun:test'
-import { createLSPProvider, LSPProvider } from '../index'
+import { createLSPProvider, LSPProvider } from '../src/providers/lsp'
 
 describe('LSPProvider', () => {
   let provider: LSPProvider | null = null
