@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.5](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.4...@pleaseai/code-v0.1.5) (2025-12-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-format bumped to 0.1.1
+    * @pleaseai/code-lsp bumped to 0.1.4
+
 ## [0.1.4](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.3...@pleaseai/code-v0.1.4) (2025-12-18)
 
 
