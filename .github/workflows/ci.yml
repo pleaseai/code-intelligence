@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
         run: bun run lint
 
   typecheck:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +38,7 @@ jobs:
         run: bun run typecheck
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
     steps:
       - uses: actions/checkout@v4
 
