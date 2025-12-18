@@ -16,7 +16,8 @@
     "ai-coding"
   ],
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./config": "./src/config/index.ts"
   },
   "main": "src/index.ts",
   "files": [

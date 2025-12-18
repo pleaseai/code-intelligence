@@ -12,6 +12,7 @@ This package provides a unified interface for interacting with multiple language
 src/
 ├── index.ts       # Public API, LSPManager class
 ├── client.ts      # LSP client implementation (JSON-RPC)
+├── config.ts      # LSP config from unified config file
 ├── server.ts      # LSP server definitions
 └── language.ts    # Language ID mapping
 ```
@@ -81,7 +82,11 @@ async function setupKotlinDependencies(platformId: PlatformId) {
 Main entry point for managing LSP clients:
 
 ```typescript
-const manager = new LSPManager(projectPath)
+// Create manager with auto-loaded config from .please/config.yml
+const manager = await LSPManager.fromProject(projectPath)
+
+// Or create with explicit config
+const manager = new LSPManager(projectPath, { lspConfig: myConfig })
 
 // Touch file to initialize LSP
 await manager.touchFile('src/index.ts', true)
@@ -142,6 +147,38 @@ const server = getServerById('typescript')
 const servers = getServersForExtension('.ts')
 ```
 
+## Configuration
+
+LSP servers can be configured via `.please/config.json` or `.please/config.yml`:
+
+```yaml
+lsp:
+  # Disable a specific server
+  typescript:
+    enabled: false
+
+  # Use custom root path
+  pyright:
+    root: "./backend"
+
+  # Globally disable all LSP servers
+  # lsp: false
+```
+
+**Config Options per Server:**
+- `enabled: boolean` - Enable/disable server (default: true)
+- `root: string` - Custom project root path (must be non-empty)
+- `command: string[]` - Custom spawn command (must have at least one element)
+
+**Config Utilities:**
+```typescript
+import { isServerEnabled, getServerRoot, loadLspConfig } from '@pleaseai/code-lsp'
+
+const config = await loadLspConfig(projectDir)
+const enabled = isServerEnabled(config, 'typescript')
+const customRoot = getServerRoot(config, 'pyright')
+```
+
 ## Testing
 
 ```bash
@@ -152,3 +189,4 @@ Tests cover:
 - Server definitions (ID, extensions, root, spawn functions)
 - LSP client lifecycle
 - Manager operations
+- Config loading and validation
