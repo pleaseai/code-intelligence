@@ -28,7 +28,7 @@
     "dev": "bun --watch run src/cli.ts",
     "build": "echo 'Build handled by root build:npm'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test ./src"
+    "test": "bun test ./test"
   },
   "dependencies": {
     "@pleaseai/code-format": "workspace:*",

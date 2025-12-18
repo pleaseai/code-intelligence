@@ -17,6 +17,7 @@ import process from 'node:process'
 import { Format } from '@pleaseai/code-format'
 import pkg from '../package.json'
 import { runLSPDiagnostics } from './hooks/lsp'
+import { parseArgs } from './utils'
 
 const VERSION = pkg.version
 
@@ -29,38 +30,6 @@ interface HookInput {
     content?: string
   }
   tool_use_id: string
-}
-
-interface ParsedArgs {
-  command: string
-  args: string[]
-  flags: Record<string, string | boolean>
-}
-
-function parseArgs(argv: string[]): ParsedArgs {
-  const args = argv.slice(2)
-  const flags: Record<string, string | boolean> = {}
-  const positional: string[] = []
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i]!
-    if (arg.startsWith('--')) {
-      const [key, value] = arg.slice(2).split('=')
-      flags[key!] = value ?? true
-    }
-    else if (arg.startsWith('-')) {
-      flags[arg.slice(1)] = true
-    }
-    else {
-      positional.push(arg)
-    }
-  }
-
-  return {
-    command: positional[0] ?? 'help',
-    args: positional.slice(1),
-    flags,
-  }
 }
 
 async function readStdinJson(): Promise<HookInput> {
@@ -77,8 +46,9 @@ async function readStdinJson(): Promise<HookInput> {
   try {
     return JSON.parse(text)
   }
-  catch {
-    throw new Error('Invalid JSON input from stdin')
+  catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'unknown parse error'
+    throw new Error(`Invalid JSON input from stdin: ${message}`)
   }
 }
 
@@ -157,6 +127,16 @@ Environment:
 async function main(): Promise<void> {
   const { command, args, flags } = parseArgs(process.argv)
 
+  // Check for version/help flags first (before command routing)
+  if (flags.v || flags.version) {
+    versionCommand()
+    return
+  }
+  if (flags.h || flags.help) {
+    helpCommand()
+    return
+  }
+
   const projectDir
     = (flags.project as string)
       ?? process.env.CODE_PROJECT_PATH
@@ -208,14 +188,10 @@ async function main(): Promise<void> {
     }
 
     case 'version':
-    case '-v':
-    case '--version':
       versionCommand()
       break
 
     case 'help':
-    case '-h':
-    case '--help':
       helpCommand()
       break
 

@@ -1,21 +1,13 @@
 /**
- * Platform-specific binary launcher for @pleaseai/code
+ * Platform detection utilities
  *
- * This file is compiled to dist/cli.js in the npm package.
- * It detects the current platform and executes the appropriate native binary.
+ * Used for determining the correct platform-specific binary to execute.
  */
 
-import { execFileSync, execSync } from 'node:child_process'
+import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const PACKAGE_SCOPE = '@pleaseai'
-const PACKAGE_NAME = 'code'
 
 /**
  * Detect if running on musl libc (Alpine Linux, etc.)
@@ -30,7 +22,7 @@ const PACKAGE_NAME = 'code'
  * the next method is tried. Common expected errors: ENOENT (file not found).
  * Unexpected errors (EACCES, ENOMEM) are silently ignored with fallback.
  */
-function isMusl(): boolean {
+export function isMusl(): boolean {
   // Method 1: Check /usr/bin/ldd for musl
   try {
     const lddContent = fs.readFileSync('/usr/bin/ldd', 'utf-8')
@@ -68,7 +60,17 @@ function isMusl(): boolean {
   return false
 }
 
-function getTarget(): string {
+/**
+ * Get the platform-specific target string.
+ *
+ * Format:
+ * - macOS: darwin-arm64, darwin-x64
+ * - Windows: win32-x64, win32-arm64
+ * - Linux: linux-x64-glibc, linux-arm64-musl, etc.
+ *
+ * @throws Error if platform is unsupported
+ */
+export function getTarget(): string {
   const platform = process.platform
   const arch = process.arch
 
@@ -88,46 +90,33 @@ function getTarget(): string {
   throw new Error(`Unsupported platform: ${platform}-${arch}`)
 }
 
-function getBinaryPath(): string {
+/**
+ * Get the list of potential binary paths to search.
+ * These paths cover different package manager layouts:
+ * - npm/yarn hoisted layout
+ * - non-hoisted layout
+ * - pnpm layout
+ *
+ * @param dirname - Directory of the calling script (__dirname)
+ * @param packageScope - Package scope (e.g., "@pleaseai")
+ * @param packageName - Package name (e.g., "code")
+ * @param binaryName - Binary name (e.g., "code" or "code.exe")
+ */
+export function getPotentialBinaryPaths(
+  dirname: string,
+  packageScope: string,
+  packageName: string,
+  binaryName: string,
+): string[] {
   const target = getTarget()
-  const packageName = `${PACKAGE_SCOPE}/${PACKAGE_NAME}-${target}`
-  const binaryName = process.platform === 'win32' ? `${PACKAGE_NAME}.exe` : PACKAGE_NAME
+  const fullPackageName = `${packageScope}/${packageName}-${target}`
 
-  // Try to find the binary in node_modules
-  const paths = [
+  return [
     // Hoisted (npm/yarn)
-    path.join(__dirname, '..', '..', packageName.replace('/', path.sep), binaryName),
+    path.join(dirname, '..', '..', fullPackageName.replace('/', path.sep), binaryName),
     // Not hoisted
-    path.join(__dirname, '..', 'node_modules', packageName.replace('/', path.sep), binaryName),
+    path.join(dirname, '..', 'node_modules', fullPackageName.replace('/', path.sep), binaryName),
     // pnpm
-    path.join(__dirname, '..', '..', '..', packageName.replace('/', path.sep), binaryName),
+    path.join(dirname, '..', '..', '..', fullPackageName.replace('/', path.sep), binaryName),
   ]
-
-  for (const p of paths) {
-    if (fs.existsSync(p)) {
-      return p
-    }
-  }
-
-  throw new Error(
-    `Could not find ${PACKAGE_NAME} binary for ${target}.\n`
-    + `Tried: ${paths.join(', ')}\n`
-    + `Please ensure the optional dependency ${packageName} is installed.`,
-  )
-}
-
-try {
-  const binaryPath = getBinaryPath()
-  execFileSync(binaryPath, process.argv.slice(2), {
-    stdio: 'inherit',
-  })
-}
-catch (error: unknown) {
-  if (error && typeof error === 'object' && 'status' in error && typeof error.status === 'number') {
-    process.exit(error.status)
-  }
-  if (error instanceof Error) {
-    console.error(error.message)
-  }
-  process.exit(1)
 }
