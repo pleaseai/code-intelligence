@@ -1,28 +1,28 @@
 # Code Please
 
-English | [한국어](README.ko.md)
+[English](README.md) | 한국어
 
-CLI and Claude Code plugin for AI-assisted coding with auto-formatting and LSP diagnostics.
+자동 포맷팅과 LSP 진단 기능을 갖춘 AI 코딩 지원 CLI 및 Claude Code 플러그인입니다.
 
-## Features
+## 주요 기능
 
-- **Auto-formatting hooks** - Automatically format files after Claude Code edits
-- **LSP diagnostics** - Real-time type checking feedback for AI coding sessions
-- **Multi-language support** - TypeScript, Python, Go, Rust, and more
+- **자동 포맷팅 훅** - Claude Code 편집 후 자동으로 파일 포맷팅
+- **LSP 진단** - AI 코딩 세션을 위한 실시간 타입 체크 피드백
+- **다중 언어 지원** - TypeScript, Python, Go, Rust 등
 
-## Installation
+## 설치
 
 ```bash
 npm install -g @pleaseai/code
-# or
+# 또는
 bun add -g @pleaseai/code
 ```
 
-## Quick Start
+## 빠른 시작
 
-### Claude Code Hooks
+### Claude Code 훅 설정
 
-Add to your `.claude/settings.json`:
+`.claude/settings.json`에 다음을 추가하세요:
 
 ```json
 {
@@ -46,25 +46,25 @@ Add to your `.claude/settings.json`:
 }
 ```
 
-Or copy the example hooks file:
+또는 예제 훅 파일을 복사하세요:
 
 ```bash
 cp node_modules/@pleaseai/code/hooks/hooks.json .claude/
 ```
 
-### CLI Usage
+### CLI 사용법
 
 ```bash
-# Format a file
+# 파일 포맷팅
 code format src/index.ts
 
-# Get LSP diagnostics
+# LSP 진단 확인
 code lsp src/index.ts
 ```
 
-## Configuration
+## 설정
 
-Create `dora.json` or `opencode.json` in your project root:
+프로젝트 루트에 `dora.json` 또는 `opencode.json`을 생성하세요:
 
 ```json
 {
@@ -83,7 +83,7 @@ Create `dora.json` or `opencode.json` in your project root:
 }
 ```
 
-### Disable all formatters
+### 모든 포매터 비활성화
 
 ```json
 {
@@ -91,11 +91,11 @@ Create `dora.json` or `opencode.json` in your project root:
 }
 ```
 
-## Supported Languages
+## 지원 언어
 
-### LSP Diagnostics
+### LSP 진단
 
-| Language              | Server                     | Auto-detected by                 |
+| 언어                  | 서버                       | 자동 감지 기준                   |
 |-----------------------|----------------------------|----------------------------------|
 | TypeScript/JavaScript | typescript-language-server | package.json, bun.lock           |
 | TypeScript/JavaScript | oxlint                     | .oxlintrc.json, package.json     |
@@ -106,39 +106,39 @@ Create `dora.json` or `opencode.json` in your project root:
 | Kotlin                | JetBrains Kotlin LSP       | build.gradle.kts, pom.xml        |
 | Dart                  | dart language-server       | pubspec.yaml                     |
 | Prisma                | @prisma/language-server    | schema.prisma                    |
-| Vue                   | @vue/language-server       | package.json (with vue)          |
+| Vue                   | @vue/language-server       | package.json (vue 포함)          |
 
-### Formatters
+### 포매터
 
 biome, prettier, gofmt, mix, zig fmt, clang-format, ktlint, ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam, prisma
 
-## MCP Server
+## MCP 서버
 
-(TBD)
+(준비 중)
 
-## Environment Variables
+## 환경 변수
 
-| Variable             | Description       | Default |
-|----------------------|-------------------|---------|
-| `CODE_PROJECT_PATH`  | Project directory | cwd     |
-| `CLAUDE_PROJECT_DIR` | Used in hook mode | -       |
+| 변수                 | 설명              | 기본값 |
+|----------------------|-------------------|--------|
+| `CODE_PROJECT_PATH`  | 프로젝트 디렉토리 | cwd    |
+| `CLAUDE_PROJECT_DIR` | 훅 모드에서 사용  | -      |
 
-## Development
+## 개발
 
 ```bash
-# Install dependencies
+# 의존성 설치
 bun install
 
-# Run tests
+# 테스트 실행
 bun run test
 
-# Type check
+# 타입 체크
 bun run typecheck
 
-# Build
+# 빌드
 bun run build
 ```
 
-## License
+## 라이선스
 
 MIT
