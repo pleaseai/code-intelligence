@@ -46,8 +46,9 @@ async function readStdinJson(): Promise<HookInput> {
   try {
     return JSON.parse(text)
   }
-  catch {
-    throw new Error('Invalid JSON input from stdin')
+  catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'unknown parse error'
+    throw new Error(`Invalid JSON input from stdin: ${message}`)
   }
 }
 

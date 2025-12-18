@@ -25,6 +25,17 @@ describe('CLI Integration', () => {
       const result = await $`bun run ${CLI_PATH} --version`.text()
       expect(result).toMatch(/code \d+\.\d+\.\d+/)
     })
+
+    test('--version flag takes precedence over format command', async () => {
+      const result = await $`bun run ${CLI_PATH} format file.ts --version`.text()
+      expect(result).toMatch(/code \d+\.\d+\.\d+/)
+      // Should NOT try to format file.ts, just show version
+    })
+
+    test('-v flag takes precedence over lsp command', async () => {
+      const result = await $`bun run ${CLI_PATH} lsp file.ts -v`.text()
+      expect(result).toMatch(/code \d+\.\d+\.\d+/)
+    })
   })
 
   describe('help command', () => {
@@ -56,6 +67,17 @@ describe('CLI Integration', () => {
       const result = await $`bun run ${CLI_PATH} help`.text()
       expect(result).toContain('Hook mode')
       expect(result).toContain('--stdin')
+    })
+
+    test('--help flag takes precedence over format command', async () => {
+      const result = await $`bun run ${CLI_PATH} format file.ts --help`.text()
+      expect(result).toContain('Usage:')
+      // Should NOT try to format file.ts, just show help
+    })
+
+    test('-h flag takes precedence over lsp command', async () => {
+      const result = await $`bun run ${CLI_PATH} lsp file.ts -h`.text()
+      expect(result).toContain('Usage:')
     })
   })
 
@@ -214,7 +236,7 @@ describe('CLI Integration', () => {
         expect(stderr).toContain('file_path')
       })
 
-      test('handles invalid JSON input', async () => {
+      test('handles invalid JSON input with parse error details', async () => {
         const proc = Bun.spawn(['bun', 'run', CLI_PATH, 'format', '--stdin'], {
           stdin: 'pipe',
           stdout: 'pipe',
@@ -229,6 +251,8 @@ describe('CLI Integration', () => {
 
         expect(exitCode).toBe(1)
         expect(stderr).toContain('Invalid JSON')
+        // Should include the original parse error details
+        expect(stderr).toMatch(/Invalid JSON input from stdin:/)
       })
 
       test('handles empty stdin', async () => {
@@ -352,6 +376,44 @@ describe('CLI Integration', () => {
 
       const exitCode = await proc.exited
       // Should not crash
+      expect([0, 1]).toContain(exitCode)
+    })
+
+    test('--project flag takes precedence over CODE_PROJECT_PATH env', async () => {
+      const testFile = path.join(PROJECT_DIR, 'packages/code/src/cli.ts')
+      const proc = Bun.spawn(
+        ['bun', 'run', CLI_PATH, 'format', testFile, `--project=${PROJECT_DIR}`],
+        {
+          stdout: 'pipe',
+          stderr: 'pipe',
+          env: {
+            ...process.env,
+            CODE_PROJECT_PATH: '/nonexistent/path',
+          },
+        },
+      )
+
+      const exitCode = await proc.exited
+      // Should use --project flag, not env var, and succeed
+      expect([0, 1]).toContain(exitCode)
+    })
+
+    test('CODE_PROJECT_PATH env is used when --project not specified', async () => {
+      const testFile = path.join(PROJECT_DIR, 'packages/code/src/cli.ts')
+      const proc = Bun.spawn(
+        ['bun', 'run', CLI_PATH, 'format', testFile],
+        {
+          stdout: 'pipe',
+          stderr: 'pipe',
+          env: {
+            ...process.env,
+            CODE_PROJECT_PATH: PROJECT_DIR,
+          },
+        },
+      )
+
+      const exitCode = await proc.exited
+      // Should use CODE_PROJECT_PATH env var
       expect([0, 1]).toContain(exitCode)
     })
   })

@@ -17,6 +17,10 @@ import process from 'node:process'
  * 1. Check /usr/bin/ldd content for "musl"
  * 2. Check process.report for glibc version (Node 12+)
  * 3. Run ldd --version and check output
+ *
+ * All methods use fallback behavior - if one fails (expected or unexpected),
+ * the next method is tried. Common expected errors: ENOENT (file not found).
+ * Unexpected errors (EACCES, ENOMEM) are silently ignored with fallback.
  */
 export function isMusl(): boolean {
   // Method 1: Check /usr/bin/ldd for musl
@@ -27,7 +31,8 @@ export function isMusl(): boolean {
     }
   }
   catch {
-    // File doesn't exist or can't be read
+    // Expected: ENOENT (file not found) on non-Linux or some distros
+    // Unexpected errors (EACCES, ENOMEM, etc.) also fall through to next method
   }
 
   // Method 2: Check process.report for glibc version (Node 12+)
@@ -38,7 +43,7 @@ export function isMusl(): boolean {
     }
   }
   catch {
-    // process.report not available
+    // Expected: process.report not available in all environments
   }
 
   // Method 3: Run ldd --version and check output
@@ -49,7 +54,7 @@ export function isMusl(): boolean {
     }
   }
   catch {
-    // ldd not available or failed
+    // Expected: ldd not available on non-Linux systems
   }
 
   return false
