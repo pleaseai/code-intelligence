@@ -542,10 +542,10 @@ describe('PrismaServer', () => {
     }
   })
 
-  test('root function returns projectPath when no schema found', async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prisma-no-schema-'))
+  test('root function detects schema.prisma at project root', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prisma-root-schema-'))
     try {
-      // No schema.prisma files
+      // schema.prisma at project root (not in prisma/ subdirectory)
       const prismaFile = path.join(tempDir, 'schema.prisma')
       await fs.writeFile(prismaFile, '// test')
 

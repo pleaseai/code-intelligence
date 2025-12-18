@@ -180,8 +180,14 @@ function nearestRoot(
             await fs.access(target)
             return undefined // Excluded
           }
-          catch {
-            // Not found, continue
+          catch (err) {
+            // Only continue searching if file not found
+            const isNotFound = err instanceof Error
+              && 'code' in err
+              && (err as NodeJS.ErrnoException).code === 'ENOENT'
+            if (!isNotFound) {
+              console.warn(`[lsp] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+            }
           }
         }
         const parent = path.dirname(checkDir)
@@ -199,8 +205,14 @@ function nearestRoot(
           await fs.access(target)
           return current
         }
-        catch {
-          // Not found, continue
+        catch (err) {
+          // Only continue searching if file not found
+          const isNotFound = err instanceof Error
+            && 'code' in err
+            && (err as NodeJS.ErrnoException).code === 'ENOENT'
+          if (!isNotFound) {
+            console.warn(`[lsp] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+          }
         }
       }
       const parent = path.dirname(current)
@@ -233,17 +245,25 @@ export const TypescriptServer: LSPServerInfo = {
     const tsserver = Bun.which('typescript-language-server')
     if (!tsserver) {
       // Try via bunx
-      const proc = spawn('bunx', ['typescript-language-server', '--stdio'], {
-        cwd: root,
-        env: { ...process.env, BUN_BE_BUN: '1' },
-      })
-      return { process: proc }
+      try {
+        const proc = spawn('bunx', ['typescript-language-server', '--stdio'], {
+          cwd: root,
+          env: { ...process.env, BUN_BE_BUN: '1' },
+        })
+        attachLSPProcessHandlers(proc, 'typescript')
+        return { process: proc }
+      }
+      catch (err) {
+        console.error('[typescript] Failed to spawn via bunx. Install typescript-language-server globally or ensure bunx is available:', err)
+        return undefined
+      }
     }
 
     const proc = spawn(tsserver, ['--stdio'], {
       cwd: root,
       env: { ...process.env, BUN_BE_BUN: '1' },
     })
+    attachLSPProcessHandlers(proc, 'typescript')
     return { process: proc }
   },
 }
@@ -263,8 +283,14 @@ export const DenoServer: LSPServerInfo = {
           await fs.access(target)
           return current
         }
-        catch {
-          // Not found
+        catch (err) {
+          // Only continue searching if file not found
+          const isNotFound = err instanceof Error
+            && 'code' in err
+            && (err as NodeJS.ErrnoException).code === 'ENOENT'
+          if (!isNotFound) {
+            console.warn(`[deno] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+          }
         }
       }
       const parent = path.dirname(current)
@@ -282,6 +308,7 @@ export const DenoServer: LSPServerInfo = {
     const proc = spawn(deno, ['lsp'], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'deno')
     return { process: proc }
   },
 }
@@ -302,15 +329,23 @@ export const PyrightServer: LSPServerInfo = {
     const pyright = Bun.which('pyright-langserver')
     if (!pyright) {
       // Try via bunx/npx
-      const proc = spawn('bunx', ['pyright-langserver', '--stdio'], {
-        cwd: root,
-      })
-      return { process: proc }
+      try {
+        const proc = spawn('bunx', ['pyright-langserver', '--stdio'], {
+          cwd: root,
+        })
+        attachLSPProcessHandlers(proc, 'pyright')
+        return { process: proc }
+      }
+      catch (err) {
+        console.error('[pyright] Failed to spawn via bunx. Install pyright-langserver globally or ensure bunx is available:', err)
+        return undefined
+      }
     }
 
     const proc = spawn(pyright, ['--stdio'], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'pyright')
     return { process: proc }
   },
 }
@@ -336,6 +371,7 @@ export const GoplsServer: LSPServerInfo = {
     const proc = spawn(gopls, ['serve'], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'gopls')
     return { process: proc }
   },
 }
@@ -355,6 +391,7 @@ export const RustAnalyzerServer: LSPServerInfo = {
     const proc = spawn(rustAnalyzer, [], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'rust-analyzer')
     return { process: proc }
   },
 }
@@ -435,11 +472,11 @@ export const OxlintServer: LSPServerInfo = {
       else {
         const help = await new Response(proc.stdout).text()
         if (help.includes('--lsp')) {
-          return {
-            process: spawn(lintBin, ['--lsp'], {
-              cwd: root,
-            }),
-          }
+          const lspProc = spawn(lintBin, ['--lsp'], {
+            cwd: root,
+          })
+          attachLSPProcessHandlers(lspProc, 'oxlint')
+          return { process: lspProc }
         }
       }
     }
@@ -447,11 +484,11 @@ export const OxlintServer: LSPServerInfo = {
     // Fallback to oxc_language_server
     const serverBin = await resolveBin('oxc_language_server')
     if (serverBin) {
-      return {
-        process: spawn(serverBin, [], {
-          cwd: root,
-        }),
-      }
+      const serverProc = spawn(serverBin, [], {
+        cwd: root,
+      })
+      attachLSPProcessHandlers(serverProc, 'oxlint')
+      return { process: serverProc }
     }
 
     // Neither found - log diagnostic
