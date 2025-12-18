@@ -30,10 +30,10 @@ export type FormatterConfig = z.infer<typeof FormatterConfigSchema>
 export const LspItemSchema = z.object({
   /** Enable/disable this LSP server */
   enabled: z.boolean().optional(),
-  /** Custom project root path for this server */
-  root: z.string().optional(),
-  /** Custom command to spawn the server */
-  command: z.array(z.string()).optional(),
+  /** Custom project root path for this server (must be non-empty if provided) */
+  root: z.string().min(1, 'root path cannot be empty').optional(),
+  /** Custom command to spawn the server (must have at least one element if provided) */
+  command: z.array(z.string()).min(1, 'command must have at least one element').optional(),
 })
 
 export type LspItem = z.infer<typeof LspItemSchema>

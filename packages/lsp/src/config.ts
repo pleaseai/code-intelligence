@@ -24,11 +24,17 @@ export async function loadLspConfig(projectDir: string): Promise<LspConfig | und
  * - Server is not explicitly disabled
  */
 export function isServerEnabled(config: LspConfig | undefined, serverId: string): boolean {
-  // No config or empty config means all servers enabled
-  if (config === undefined || config === false) {
-    return config !== false
+  // No config means all servers enabled (default)
+  if (config === undefined) {
+    return true
   }
 
+  // Config is false means globally disabled
+  if (config === false) {
+    return false
+  }
+
+  // Check specific server config
   const serverConfig = config[serverId]
   if (!serverConfig) {
     return true // Not configured means enabled
@@ -41,7 +47,8 @@ export function isServerEnabled(config: LspConfig | undefined, serverId: string)
  * Get custom root path for a server
  */
 export function getServerRoot(config: LspConfig | undefined, serverId: string): string | undefined {
-  if (!config || typeof config === 'boolean') {
+  // No config or globally disabled - no custom root
+  if (config === undefined || config === false) {
     return undefined
   }
 
@@ -52,7 +59,8 @@ export function getServerRoot(config: LspConfig | undefined, serverId: string): 
  * Get custom command for a server
  */
 export function getServerCommand(config: LspConfig | undefined, serverId: string): string[] | undefined {
-  if (!config || typeof config === 'boolean') {
+  // No config or globally disabled - no custom command
+  if (config === undefined || config === false) {
     return undefined
   }
 

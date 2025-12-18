@@ -4,6 +4,34 @@ import YAML from 'yaml'
 import { ConfigSchema, defaultConfig } from './schema'
 
 /**
+ * Error thrown when configuration validation fails
+ */
+export class ConfigValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly filePath: string,
+    public readonly issues: Array<{ path: string[], message: string }>,
+  ) {
+    super(message)
+    this.name = 'ConfigValidationError'
+  }
+}
+
+/**
+ * Error thrown when configuration file cannot be read or parsed
+ */
+export class ConfigLoadError extends Error {
+  constructor(
+    message: string,
+    public readonly filePath: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message)
+    this.name = 'ConfigLoadError'
+  }
+}
+
+/**
  * Configuration file names to search for (in order of priority)
  */
 const CONFIG_FILES = [
@@ -47,17 +75,24 @@ function parseConfigContent(content: string, filePath: string): unknown {
   if (ext === '.yml' || ext === '.yaml') {
     return YAML.parse(content)
   }
-  // Try JSON first, then YAML
+  // Try JSON first, then YAML (only catch syntax errors)
   try {
     return JSON.parse(content)
   }
-  catch {
-    return YAML.parse(content)
+  catch (err) {
+    if (err instanceof SyntaxError) {
+      // JSON syntax error - try YAML as fallback
+      return YAML.parse(content)
+    }
+    // Re-throw unexpected errors (memory, stack overflow, etc.)
+    throw err
   }
 }
 
 /**
  * Load configuration from a specific file
+ * @throws {ConfigLoadError} If file cannot be read or parsed
+ * @throws {ConfigValidationError} If configuration fails validation
  */
 export async function loadConfigFromFile(filePath: string): Promise<Config> {
   const file = Bun.file(filePath)
@@ -65,13 +100,45 @@ export async function loadConfigFromFile(filePath: string): Promise<Config> {
     return defaultConfig
   }
 
-  const content = await file.text()
-  const parsed = parseConfigContent(content, filePath)
-  const result = ConfigSchema.safeParse(parsed)
+  // Read file with error context
+  let content: string
+  try {
+    content = await file.text()
+  }
+  catch (err) {
+    throw new ConfigLoadError(
+      `Failed to read configuration file: ${err instanceof Error ? err.message : String(err)}`,
+      filePath,
+      err,
+    )
+  }
 
+  // Parse file with error context
+  let parsed: unknown
+  try {
+    parsed = parseConfigContent(content, filePath)
+  }
+  catch (err) {
+    throw new ConfigLoadError(
+      `Failed to parse configuration file: ${err instanceof Error ? err.message : String(err)}`,
+      filePath,
+      err,
+    )
+  }
+
+  // Validate configuration - throw on validation errors
+  const result = ConfigSchema.safeParse(parsed)
   if (!result.success) {
-    console.error(`[config] Invalid configuration in ${filePath}:`, result.error.message)
-    return defaultConfig
+    const issues = result.error.issues.map(i => ({
+      path: i.path.map(String),
+      message: i.message,
+    }))
+    const issueMessages = issues.map(i => `  - ${i.path.join('.')}: ${i.message}`).join('\n')
+    throw new ConfigValidationError(
+      `Invalid configuration in ${filePath}:\n${issueMessages}`,
+      filePath,
+      issues,
+    )
   }
 
   return result.data
@@ -79,6 +146,8 @@ export async function loadConfigFromFile(filePath: string): Promise<Config> {
 
 /**
  * Load configuration by searching from projectDir upward
+ * @throws {ConfigLoadError} If file cannot be read or parsed
+ * @throws {ConfigValidationError} If configuration fails validation
  */
 export async function loadConfig(projectDir: string): Promise<Config> {
   const configPath = await findConfigFile(projectDir)
@@ -86,6 +155,7 @@ export async function loadConfig(projectDir: string): Promise<Config> {
     return defaultConfig
   }
 
+  // Use stderr to avoid interfering with JSON output on stdout
   console.error(`[config] Loading configuration from ${configPath}`)
   return loadConfigFromFile(configPath)
 }

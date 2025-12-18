@@ -16,7 +16,7 @@ import {
   createLSPClient,
 
 } from './client'
-import { isServerEnabled, loadLspConfig } from './config'
+import { getServerRoot, isServerEnabled, loadLspConfig } from './config'
 import { LSP_SERVERS } from './server'
 
 export type Diagnostic = VSCodeDiagnostic
@@ -340,7 +340,11 @@ export class LSPManager {
         continue
       }
 
-      const root = await server.root(file, this.projectPath)
+      // Use custom root from config if specified, otherwise detect automatically
+      const customRoot = getServerRoot(this.lspConfig, server.id)
+      const root = customRoot
+        ? path.resolve(this.projectPath, customRoot)
+        : await server.root(file, this.projectPath)
       if (!root)
         continue
 
