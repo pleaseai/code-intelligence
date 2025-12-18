@@ -143,6 +143,40 @@ export const DocumentSymbolSchema = z.object({
 export type DocumentSymbol = z.infer<typeof DocumentSymbolSchema>
 
 /**
+ * LSP TextEdit schema
+ * A textual edit applicable to a text document.
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textEdit
+ */
+export const TextEditSchema = z.object({
+  range: RangeSchema,
+  newText: z.string(),
+})
+export type TextEdit = z.infer<typeof TextEditSchema>
+
+/**
+ * LSP WorkspaceEdit schema
+ * A workspace edit represents changes to many resources managed in the workspace.
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspaceEdit
+ */
+export const WorkspaceEditSchema = z.object({
+  changes: z.record(z.string(), z.array(TextEditSchema)).optional(),
+})
+export type WorkspaceEdit = z.infer<typeof WorkspaceEditSchema>
+
+/**
+ * LSP PrepareRenameResult schema
+ * The result of a prepareRename request.
+ * Can be: Range, { range, placeholder }, or { defaultBehavior }
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_prepareRename
+ */
+export const PrepareRenameResultSchema = z.union([
+  RangeSchema,
+  z.object({ range: RangeSchema, placeholder: z.string() }),
+  z.object({ defaultBehavior: z.boolean() }),
+])
+export type PrepareRenameResult = z.infer<typeof PrepareRenameResultSchema>
+
+/**
  * LSP Status
  */
 export interface LSPStatus {
@@ -643,6 +677,186 @@ export class LSPManager {
       && 'targetRange' in obj
       && 'targetSelectionRange' in obj
     )
+  }
+
+  /**
+   * Type guard for Range
+   */
+  private isRange(obj: unknown): obj is Range {
+    return (
+      typeof obj === 'object'
+      && obj !== null
+      && 'start' in obj
+      && 'end' in obj
+    )
+  }
+
+  /**
+   * Normalize WorkspaceEdit response
+   * Handles both 'changes' and 'documentChanges' formats
+   * Based on Serena: ls_types.py:extract_text_edits
+   */
+  private normalizeWorkspaceEdit(result: unknown): WorkspaceEdit | null {
+    if (!result || typeof result !== 'object')
+      return null
+
+    const edit = result as Record<string, unknown>
+
+    // Handle 'changes' format (preferred, simpler)
+    if ('changes' in edit && edit.changes) {
+      return { changes: edit.changes as Record<string, TextEdit[]> }
+    }
+
+    // Handle 'documentChanges' format - normalize to 'changes'
+    if ('documentChanges' in edit && Array.isArray(edit.documentChanges)) {
+      const changes: Record<string, TextEdit[]> = {}
+      for (const change of edit.documentChanges) {
+        if (
+          typeof change === 'object'
+          && change !== null
+          && 'textDocument' in change
+          && 'edits' in change
+        ) {
+          const uri = (change as { textDocument: { uri: string } }).textDocument.uri
+          changes[uri] = (change as { edits: TextEdit[] }).edits
+        }
+      }
+      if (Object.keys(changes).length > 0) {
+        return { changes }
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Normalize PrepareRenameResult response
+   * Handles: Range, { range, placeholder }, or { defaultBehavior }
+   */
+  private normalizePrepareRename(result: unknown): PrepareRenameResult | null {
+    if (!result)
+      return null
+
+    // Format 1: Just a Range
+    if (this.isRange(result)) {
+      return result
+    }
+
+    // Format 2: { range, placeholder }
+    if (
+      typeof result === 'object'
+      && 'range' in result
+      && 'placeholder' in result
+    ) {
+      return result as { range: Range, placeholder: string }
+    }
+
+    // Format 3: { defaultBehavior }
+    if (typeof result === 'object' && 'defaultBehavior' in result) {
+      return result as { defaultBehavior: boolean }
+    }
+
+    return null
+  }
+
+  /**
+   * Prepare rename at the given position
+   * Validates if the symbol at the position can be renamed
+   *
+   * @returns PrepareRenameResult if symbol can be renamed, null if:
+   *          - Symbol cannot be renamed (LSP server returned null)
+   *          - Position is not on a renameable symbol
+   *          - All LSP servers failed (errors are logged)
+   *
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_prepareRename
+   */
+  async prepareRename(input: {
+    file: string
+    line: number
+    character: number
+  }): Promise<PrepareRenameResult | null> {
+    const clients = await this.getClients(input.file)
+
+    const results = await Promise.all(
+      clients.map(client =>
+        client.connection
+          .sendRequest('textDocument/prepareRename', {
+            textDocument: {
+              uri: pathToFileURL(input.file).href,
+            },
+            position: {
+              line: input.line,
+              character: input.character,
+            },
+          })
+          .then((result: unknown) => this.normalizePrepareRename(result))
+          .catch((err: unknown) => {
+            // Log unexpected errors (not "method not found" which is expected for some servers)
+            const message = err instanceof Error ? err.message : String(err)
+            if (!message.includes('-32601') && !message.includes('Method not found')) {
+              console.error(`[lsp:${client.serverID}] prepareRename failed:`, message)
+            }
+            return null
+          }),
+      ),
+    )
+
+    // Return first non-null result (only one server typically owns rename)
+    return results.find(r => r !== null) ?? null
+  }
+
+  /**
+   * Rename the symbol at the given position
+   * Returns a WorkspaceEdit with all changes needed
+   *
+   * Note: input.newName must be non-empty (not empty string or whitespace-only)
+   *
+   * @returns WorkspaceEdit if rename succeeded, null if:
+   *          - Symbol cannot be renamed
+   *          - newName is empty or whitespace-only
+   *          - All LSP servers failed (errors are logged)
+   *
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_rename
+   */
+  async rename(input: {
+    file: string
+    line: number
+    character: number
+    newName: string
+  }): Promise<WorkspaceEdit | null> {
+    // Validate newName
+    if (!input.newName || input.newName.trim() === '') {
+      console.warn('[lsp] rename called with empty newName')
+      return null
+    }
+
+    const clients = await this.getClients(input.file)
+
+    const results = await Promise.all(
+      clients.map(client =>
+        client.connection
+          .sendRequest('textDocument/rename', {
+            textDocument: {
+              uri: pathToFileURL(input.file).href,
+            },
+            position: {
+              line: input.line,
+              character: input.character,
+            },
+            newName: input.newName,
+          })
+          .then((result: unknown) => this.normalizeWorkspaceEdit(result))
+          .catch((err: unknown) => {
+            // Log rename errors - these are more serious since rename is a mutating operation
+            const message = err instanceof Error ? err.message : String(err)
+            console.error(`[lsp:${client.serverID}] rename failed:`, message)
+            return null
+          }),
+      ),
+    )
+
+    // Return first non-null result (only one server typically owns rename)
+    return results.find(r => r !== null) ?? null
   }
 
   /**

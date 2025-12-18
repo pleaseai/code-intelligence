@@ -5,7 +5,10 @@ import {
   getLanguageId,
   LANGUAGE_EXTENSIONS,
   LSPManager,
+  PrepareRenameResultSchema,
   SymbolKind,
+  TextEditSchema,
+  WorkspaceEditSchema,
 } from '../../src/index'
 
 describe('LSPManager', () => {
@@ -35,6 +38,28 @@ describe('LSPManager', () => {
     const manager = new LSPManager('/test/project')
     await manager.shutdown()
     // Should not throw
+  })
+
+  test('rename returns null for empty newName', async () => {
+    const manager = new LSPManager('/test/project')
+    const result = await manager.rename({
+      file: '/test/project/test.ts',
+      line: 0,
+      character: 0,
+      newName: '',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('rename returns null for whitespace-only newName', async () => {
+    const manager = new LSPManager('/test/project')
+    const result = await manager.rename({
+      file: '/test/project/test.ts',
+      line: 0,
+      character: 0,
+      newName: '   ',
+    })
+    expect(result).toBeNull()
   })
 })
 
@@ -172,5 +197,152 @@ describe('LANGUAGE_EXTENSIONS', () => {
     expect(LANGUAGE_EXTENSIONS['.json']).toBe('json')
     expect(LANGUAGE_EXTENSIONS['.yaml']).toBe('yaml')
     expect(LANGUAGE_EXTENSIONS['.yml']).toBe('yaml')
+  })
+})
+
+describe('TextEditSchema', () => {
+  test('validates valid TextEdit', () => {
+    const textEdit = {
+      range: {
+        start: { line: 0, character: 5 },
+        end: { line: 0, character: 10 },
+      },
+      newText: 'newName',
+    }
+
+    const result = TextEditSchema.safeParse(textEdit)
+    expect(result.success).toBe(true)
+  })
+
+  test('rejects TextEdit without range', () => {
+    const invalid = { newText: 'newName' }
+
+    const result = TextEditSchema.safeParse(invalid)
+    expect(result.success).toBe(false)
+  })
+
+  test('rejects TextEdit without newText', () => {
+    const invalid = {
+      range: {
+        start: { line: 0, character: 5 },
+        end: { line: 0, character: 10 },
+      },
+    }
+
+    const result = TextEditSchema.safeParse(invalid)
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('WorkspaceEditSchema', () => {
+  test('validates WorkspaceEdit with changes', () => {
+    const workspaceEdit = {
+      changes: {
+        'file:///test.ts': [
+          {
+            range: {
+              start: { line: 0, character: 5 },
+              end: { line: 0, character: 10 },
+            },
+            newText: 'newName',
+          },
+        ],
+      },
+    }
+
+    const result = WorkspaceEditSchema.safeParse(workspaceEdit)
+    expect(result.success).toBe(true)
+  })
+
+  test('validates empty WorkspaceEdit', () => {
+    const emptyEdit = {}
+
+    const result = WorkspaceEditSchema.safeParse(emptyEdit)
+    expect(result.success).toBe(true)
+  })
+
+  test('validates WorkspaceEdit with multiple files', () => {
+    const multiFileEdit = {
+      changes: {
+        'file:///a.ts': [
+          { range: { start: { line: 0, character: 0 }, end: { line: 0, character: 5 } }, newText: 'new1' },
+        ],
+        'file:///b.ts': [
+          { range: { start: { line: 1, character: 0 }, end: { line: 1, character: 5 } }, newText: 'new2' },
+        ],
+      },
+    }
+
+    const result = WorkspaceEditSchema.safeParse(multiFileEdit)
+    expect(result.success).toBe(true)
+  })
+
+  /**
+   * Note: LSP servers can return WorkspaceEdit in two formats:
+   * 1. 'changes' format: { changes: { [uri]: TextEdit[] } }
+   * 2. 'documentChanges' format: { documentChanges: TextDocumentEdit[] }
+   *
+   * The schema only validates the normalized 'changes' format output.
+   * LSPManager.normalizeWorkspaceEdit() converts 'documentChanges' to 'changes' at runtime.
+   */
+  test('schema validates normalized changes format (documentChanges is normalized at runtime)', () => {
+    // This test documents that the schema validates the normalized output format
+    // documentChanges format from LSP servers:
+    // { documentChanges: [{ textDocument: { uri: 'file:///test.ts' }, edits: [...] }] }
+    // gets normalized to:
+    // { changes: { 'file:///test.ts': [...] } }
+
+    const normalizedFromDocumentChanges = {
+      changes: {
+        'file:///test.ts': [
+          { range: { start: { line: 0, character: 0 }, end: { line: 0, character: 5 } }, newText: 'renamed' },
+        ],
+        'file:///other.ts': [
+          { range: { start: { line: 10, character: 0 }, end: { line: 10, character: 5 } }, newText: 'renamed' },
+        ],
+      },
+    }
+
+    const result = WorkspaceEditSchema.safeParse(normalizedFromDocumentChanges)
+    expect(result.success).toBe(true)
+  })
+})
+
+describe('PrepareRenameResultSchema', () => {
+  test('validates Range format', () => {
+    const rangeResult = {
+      start: { line: 0, character: 5 },
+      end: { line: 0, character: 10 },
+    }
+
+    const result = PrepareRenameResultSchema.safeParse(rangeResult)
+    expect(result.success).toBe(true)
+  })
+
+  test('validates range + placeholder format', () => {
+    const placeholderResult = {
+      range: {
+        start: { line: 0, character: 5 },
+        end: { line: 0, character: 10 },
+      },
+      placeholder: 'oldName',
+    }
+
+    const result = PrepareRenameResultSchema.safeParse(placeholderResult)
+    expect(result.success).toBe(true)
+  })
+
+  test('validates defaultBehavior format', () => {
+    const defaultResult = { defaultBehavior: true }
+
+    const result = PrepareRenameResultSchema.safeParse(defaultResult)
+    expect(result.success).toBe(true)
+  })
+
+  test('rejects invalid format', () => {
+    const invalid = { invalid: 'format' }
+
+    const result = PrepareRenameResultSchema.safeParse(invalid)
+    expect(result.success).toBe(false)
   })
 })

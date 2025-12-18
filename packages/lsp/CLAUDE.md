@@ -106,6 +106,12 @@ const symbols = await manager.workspaceSymbol('query')
 // Get document symbols
 const docSymbols = await manager.documentSymbol(uri)
 
+// Prepare rename (validate rename is possible)
+const prepareResult = await manager.prepareRename({ file, line, character })
+
+// Rename symbol
+const workspaceEdit = await manager.rename({ file, line, character, newName: 'newSymbolName' })
+
 // Cleanup
 await manager.shutdown()
 ```
@@ -122,6 +128,8 @@ await manager.shutdown()
 | `completion()` | `textDocument/completion` | Get code completions |
 | `workspaceSymbol()` | `workspace/symbol` | Search workspace symbols |
 | `documentSymbol()` | `textDocument/documentSymbol` | Get document symbols |
+| `prepareRename()` | `textDocument/prepareRename` | Validate rename at position |
+| `rename()` | `textDocument/rename` | Rename symbol, returns WorkspaceEdit |
 | `shutdown()` | `shutdown` | Close all clients |
 
 ### Server Utilities

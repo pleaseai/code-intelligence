@@ -13,13 +13,17 @@
   "scripts": {
     "start": "bun run packages/code/src/cli.ts",
     "dev": "turbo dev",
-    "lint": "eslint --cache .",
-    "lint:fix": "eslint --cache --fix .",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "build": "turbo build",
     "build:npm": "bun run scripts/generate-packages.ts",
-    "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && bun publish --access public --tolerate-republish); done && cd npm/code && bun publish --access public --tolerate-republish"
+    "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && bun publish --access public --tolerate-republish); done && cd npm/code && bun publish --access public --tolerate-republish",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --fix"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
@@ -32,6 +36,8 @@
     "@antfu/eslint-config": "^6.7.1",
     "@types/bun": "latest",
     "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "turbo": "^2.6.3",
     "typescript": "^5.7.0"
   }

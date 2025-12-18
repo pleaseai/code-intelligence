@@ -1,19 +1,50 @@
 {
-  "session_id": "20251217-oxc-formatter-support",
-  "feature_name": "Add oxc formatter (oxfmt) support to packages/format",
-  "created_at": "2025-12-17T10:00:00Z",
-  "updated_at": "2025-12-17T10:00:00Z",
+  "session_id": "20251218-rename-symbol-lsp",
+  "feature_name": "Add Rename Symbol support to @pleaseai/code-lsp",
+  "created_at": "2025-12-18T10:00:00Z",
+  "updated_at": "2025-12-18T10:00:00Z",
   "status": "in_progress",
-  "current_phase": 1,
+  "current_phase": 6,
+  "issue_number": 18,
+  "branch": "18-featlsp-add-rename-symbol-support",
+  "spec": {
+    "path": "specs/001-rename-symbol/spec.md",
+    "number": 1,
+    "short_name": "rename-symbol",
+    "created_at": "2025-12-18T10:25:00Z",
+    "clarified_at": "2025-12-18T10:30:00Z"
+  },
+  "checkpoint_config": {
+    "mode": "auto",
+    "push_strategy": "batch",
+    "validation_required": true
+  },
+  "ralph_config": {
+    "enabled": true,
+    "max_iterations": 50,
+    "completion_promise": "ALL_PHASE6_TASKS_COMPLETED",
+    "current_iteration": 0,
+    "started_at": "2025-12-18T10:50:00Z"
+  },
   "phases": [
-    { "number": 1, "name": "Discovery", "status": "in_progress", "started_at": "2025-12-17T10:00:00Z" },
-    { "number": 2, "name": "Codebase Exploration", "status": "pending" },
-    { "number": 3, "name": "Clarifying Questions", "status": "pending" },
-    { "number": 4, "name": "Architecture Design", "status": "pending" },
-    { "number": 5, "name": "GitHub Issue & PR", "status": "pending" },
-    { "number": 6, "name": "Implementation", "status": "pending" },
+    { "number": 1, "name": "Discovery", "status": "completed", "started_at": "2025-12-18T10:00:00Z", "completed_at": "2025-12-18T10:05:00Z" },
+    { "number": 2, "name": "Codebase Exploration", "status": "completed", "started_at": "2025-12-18T10:05:00Z", "completed_at": "2025-12-18T10:20:00Z" },
+    { "number": 3, "name": "Specification & Clarification", "status": "completed", "started_at": "2025-12-18T10:20:00Z", "completed_at": "2025-12-18T10:30:00Z" },
+    { "number": 4, "name": "Architecture Design", "status": "completed", "started_at": "2025-12-18T10:30:00Z", "completed_at": "2025-12-18T10:45:00Z" },
+    { "number": 5, "name": "GitHub Issue & PR", "status": "completed", "started_at": "2025-12-18T10:45:00Z", "completed_at": "2025-12-18T10:50:00Z" },
+    { "number": 6, "name": "Implementation", "status": "in_progress", "started_at": "2025-12-18T10:50:00Z" },
     { "number": 7, "name": "Quality Review", "status": "pending" },
     { "number": 8, "name": "PR Finalization", "status": "pending" }
   ],
-  "tasks": []
+  "tasks": [
+    { "id": "T001", "title": "Add type schemas (TextEdit, WorkspaceEdit, PrepareRenameResult)", "phase": 6, "status": "pending", "parallel": true, "dependencies": [] },
+    { "id": "T002", "title": "Add rename capability to client initialization", "phase": 6, "status": "pending", "parallel": true, "dependencies": [] },
+    { "id": "T003", "title": "Add normalization methods", "phase": 6, "status": "pending", "parallel": false, "dependencies": ["T001"] },
+    { "id": "T004", "title": "Add prepareRename() method", "phase": 6, "status": "pending", "parallel": false, "dependencies": ["T001", "T003"] },
+    { "id": "T005", "title": "Add rename() method", "phase": 6, "status": "pending", "parallel": false, "dependencies": ["T001", "T003"] },
+    { "id": "T006", "title": "Update CLAUDE.md documentation", "phase": 6, "status": "pending", "parallel": false, "dependencies": ["T004", "T005"] },
+    { "id": "T007", "title": "Add unit tests for normalization", "phase": 6, "status": "pending", "parallel": true, "dependencies": [] },
+    { "id": "T008", "title": "Add integration tests", "phase": 6, "status": "pending", "parallel": false, "dependencies": ["T004", "T005"] }
+  ],
+  "checkpoints": []
 }
