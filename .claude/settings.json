@@ -10,7 +10,13 @@
       "Bash(gh issue:*)",
       "Bash(bun run tsc:*)",
       "Bash(bun test:*)",
-      "Bash(bun install:*)"
+      "Bash(bun install:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(bun run test:*)",
+      "SlashCommand(/please:review-pr:*)"
     ],
     "deny": [],
     "ask": []

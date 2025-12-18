@@ -24,9 +24,9 @@
     { "number": 3, "name": "Specification & Clarification", "status": "completed", "started_at": "2025-12-18T12:15:00Z", "completed_at": "2025-12-18T12:20:00Z" },
     { "number": 4, "name": "Architecture Design", "status": "completed", "started_at": "2025-12-18T12:20:00Z", "completed_at": "2025-12-18T12:25:00Z" },
     { "number": 5, "name": "GitHub Issue & PR", "status": "completed", "started_at": "2025-12-18T12:25:00Z", "completed_at": "2025-12-18T12:30:00Z" },
-    { "number": 6, "name": "Implementation", "status": "in_progress", "started_at": "2025-12-18T12:30:00Z" },
-    { "number": 7, "name": "Quality Review", "status": "pending" },
-    { "number": 8, "name": "PR Finalization", "status": "pending" }
+    { "number": 6, "name": "Implementation", "status": "completed", "started_at": "2025-12-18T12:30:00Z", "completed_at": "2025-12-18T12:45:00Z" },
+    { "number": 7, "name": "Quality Review", "status": "completed", "started_at": "2025-12-18T12:45:00Z", "completed_at": "2025-12-18T12:50:00Z" },
+    { "number": 8, "name": "PR Finalization", "status": "completed", "started_at": "2025-12-18T12:50:00Z", "completed_at": "2025-12-18T12:55:00Z" }
   ],
   "tasks": [
     { "id": "T001", "title": "Add .prisma language mapping to language.ts", "phase": 6, "status": "completed", "parallel": true, "dependencies": [] },
