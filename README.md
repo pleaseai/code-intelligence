@@ -108,7 +108,7 @@ Create `dora.json` or `opencode.json` in your project root:
 
 ### Formatters
 
-biome, prettier, gofmt, mix, zig fmt, clang-format, ktlint, ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam
+biome, prettier, gofmt, mix, zig fmt, clang-format, ktlint, ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam, prisma
 
 ## MCP Server
 
