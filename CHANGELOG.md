@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.4](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.3...code-please-v0.1.4) (2025-12-18)
+
+
+### Features
+
+* **lsp:** add completion method to LSPManager ([#16](https://github.com/chatbot-pf/code-please/issues/16)) ([f9423ec](https://github.com/chatbot-pf/code-please/commit/f9423ecec193f49bf5ee49b7f071878d46b8239c))
+* **lsp:** add definition and references methods to LSPManager ([#14](https://github.com/chatbot-pf/code-please/issues/14)) ([45e82f3](https://github.com/chatbot-pf/code-please/commit/45e82f3068b5c26c5a874aa521d4f2dfa02f13ce)), closes [#13](https://github.com/chatbot-pf/code-please/issues/13)
+
 ## [0.1.3](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.2...code-please-v0.1.3) (2025-12-17)
 
 

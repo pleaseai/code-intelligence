@@ -1,7 +1,7 @@
 {
   "name": "@pleaseai/dora",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server for JetBrains IDE integration",
   "author": "Minsu Lee",
   "license": "MIT",
