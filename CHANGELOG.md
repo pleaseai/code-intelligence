@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.6](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.5...code-please-v0.1.6) (2025-12-18)
+
+
+### Features
+
+* **config:** implement unified configuration system ([#26](https://github.com/chatbot-pf/code-please/issues/26)) ([1fe9cab](https://github.com/chatbot-pf/code-please/commit/1fe9cabcc25de195bbe13d947c618480f7eee436))
+* **dora:** add FileProvider with Serena-inspired file tools ([#27](https://github.com/chatbot-pf/code-please/issues/27)) ([7938021](https://github.com/chatbot-pf/code-please/commit/793802161d47fdacfe50e3ea23340d230004773a))
+* **lsp:** add Prisma Language Server support ([#23](https://github.com/chatbot-pf/code-please/issues/23)) ([9a691e1](https://github.com/chatbot-pf/code-please/commit/9a691e1955ca84665ab13f25a1942ee969c766e7))
+
 ## [0.1.5](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.4...code-please-v0.1.5) (2025-12-18)
 
 
