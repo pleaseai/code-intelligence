@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.2...@pleaseai/code-lsp-v0.1.3) (2025-12-18)
+
+
+### Features
+
+* **lsp:** add Rename Symbol support ([#19](https://github.com/chatbot-pf/code-please/issues/19)) ([12ec597](https://github.com/chatbot-pf/code-please/commit/12ec59785b6eefdc8cdd56e18c21fdf2466e8a7d))
+
 ## [0.1.2](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.1...@pleaseai/code-lsp-v0.1.2) (2025-12-18)
 
 
