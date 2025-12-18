@@ -5,6 +5,7 @@
  * Based on opencode reference implementation
  */
 
+import type { LspConfig } from '@pleaseai/code-format/config'
 import type { Diagnostic as VSCodeDiagnostic } from 'vscode-languageserver-types'
 import type { LSPClientInfo, LSPServerHandle } from './client'
 import type { LSPServerInfo } from './server'
@@ -15,6 +16,7 @@ import {
   createLSPClient,
 
 } from './client'
+import { isServerEnabled, loadLspConfig } from './config'
 import { LSP_SERVERS } from './server'
 
 export type Diagnostic = VSCodeDiagnostic
@@ -230,15 +232,29 @@ export class LSPManager {
 
   private projectPath: string
   private enabled: boolean = true
+  private lspConfig: LspConfig | undefined
 
-  constructor(projectPath: string, options?: { enabled?: boolean }) {
+  constructor(projectPath: string, options?: { enabled?: boolean, lspConfig?: LspConfig }) {
     this.projectPath = projectPath
     this.enabled = options?.enabled ?? true
+    this.lspConfig = options?.lspConfig
 
     // Register servers
     for (const server of LSP_SERVERS) {
       this.servers.set(server.id, server)
     }
+  }
+
+  /**
+   * Create LSPManager with config loaded from project
+   */
+  static async fromProject(projectPath: string, options?: { enabled?: boolean }): Promise<LSPManager> {
+    const lspConfig = await loadLspConfig(projectPath)
+    const managerOptions: { enabled?: boolean, lspConfig?: LspConfig } = { ...options }
+    if (lspConfig !== undefined) {
+      managerOptions.lspConfig = lspConfig
+    }
+    return new LSPManager(projectPath, managerOptions)
   }
 
   /**
@@ -312,6 +328,11 @@ export class LSPManager {
     }
 
     for (const server of this.servers.values()) {
+      // Check if server is enabled in config
+      if (!isServerEnabled(this.lspConfig, server.id)) {
+        continue
+      }
+
       if (
         server.extensions.length
         && !server.extensions.includes(extension)
@@ -887,6 +908,14 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
 }
 
 export { createLSPClient, type LSPClientInfo } from './client'
+export {
+  getServerCommand,
+  getServerRoot,
+  isServerEnabled,
+  loadLspConfig,
+  type LspConfig,
+  type LspItem,
+} from './config'
 // Re-export specific items to avoid conflicts
 export { getLanguageId, LANGUAGE_EXTENSIONS } from './language'
 export {

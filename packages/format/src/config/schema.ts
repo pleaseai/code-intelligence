@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 /**
  * Formatter configuration schema
- * Compatible with opencode.json and .please/config.yml
+ * Compatible with .please/config.json and .please/config.yml
  */
 export const FormatterItemSchema = z.object({
   /** Disable this specific formatter */
@@ -25,11 +25,38 @@ export const FormatterConfigSchema = z.union([
 export type FormatterConfig = z.infer<typeof FormatterConfigSchema>
 
 /**
- * Dora configuration schema
+ * LSP server configuration schema
+ */
+export const LspItemSchema = z.object({
+  /** Enable/disable this LSP server */
+  enabled: z.boolean().optional(),
+  /** Custom project root path for this server */
+  root: z.string().optional(),
+  /** Custom command to spawn the server */
+  command: z.array(z.string()).optional(),
+})
+
+export type LspItem = z.infer<typeof LspItemSchema>
+
+export const LspConfigSchema = z.union([
+  z.literal(false),
+  z.record(z.string(), LspItemSchema),
+])
+
+export type LspConfig = z.infer<typeof LspConfigSchema>
+
+/**
+ * Unified configuration schema
  */
 export const ConfigSchema = z.object({
+  /** Language for messages (en or ko) */
+  language: z.enum(['en', 'ko']).optional(),
+  /** Patterns to ignore */
+  ignore_patterns: z.array(z.string()).optional(),
   /** Formatter configuration */
   formatter: FormatterConfigSchema.optional(),
+  /** LSP configuration */
+  lsp: LspConfigSchema.optional(),
 })
 
 export type Config = z.infer<typeof ConfigSchema>
@@ -39,4 +66,5 @@ export type Config = z.infer<typeof ConfigSchema>
  */
 export const defaultConfig: Config = {
   formatter: {},
+  lsp: {},
 }

@@ -7,12 +7,9 @@ import { ConfigSchema, defaultConfig } from './schema'
  * Configuration file names to search for (in order of priority)
  */
 const CONFIG_FILES = [
-  'opencode.json',
-  'dora.json',
+  '.please/config.json',
   '.please/config.yml',
   '.please/config.yaml',
-  '.dora/config.yml',
-  '.dora/config.yaml',
 ]
 
 /**
@@ -99,6 +96,15 @@ export async function loadConfig(projectDir: string): Promise<Config> {
 export function mergeConfig(base: Config, source: Partial<Config>): Config {
   const merged: Config = { ...base }
 
+  // Merge shared settings
+  if (source.language !== undefined) {
+    merged.language = source.language
+  }
+  if (source.ignore_patterns !== undefined) {
+    merged.ignore_patterns = source.ignore_patterns
+  }
+
+  // Merge formatter config
   if (source.formatter !== undefined) {
     if (source.formatter === false) {
       merged.formatter = false
@@ -110,6 +116,22 @@ export function mergeConfig(base: Config, source: Partial<Config>): Config {
       merged.formatter = {
         ...(base.formatter ?? {}),
         ...source.formatter,
+      }
+    }
+  }
+
+  // Merge LSP config
+  if (source.lsp !== undefined) {
+    if (source.lsp === false) {
+      merged.lsp = false
+    }
+    else if (base.lsp === false) {
+      merged.lsp = source.lsp
+    }
+    else {
+      merged.lsp = {
+        ...(base.lsp ?? {}),
+        ...source.lsp,
       }
     }
   }
