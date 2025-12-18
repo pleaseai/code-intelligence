@@ -12,7 +12,7 @@ env:
 
 jobs:
   lint:
-    runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
+    runs-on: ["self-hosted", "linux", "x64", "ubuntu-2404", "aws"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +40,7 @@ jobs:
         run: bun run lint
 
   typecheck:
-    runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
+    runs-on: ["self-hosted", "linux", "x64", "ubuntu-2404", "aws"]
     steps:
       - uses: actions/checkout@v4
 
@@ -61,7 +61,7 @@ jobs:
         run: bun run typecheck
 
   test:
-    runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
+    runs-on: ["self-hosted", "linux", "x64", "ubuntu-2404", "aws"]
     steps:
       - uses: actions/checkout@v4
 
