@@ -91,24 +91,24 @@ await manager.shutdown()
 
 ```typescript
 import {
-  // Position and Range
-  Position,
-  Range,
+  // Completions
+  CompletionItem,
+  CompletionItemKind,
+  CompletionList,
+  // Diagnostics
+  Diagnostic,
+
+  DocumentSymbol,
   Location,
   LocationLink,
 
+  // Position and Range
+  Position,
+  Range,
   // Symbols
   Symbol,
-  DocumentSymbol,
+
   SymbolKind,
-
-  // Completions
-  CompletionItem,
-  CompletionList,
-  CompletionItemKind,
-
-  // Diagnostics
-  Diagnostic,
 } from '@pleaseai/code-lsp'
 ```
 
