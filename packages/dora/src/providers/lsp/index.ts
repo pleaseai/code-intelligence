@@ -55,6 +55,21 @@ const LSP_TOOLS: ToolDefinition[] = [
     }),
   },
   {
+    name: 'lsp_references',
+    description:
+      'Find all references to a symbol at a specific position in a file. '
+      + 'Returns locations where the symbol is used across the workspace.',
+    inputSchema: z.object({
+      file: z.string().describe('Path to the file'),
+      line: z.number().describe('Line number (0-indexed)'),
+      character: z.number().describe('Character position (0-indexed)'),
+      include_declaration: z
+        .boolean()
+        .optional()
+        .describe('Include the symbol\'s declaration in results (default: false)'),
+    }),
+  },
+  {
     name: 'lsp_status',
     description:
       'Get the status of connected LSP servers. '
@@ -119,6 +134,8 @@ export class LSPProvider implements Provider {
           return await this.handleWorkspaceSymbol(args)
         case 'lsp_document_symbol':
           return await this.handleDocumentSymbol(args)
+        case 'lsp_references':
+          return await this.handleReferences(args)
         case 'lsp_status':
           return await this.handleStatus()
         default:
@@ -232,6 +249,41 @@ export class LSPProvider implements Provider {
 
     return {
       content: [{ type: 'text', text: JSON.stringify(symbols, null, 2) }],
+    }
+  }
+
+  private async handleReferences(args: unknown): Promise<ToolResult> {
+    const parsed = z
+      .object({
+        file: z.string(),
+        line: z.number(),
+        character: z.number(),
+        include_declaration: z.boolean().optional(),
+      })
+      .parse(args)
+
+    const filePath = path.isAbsolute(parsed.file)
+      ? parsed.file
+      : path.join(this.config.projectPath, parsed.file)
+
+    await this.manager!.touchFile(filePath, true)
+    const references = await this.manager!.references({
+      file: filePath,
+      line: parsed.line,
+      character: parsed.character,
+      includeDeclaration: parsed.include_declaration ?? false,
+    })
+
+    if (!references.length) {
+      return {
+        content: [
+          { type: 'text', text: 'No references found at this position' },
+        ],
+      }
+    }
+
+    return {
+      content: [{ type: 'text', text: JSON.stringify(references, null, 2) }],
     }
   }
 

@@ -48,6 +48,7 @@ describe('LSPProvider', () => {
     expect(toolNames).toContain('lsp_hover')
     expect(toolNames).toContain('lsp_workspace_symbol')
     expect(toolNames).toContain('lsp_document_symbol')
+    expect(toolNames).toContain('lsp_references')
     expect(toolNames).toContain('lsp_status')
   })
 
@@ -75,6 +76,33 @@ describe('LSPProvider', () => {
     const result = await provider.callTool('unknown_tool', {})
     expect(result.isError).toBe(true)
     expect(result.content[0]!.text).toContain('Unknown tool')
+  })
+
+  test('lsp_references returns error when not connected', async () => {
+    provider = new LSPProvider({ projectPath: process.cwd() })
+
+    const result = await provider.callTool('lsp_references', {
+      file: 'test.ts',
+      line: 0,
+      character: 0,
+    })
+    expect(result.isError).toBe(true)
+    expect(result.content[0]!.text).toContain('not connected')
+  })
+
+  test('lsp_references returns no references for non-symbol position', async () => {
+    provider = new LSPProvider({ projectPath: process.cwd() })
+    await provider.connect()
+
+    // Call on a position that doesn't have a symbol (no LSP servers connected)
+    const result = await provider.callTool('lsp_references', {
+      file: 'test.ts',
+      line: 0,
+      character: 0,
+    })
+    // Without connected LSP servers, should return "No references found"
+    expect(result.isError).toBeFalsy()
+    expect(result.content[0]!.text).toContain('No references found')
   })
 })
 
