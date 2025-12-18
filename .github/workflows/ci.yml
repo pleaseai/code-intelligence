@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   lint:
     runs-on: [self-hosted, X64, Linux, aws, ubuntu, ubuntu-2404]
