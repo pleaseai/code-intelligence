@@ -15,6 +15,7 @@ bun add @pleaseai/code-lsp
 - Code completions
 - Diagnostics and hover information
 - Symbol search (workspace and document)
+- Rename symbol across project
 - Auto-download for Kotlin, Dart, and Vue language servers
 
 ## Quick Start
@@ -52,6 +53,21 @@ const completions = await manager.completion({
   character: 5,
 })
 
+// Prepare rename (validate rename is possible)
+const prepareResult = await manager.prepareRename({
+  file: 'src/index.ts',
+  line: 10,
+  character: 5,
+})
+
+// Rename symbol
+const workspaceEdit = await manager.rename({
+  file: 'src/index.ts',
+  line: 10,
+  character: 5,
+  newName: 'newSymbolName',
+})
+
 // Cleanup
 await manager.shutdown()
 ```
@@ -84,6 +100,8 @@ await manager.shutdown()
 | `completion({ file, line, character })` | Get code completions |
 | `workspaceSymbol(query)` | Search workspace symbols |
 | `documentSymbol(uri)` | Get document symbols |
+| `prepareRename({ file, line, character })` | Validate rename is possible at position |
+| `rename({ file, line, character, newName })` | Rename symbol, returns WorkspaceEdit |
 | `status()` | Get connected server status |
 | `shutdown()` | Close all clients |
 
@@ -107,8 +125,10 @@ import {
   Range,
   // Symbols
   Symbol,
-
   SymbolKind,
+
+  // Rename
+  WorkspaceEdit,
 } from '@pleaseai/code-lsp'
 ```
 
