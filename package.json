@@ -13,8 +13,8 @@
   "scripts": {
     "start": "bun run packages/code/src/cli.ts",
     "dev": "turbo dev",
-    "lint": "eslint --cache .",
-    "lint:fix": "eslint --cache --fix .",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "build": "turbo build",
