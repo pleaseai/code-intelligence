@@ -22,12 +22,13 @@
 
 ### High Priority
 
-#### 1. Rename Symbol
+#### 1. ~~Rename Symbol~~ ✅ Implemented
 - **LSP Methods**: `textDocument/rename`, `textDocument/prepareRename`
 - **Description**: Allows renaming symbols across the project
 - **Reference**: Serena `ls.py:1834-1859`
 - **Returns**: `WorkspaceEdit` with all changes needed
 - **Use Case**: Refactoring variable/function/class names safely
+- **Implementation**: PR #19 (merged)
 
 #### 2. Code Actions
 - **LSP Methods**: `textDocument/codeAction`, `codeAction/resolve`
@@ -204,7 +205,7 @@ capabilities: {
 
 | Priority | Feature | Effort | Value | Status |
 |----------|---------|--------|-------|--------|
-| **High** | Rename Symbol | Medium | High | ⬜ TODO |
+| **High** | Rename Symbol | Medium | High | ✅ Done |
 | **High** | Code Actions | Medium | High | ⬜ TODO |
 | **High** | File Close (`didClose`) | Low | Medium | ⬜ TODO |
 | **Medium** | Signature Help | Low | Medium | ⬜ TODO |
