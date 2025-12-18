@@ -125,6 +125,7 @@ export async function createLSPClient(input: {
         textDocument: {
           synchronization: { didOpen: true, didChange: true },
           publishDiagnostics: { versionSupport: true },
+          rename: { prepareSupport: true },
         },
       },
     }),
