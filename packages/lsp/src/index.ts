@@ -809,7 +809,8 @@ export class LSPManager {
    * Rename the symbol at the given position
    * Returns a WorkspaceEdit with all changes needed
    *
-   * @param input.newName - The new name for the symbol (must be non-empty)
+   * Note: input.newName must be non-empty (not empty string or whitespace-only)
+   *
    * @returns WorkspaceEdit if rename succeeded, null if:
    *          - Symbol cannot be renamed
    *          - newName is empty or whitespace-only

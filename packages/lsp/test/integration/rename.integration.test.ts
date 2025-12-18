@@ -176,4 +176,47 @@ describe('Rename Symbol Integration (no npm required)', () => {
     })
     expect(result).toBeNull()
   })
+
+  test('rename returns null for empty newName', async () => {
+    const manager = new LSPManager(VUE_PROJECT_PATH, { enabled: false })
+    const result = await manager.rename({
+      file: MATH_TS_PATH,
+      line: 3,
+      character: 16,
+      newName: '',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('rename returns null for whitespace-only newName', async () => {
+    const manager = new LSPManager(VUE_PROJECT_PATH, { enabled: false })
+    const result = await manager.rename({
+      file: MATH_TS_PATH,
+      line: 3,
+      character: 16,
+      newName: '   ',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('prepareRename returns null for non-existent file when disabled', async () => {
+    const manager = new LSPManager(VUE_PROJECT_PATH, { enabled: false })
+    const result = await manager.prepareRename({
+      file: '/non/existent/file.ts',
+      line: 0,
+      character: 0,
+    })
+    expect(result).toBeNull()
+  })
+
+  test('rename returns null for non-existent file when disabled', async () => {
+    const manager = new LSPManager(VUE_PROJECT_PATH, { enabled: false })
+    const result = await manager.rename({
+      file: '/non/existent/file.ts',
+      line: 0,
+      character: 0,
+      newName: 'newName',
+    })
+    expect(result).toBeNull()
+  })
 })
