@@ -763,6 +763,11 @@ export class LSPManager {
    * Prepare rename at the given position
    * Validates if the symbol at the position can be renamed
    *
+   * @returns PrepareRenameResult if symbol can be renamed, null if:
+   *          - Symbol cannot be renamed (LSP server returned null)
+   *          - Position is not on a renameable symbol
+   *          - All LSP servers failed (errors are logged)
+   *
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_prepareRename
    */
   async prepareRename(input: {
@@ -785,7 +790,14 @@ export class LSPManager {
             },
           })
           .then((result: unknown) => this.normalizePrepareRename(result))
-          .catch(() => null),
+          .catch((err: unknown) => {
+            // Log unexpected errors (not "method not found" which is expected for some servers)
+            const message = err instanceof Error ? err.message : String(err)
+            if (!message.includes('-32601') && !message.includes('Method not found')) {
+              console.error(`[lsp:${client.serverID}] prepareRename failed:`, message)
+            }
+            return null
+          }),
       ),
     )
 
@@ -797,6 +809,12 @@ export class LSPManager {
    * Rename the symbol at the given position
    * Returns a WorkspaceEdit with all changes needed
    *
+   * @param input.newName - The new name for the symbol (must be non-empty)
+   * @returns WorkspaceEdit if rename succeeded, null if:
+   *          - Symbol cannot be renamed
+   *          - newName is empty or whitespace-only
+   *          - All LSP servers failed (errors are logged)
+   *
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_rename
    */
   async rename(input: {
@@ -805,6 +823,12 @@ export class LSPManager {
     character: number
     newName: string
   }): Promise<WorkspaceEdit | null> {
+    // Validate newName
+    if (!input.newName || input.newName.trim() === '') {
+      console.warn('[lsp] rename called with empty newName')
+      return null
+    }
+
     const clients = await this.getClients(input.file)
 
     const results = await Promise.all(
@@ -821,7 +845,12 @@ export class LSPManager {
             newName: input.newName,
           })
           .then((result: unknown) => this.normalizeWorkspaceEdit(result))
-          .catch(() => null),
+          .catch((err: unknown) => {
+            // Log rename errors - these are more serious since rename is a mutating operation
+            const message = err instanceof Error ? err.message : String(err)
+            console.error(`[lsp:${client.serverID}] rename failed:`, message)
+            return null
+          }),
       ),
     )
 

@@ -39,6 +39,28 @@ describe('LSPManager', () => {
     await manager.shutdown()
     // Should not throw
   })
+
+  test('rename returns null for empty newName', async () => {
+    const manager = new LSPManager('/test/project')
+    const result = await manager.rename({
+      file: '/test/project/test.ts',
+      line: 0,
+      character: 0,
+      newName: '',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('rename returns null for whitespace-only newName', async () => {
+    const manager = new LSPManager('/test/project')
+    const result = await manager.rename({
+      file: '/test/project/test.ts',
+      line: 0,
+      character: 0,
+      newName: '   ',
+    })
+    expect(result).toBeNull()
+  })
 })
 
 describe('formatDiagnostic', () => {
@@ -252,6 +274,36 @@ describe('WorkspaceEditSchema', () => {
     }
 
     const result = WorkspaceEditSchema.safeParse(multiFileEdit)
+    expect(result.success).toBe(true)
+  })
+
+  /**
+   * Note: LSP servers can return WorkspaceEdit in two formats:
+   * 1. 'changes' format: { changes: { [uri]: TextEdit[] } }
+   * 2. 'documentChanges' format: { documentChanges: TextDocumentEdit[] }
+   *
+   * The schema only validates the normalized 'changes' format output.
+   * LSPManager.normalizeWorkspaceEdit() converts 'documentChanges' to 'changes' at runtime.
+   */
+  test('schema validates normalized changes format (documentChanges is normalized at runtime)', () => {
+    // This test documents that the schema validates the normalized output format
+    // documentChanges format from LSP servers:
+    // { documentChanges: [{ textDocument: { uri: 'file:///test.ts' }, edits: [...] }] }
+    // gets normalized to:
+    // { changes: { 'file:///test.ts': [...] } }
+
+    const normalizedFromDocumentChanges = {
+      changes: {
+        'file:///test.ts': [
+          { range: { start: { line: 0, character: 0 }, end: { line: 0, character: 5 } }, newText: 'renamed' },
+        ],
+        'file:///other.ts': [
+          { range: { start: { line: 10, character: 0 }, end: { line: 10, character: 5 } }, newText: 'renamed' },
+        ],
+      },
+    }
+
+    const result = WorkspaceEditSchema.safeParse(normalizedFromDocumentChanges)
     expect(result.success).toBe(true)
   })
 })
