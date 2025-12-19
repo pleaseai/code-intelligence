@@ -150,19 +150,19 @@ ignore_patterns:
 # Formatter settings
 formatter:
   biome:
-    command: ["biome", "format", "--write", "$FILE"]
-    extensions: [".ts", ".tsx", ".js", ".jsx"]
+    command: [biome, format, --write, $FILE]
+    extensions: [.ts, .tsx, .js, .jsx]
   prettier:
-    disabled: true  # Disable a built-in formatter
+    disabled: true # Disable a built-in formatter
 
 # LSP settings
 lsp:
   typescript:
     enabled: true
   vue:
-    enabled: false  # Disable a specific LSP server
+    enabled: false # Disable a specific LSP server
   pyright:
-    root: "./backend"  # Custom root path
+    root: ./backend # Custom root path
 ```
 
 **Formatter Config:**

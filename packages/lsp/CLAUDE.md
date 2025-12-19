@@ -159,7 +159,7 @@ lsp:
 
   # Use custom root path
   pyright:
-    root: "./backend"
+    root: ./backend
 
   # Globally disable all LSP servers
   # lsp: false
@@ -172,7 +172,7 @@ lsp:
 
 **Config Utilities:**
 ```typescript
-import { isServerEnabled, getServerRoot, loadLspConfig } from '@pleaseai/code-lsp'
+import { getServerRoot, isServerEnabled, loadLspConfig } from '@pleaseai/code-lsp'
 
 const config = await loadLspConfig(projectDir)
 const enabled = isServerEnabled(config, 'typescript')
