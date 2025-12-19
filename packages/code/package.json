@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@pleaseai/code-format": "workspace:*",
-    "@pleaseai/code-lsp": "workspace:*"
+    "@pleaseai/code-lsp": "workspace:*",
+    "@pleaseai/logger": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

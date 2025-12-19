@@ -11,6 +11,9 @@ import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { pipeline } from 'node:stream/promises'
+import { createLogger } from '@pleaseai/logger'
+
+const log = createLogger('lsp')
 
 export interface LSPServerHandle {
   process: ChildProcessWithoutNullStreams
@@ -116,16 +119,16 @@ async function downloadAndExtract(url: string, destDir: string): Promise<void> {
   const tempFile = path.join(tempDir, 'archive.zip')
 
   try {
-    console.warn(`[lsp] Downloading ${url}...`)
+    log.info({ url }, 'Downloading')
     await downloadFile(url, tempFile)
-    console.warn(`[lsp] Extracting to ${destDir}...`)
+    log.info({ destDir }, 'Extracting')
     await extractZip(tempFile, destDir)
-    console.warn(`[lsp] Download complete`)
+    log.info('Download complete')
   }
   finally {
     // Cleanup temp files
     await fs.rm(tempDir, { recursive: true, force: true }).catch((err) => {
-      console.warn(`[lsp] Failed to cleanup temp directory ${tempDir}:`, err instanceof Error ? err.message : err)
+      log.warn({ tempDir, err }, 'Failed to cleanup temp directory')
     })
   }
 }
@@ -142,16 +145,17 @@ function attachLSPProcessHandlers(
   proc: ChildProcessWithoutNullStreams,
   serverId: string,
 ): void {
+  const serverLog = log.child({ serverId })
   proc.on('error', (err) => {
-    console.error(`[${serverId}] LSP process error:`, err)
+    serverLog.error({ err }, 'LSP process error')
   })
 
   proc.on('exit', (code, signal) => {
     if (code !== 0 && code !== null) {
-      console.error(`[${serverId}] LSP exited with code ${code}`)
+      serverLog.error({ exitCode: code }, 'LSP exited with non-zero code')
     }
     if (signal) {
-      console.error(`[${serverId}] LSP killed by signal ${signal}`)
+      serverLog.error({ signal }, 'LSP killed by signal')
     }
   })
 }
@@ -186,7 +190,7 @@ function nearestRoot(
               && 'code' in err
               && (err as NodeJS.ErrnoException).code === 'ENOENT'
             if (!isNotFound) {
-              console.warn(`[lsp] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+              log.warn({ target, err }, 'Unexpected error accessing file')
             }
           }
         }
@@ -211,7 +215,7 @@ function nearestRoot(
             && 'code' in err
             && (err as NodeJS.ErrnoException).code === 'ENOENT'
           if (!isNotFound) {
-            console.warn(`[lsp] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+            log.warn({ target, err }, 'Unexpected error accessing file')
           }
         }
       }
@@ -254,7 +258,7 @@ export const TypescriptServer: LSPServerInfo = {
         return { process: proc }
       }
       catch (err) {
-        console.error('[typescript] Failed to spawn via bunx. Install typescript-language-server globally or ensure bunx is available:', err)
+        log.error({ err }, 'Failed to spawn typescript-language-server via bunx')
         return undefined
       }
     }
@@ -289,7 +293,7 @@ export const DenoServer: LSPServerInfo = {
             && 'code' in err
             && (err as NodeJS.ErrnoException).code === 'ENOENT'
           if (!isNotFound) {
-            console.warn(`[deno] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+            log.warn({ target, err }, 'Unexpected error accessing file')
           }
         }
       }
@@ -337,7 +341,7 @@ export const PyrightServer: LSPServerInfo = {
         return { process: proc }
       }
       catch (err) {
-        console.error('[pyright] Failed to spawn via bunx. Install pyright-langserver globally or ensure bunx is available:', err)
+        log.error({ err }, 'Failed to spawn pyright-langserver via bunx')
         return undefined
       }
     }
@@ -442,7 +446,7 @@ export const OxlintServer: LSPServerInfo = {
             && 'code' in err
             && (err as NodeJS.ErrnoException).code === 'ENOENT'
         if (!isNotFound) {
-          console.error(`[oxlint] Cannot access local binary at ${localBin}:`, err)
+          log.error({ localBin, err }, 'Cannot access local oxlint binary')
         }
       }
 
@@ -465,9 +469,7 @@ export const OxlintServer: LSPServerInfo = {
 
       if (exitCode !== 0) {
         const stderr = await new Response(proc.stderr).text()
-        console.warn(
-          `[oxlint] Binary at ${lintBin} failed --help (exit ${exitCode}): ${stderr.slice(0, 200)}`,
-        )
+        log.warn({ lintBin, exitCode, stderr: stderr.slice(0, 200) }, 'oxlint binary failed --help')
       }
       else {
         const help = await new Response(proc.stdout).text()
@@ -492,10 +494,7 @@ export const OxlintServer: LSPServerInfo = {
     }
 
     // Neither found - log diagnostic
-    console.warn(
-      `[oxlint] Could not start oxlint LSP server for ${root}. `
-      + `Install with: npm install -D oxlint`,
-    )
+    log.warn({ root }, 'Could not start oxlint LSP server. Install with: npm install -D oxlint')
     return undefined
   },
 }
@@ -562,7 +561,7 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   const javaConfig = KOTLIN_RUNTIME_DEPS.java[platformId]
 
   if (!javaConfig) {
-    console.warn(`[kotlin] Unsupported platform: ${platformId}`)
+    log.warn({ platformId }, 'Unsupported platform for Kotlin')
     return undefined
   }
 
@@ -581,12 +580,12 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
       && (err as NodeJS.ErrnoException).code === 'ENOENT'
 
     if (!isNotFound) {
-      console.error(`[kotlin] Cannot access Java at ${javaPath}:`, err instanceof Error ? err.message : err)
+      log.error({ javaPath, err }, 'Cannot access Java')
       return undefined
     }
 
     // Java not found, download it
-    console.warn(`[kotlin] Downloading Java 21 for ${platformId}...`)
+    log.info({ platformId }, 'Downloading Java 21')
     try {
       await downloadAndExtract(javaConfig.url, javaDir)
 
@@ -596,13 +595,13 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
           await fs.chmod(javaPath, 0o755)
         }
         catch (chmodErr) {
-          console.error(`[kotlin] Failed to make Java executable at ${javaPath}:`, chmodErr instanceof Error ? chmodErr.message : chmodErr)
+          log.error({ javaPath, err: chmodErr }, 'Failed to make Java executable')
           return undefined
         }
       }
     }
     catch (err) {
-      console.error(`[kotlin] Failed to download Java:`, err)
+      log.error({ err }, 'Failed to download Java')
       return undefined
     }
   }
@@ -613,7 +612,7 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   }
   catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err)
-    console.error(`[kotlin] Java executable not accessible at ${javaPath}: ${errorMsg}`)
+    log.error({ javaPath, errorMsg }, 'Java executable not accessible')
     return undefined
   }
 
@@ -632,12 +631,12 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
       && (err as NodeJS.ErrnoException).code === 'ENOENT'
 
     if (!isNotFound) {
-      console.error(`[kotlin] Cannot access Kotlin LSP at ${kotlinLspPath}:`, err instanceof Error ? err.message : err)
+      log.error({ kotlinLspPath, err }, 'Cannot access Kotlin LSP')
       return undefined
     }
 
     // Kotlin LSP not found, download it
-    console.warn(`[kotlin] Downloading Kotlin Language Server...`)
+    log.info('Downloading Kotlin Language Server')
     try {
       await downloadAndExtract(KOTLIN_RUNTIME_DEPS.kotlinLsp.url, resourcesDir)
 
@@ -647,13 +646,13 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
           await fs.chmod(kotlinLspPath, 0o755)
         }
         catch (chmodErr) {
-          console.error(`[kotlin] Failed to make Kotlin LSP executable at ${kotlinLspPath}:`, chmodErr instanceof Error ? chmodErr.message : chmodErr)
+          log.error({ kotlinLspPath, err: chmodErr }, 'Failed to make Kotlin LSP executable')
           return undefined
         }
       }
     }
     catch (err) {
-      console.error(`[kotlin] Failed to download Kotlin LSP:`, err)
+      log.error({ err }, 'Failed to download Kotlin LSP')
       return undefined
     }
   }
@@ -664,7 +663,7 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
   }
   catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err)
-    console.error(`[kotlin] Kotlin LSP script not accessible at ${kotlinLspPath}: ${errorMsg}`)
+    log.error({ kotlinLspPath, errorMsg }, 'Kotlin LSP script not accessible')
     return undefined
   }
 
@@ -691,14 +690,14 @@ export const KotlinServer: LSPServerInfo = {
   async spawn(root) {
     const platformId = getPlatformId()
     if (!platformId) {
-      console.warn(`[kotlin] Unsupported platform: ${process.platform}-${process.arch}`)
+      log.warn({ platform: process.platform, arch: process.arch }, 'Unsupported platform for Kotlin')
       return undefined
     }
 
     // Setup dependencies (downloads if needed)
     const deps = await setupKotlinDependencies(platformId)
     if (!deps) {
-      console.warn(`[kotlin] Failed to setup Kotlin LSP dependencies. Check previous logs for details.`)
+      log.warn('Failed to setup Kotlin LSP dependencies')
       return undefined
     }
 
@@ -718,7 +717,7 @@ export const KotlinServer: LSPServerInfo = {
       return { process: proc }
     }
     catch (err) {
-      console.error(`[kotlin] Failed to spawn Kotlin LSP:`, err)
+      log.error({ err }, 'Failed to spawn Kotlin LSP')
       return undefined
     }
   },
@@ -778,7 +777,7 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
   const config = DART_RUNTIME_DEPS.platforms[platformId]
 
   if (!config) {
-    console.warn(`[dart] Unsupported platform: ${platformId}`)
+    log.warn({ platformId }, 'Unsupported platform for Dart')
     return undefined
   }
 
@@ -795,12 +794,12 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
       && (err as NodeJS.ErrnoException).code === 'ENOENT'
 
     if (!isNotFound) {
-      console.error(`[dart] Cannot access Dart at ${dartPath}:`, err instanceof Error ? err.message : err)
+      log.error({ dartPath, err }, 'Cannot access Dart')
       return undefined
     }
 
     // Dart not found, download it
-    console.warn(`[dart] Downloading Dart SDK ${DART_RUNTIME_DEPS.version} for ${platformId}...`)
+    log.info({ version: DART_RUNTIME_DEPS.version, platformId }, 'Downloading Dart SDK')
     try {
       await downloadAndExtract(config.url, resourcesDir)
 
@@ -810,13 +809,13 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
           await fs.chmod(dartPath, 0o755)
         }
         catch (chmodErr) {
-          console.error(`[dart] Failed to make Dart executable at ${dartPath}:`, chmodErr instanceof Error ? chmodErr.message : chmodErr)
+          log.error({ dartPath, err: chmodErr }, 'Failed to make Dart executable')
           return undefined
         }
       }
     }
     catch (downloadErr) {
-      console.error(`[dart] Failed to download Dart SDK:`, downloadErr)
+      log.error({ err: downloadErr }, 'Failed to download Dart SDK')
       return undefined
     }
   }
@@ -828,7 +827,7 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
   }
   catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err)
-    console.error(`[dart] Dart executable not accessible at ${dartPath}: ${errorMsg}`)
+    log.error({ dartPath, errorMsg }, 'Dart executable not accessible')
     return undefined
   }
 }
@@ -854,20 +853,20 @@ export const DartServer: LSPServerInfo = {
         return { process: proc }
       }
       catch (err) {
-        console.warn(`[dart] Failed to spawn system Dart LSP, trying auto-download:`, err)
+        log.warn({ err }, 'Failed to spawn system Dart LSP, trying auto-download')
       }
     }
 
     // Fallback to auto-download
     const platformId = getPlatformId()
     if (!platformId) {
-      console.warn(`[dart] Unsupported platform: ${process.platform}-${process.arch}`)
+      log.warn({ platform: process.platform, arch: process.arch }, 'Unsupported platform for Dart')
       return undefined
     }
 
     const dartPath = await setupDartDependencies(platformId)
     if (!dartPath) {
-      console.warn(`[dart] Failed to setup Dart SDK. Check previous logs for details.`)
+      log.warn('Failed to setup Dart SDK')
       return undefined
     }
 
@@ -880,7 +879,7 @@ export const DartServer: LSPServerInfo = {
       return { process: proc }
     }
     catch (err) {
-      console.error(`[dart] Failed to spawn Dart LSP:`, err)
+      log.error({ err }, 'Failed to spawn Dart LSP')
       return undefined
     }
   },
@@ -970,7 +969,7 @@ async function setupVueDependencies(): Promise<{
     try {
       const installedVersion = await fs.readFile(versionFile, 'utf-8')
       if (installedVersion.trim() !== expectedVersion) {
-        console.warn(`[vue] Version mismatch: installed=${installedVersion.trim()}, expected=${expectedVersion}`)
+        log.warn({ installed: installedVersion.trim(), expected: expectedVersion }, 'Vue version mismatch')
         needsInstall = true
       }
     }
@@ -985,7 +984,7 @@ async function setupVueDependencies(): Promise<{
       }
       else {
         // Unexpected error reading version file - log it but proceed with reinstall
-        console.warn(`[vue] Unexpected error reading version file:`, err instanceof Error ? err.message : err)
+        log.warn({ err }, 'Unexpected error reading Vue version file')
         needsInstall = true
       }
     }
@@ -1001,13 +1000,13 @@ async function setupVueDependencies(): Promise<{
     }
     else {
       // Unexpected error accessing executables
-      console.error(`[vue] Cannot access Vue LSP executables:`, err instanceof Error ? err.message : err)
+      log.error({ err }, 'Cannot access Vue LSP executables')
       return undefined
     }
   }
 
   if (needsInstall) {
-    console.warn('[vue] Installing Vue Language Server dependencies...')
+    log.info('Installing Vue Language Server dependencies')
 
     try {
       await fs.mkdir(resourcesDir, { recursive: true })
@@ -1029,7 +1028,7 @@ async function setupVueDependencies(): Promise<{
       const exitCode = await proc.exited
       if (exitCode !== 0) {
         const stderr = await new Response(proc.stderr).text()
-        console.error(`[vue] npm install failed with exit code ${exitCode}: ${stderr}`)
+        log.error({ exitCode, stderr }, 'Vue npm install failed')
         return undefined
       }
 
@@ -1038,12 +1037,12 @@ async function setupVueDependencies(): Promise<{
         await fs.writeFile(versionFile, expectedVersion)
       }
       catch (writeErr) {
-        console.warn(`[vue] Failed to write version marker file:`, writeErr instanceof Error ? writeErr.message : writeErr, '- Dependencies will be reinstalled on next run')
+        log.warn({ err: writeErr }, 'Failed to write Vue version marker file')
       }
-      console.warn('[vue] Vue Language Server dependencies installed successfully')
+      log.info('Vue Language Server dependencies installed successfully')
     }
     catch (err) {
-      console.error('[vue] Failed to install dependencies:', err)
+      log.error({ err }, 'Failed to install Vue dependencies')
       return undefined
     }
   }
@@ -1061,7 +1060,7 @@ async function setupVueDependencies(): Promise<{
       await fs.access(filePath)
     }
     catch (err) {
-      console.error(`[vue] Required file not found after installation: ${name} at ${filePath}:`, err instanceof Error ? err.message : err)
+      log.error({ name, filePath, err }, 'Vue required file not found after installation')
       return undefined
     }
   }
@@ -1102,14 +1101,14 @@ export const VueServer: LSPServerInfo = {
     const npm = Bun.which('npm')
 
     if (!node || !npm) {
-      console.warn('[vue] Node.js and npm are required for Vue Language Server')
+      log.warn('Node.js and npm are required for Vue Language Server')
       return undefined
     }
 
     // Setup dependencies (npm install if needed)
     const deps = await setupVueDependencies()
     if (!deps) {
-      console.warn('[vue] Failed to setup Vue LSP dependencies. Check previous logs for details.')
+      log.warn('Failed to setup Vue LSP dependencies')
       return undefined
     }
 
@@ -1135,7 +1134,7 @@ export const VueServer: LSPServerInfo = {
       }
     }
     catch (err) {
-      console.error('[vue] Failed to spawn Vue Language Server:', err)
+      log.error({ err }, 'Failed to spawn Vue Language Server')
       return undefined
     }
   },
@@ -1187,7 +1186,7 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
     try {
       const installedVersion = await fs.readFile(versionFile, 'utf-8')
       if (installedVersion.trim() !== expectedVersion) {
-        console.warn(`[prisma] Version mismatch: installed=${installedVersion.trim()}, expected=${expectedVersion}`)
+        log.warn({ installed: installedVersion.trim(), expected: expectedVersion }, 'Prisma version mismatch')
         needsInstall = true
       }
     }
@@ -1200,7 +1199,7 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
         needsInstall = true
       }
       else {
-        console.warn(`[prisma] Unexpected error reading version file:`, err instanceof Error ? err.message : err)
+        log.warn({ err }, 'Unexpected error reading Prisma version file')
         needsInstall = true
       }
     }
@@ -1214,13 +1213,13 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
       needsInstall = true
     }
     else {
-      console.error(`[prisma] Cannot access Prisma LSP executable:`, err instanceof Error ? err.message : err)
+      log.error({ err }, 'Cannot access Prisma LSP executable')
       return undefined
     }
   }
 
   if (needsInstall) {
-    console.warn('[prisma] Installing Prisma Language Server...')
+    log.info('Installing Prisma Language Server')
 
     try {
       await fs.mkdir(resourcesDir, { recursive: true })
@@ -1236,7 +1235,7 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
       const exitCode = await proc.exited
       if (exitCode !== 0) {
         const stderr = await new Response(proc.stderr).text()
-        console.error(`[prisma] npm install failed with exit code ${exitCode}: ${stderr}`)
+        log.error({ exitCode, stderr }, 'Prisma npm install failed')
         return undefined
       }
 
@@ -1245,12 +1244,12 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
         await fs.writeFile(versionFile, expectedVersion)
       }
       catch (writeErr) {
-        console.warn(`[prisma] Failed to write version marker file:`, writeErr instanceof Error ? writeErr.message : writeErr, '- Dependencies will be reinstalled on next run')
+        log.warn({ err: writeErr }, 'Failed to write Prisma version marker file')
       }
-      console.warn('[prisma] Prisma Language Server installed successfully')
+      log.info('Prisma Language Server installed successfully')
     }
     catch (err) {
-      console.error('[prisma] Failed to install dependencies:', err)
+      log.error({ err }, 'Failed to install Prisma dependencies')
       return undefined
     }
   }
@@ -1261,7 +1260,7 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
     return prismaServerPath
   }
   catch (err) {
-    console.error(`[prisma] Prisma LSP binary not found after installation: ${prismaServerPath}:`, err instanceof Error ? err.message : err)
+    log.error({ prismaServerPath, err }, 'Prisma LSP binary not found after installation')
     return undefined
   }
 }
@@ -1290,14 +1289,14 @@ export const PrismaServer: LSPServerInfo = {
     const npm = Bun.which('npm')
 
     if (!node || !npm) {
-      console.warn('[prisma] Node.js and npm are required for Prisma Language Server')
+      log.warn('Node.js and npm are required for Prisma Language Server')
       return undefined
     }
 
     // Setup dependencies (npm install if needed)
     const prismaServerPath = await setupPrismaDependencies()
     if (!prismaServerPath) {
-      console.warn('[prisma] Failed to setup Prisma LSP dependencies. Check previous logs for details.')
+      log.warn('Failed to setup Prisma LSP dependencies')
       return undefined
     }
 
@@ -1311,7 +1310,7 @@ export const PrismaServer: LSPServerInfo = {
       return { process: proc }
     }
     catch (err) {
-      console.error('[prisma] Failed to spawn Prisma Language Server:', err)
+      log.error({ err }, 'Failed to spawn Prisma Language Server')
       return undefined
     }
   },

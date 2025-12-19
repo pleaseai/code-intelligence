@@ -1,7 +1,10 @@
 import type { Config } from './schema'
 import path from 'node:path'
+import { createLogger } from '@pleaseai/logger'
 import YAML from 'yaml'
 import { ConfigSchema, defaultConfig } from './schema'
+
+const log = createLogger('config')
 
 /**
  * Error thrown when configuration validation fails
@@ -155,8 +158,7 @@ export async function loadConfig(projectDir: string): Promise<Config> {
     return defaultConfig
   }
 
-  // Use stderr to avoid interfering with JSON output on stdout
-  console.error(`[config] Loading configuration from ${configPath}`)
+  log.debug({ configPath }, 'Loading configuration')
   return loadConfigFromFile(configPath)
 }
 

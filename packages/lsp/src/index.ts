@@ -11,6 +11,7 @@ import type { LSPClientInfo, LSPServerHandle } from './client'
 import type { LSPServerInfo } from './server'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { createLogger } from '@pleaseai/logger'
 import { z } from 'zod'
 import {
   createLSPClient,
@@ -18,6 +19,8 @@ import {
 } from './client'
 import { getServerRoot, isServerEnabled, loadLspConfig } from './config'
 import { LSP_SERVERS } from './server'
+
+const log = createLogger('lsp')
 
 export type Diagnostic = VSCodeDiagnostic
 
@@ -295,7 +298,7 @@ export class LSPManager {
       }
       catch (err) {
         this.broken.add(key)
-        console.error(`Failed to spawn LSP server ${server.id}:`, err)
+        log.error({ serverId: server.id, err }, 'Failed to spawn LSP server')
         return undefined
       }
 
@@ -322,7 +325,7 @@ export class LSPManager {
       catch (err) {
         this.broken.add(key)
         handle.process.kill()
-        console.error(`Failed to initialize LSP client ${server.id}:`, err)
+        log.error({ serverId: server.id, err }, 'Failed to initialize LSP client')
         return undefined
       }
     }
@@ -406,7 +409,7 @@ export class LSPManager {
         return wait
       }),
     ).catch((err) => {
-      console.error('Failed to touch file:', err)
+      log.error({ err }, 'Failed to touch file')
     })
   }
 
@@ -819,7 +822,7 @@ export class LSPManager {
             // Log unexpected errors (not "method not found" which is expected for some servers)
             const message = err instanceof Error ? err.message : String(err)
             if (!message.includes('-32601') && !message.includes('Method not found')) {
-              console.error(`[lsp:${client.serverID}] prepareRename failed:`, message)
+              log.error({ serverId: client.serverID, message }, 'prepareRename failed')
             }
             return null
           }),
@@ -851,7 +854,7 @@ export class LSPManager {
   }): Promise<WorkspaceEdit | null> {
     // Validate newName
     if (!input.newName || input.newName.trim() === '') {
-      console.warn('[lsp] rename called with empty newName')
+      log.warn('rename called with empty newName')
       return null
     }
 
@@ -874,7 +877,7 @@ export class LSPManager {
           .catch((err: unknown) => {
             // Log rename errors - these are more serious since rename is a mutating operation
             const message = err instanceof Error ? err.message : String(err)
-            console.error(`[lsp:${client.serverID}] rename failed:`, message)
+            log.error({ serverId: client.serverID, message }, 'rename failed')
             return null
           }),
       ),

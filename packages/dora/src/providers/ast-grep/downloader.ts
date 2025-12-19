@@ -8,6 +8,7 @@
 import type { PlatformId } from './types'
 import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import process from 'node:process'
+import { createLogger } from '@pleaseai/logger'
 import { spawn } from 'bun'
 import {
   AST_GREP_VERSION,
@@ -17,6 +18,8 @@ import {
   getVersionMarkerPath,
   PLATFORM_CONFIGS,
 } from './constants'
+
+const log = createLogger('ast-grep')
 
 /**
  * Verify a binary is actually ast-grep by checking --version output
@@ -34,7 +37,7 @@ async function verifyAstGrepBinary(binaryPath: string): Promise<boolean> {
     return stdout.includes('ast-grep') || /^\d+\.\d+\.\d+/.test(stdout.trim())
   }
   catch (e) {
-    console.error(`[ast-grep] Binary verification failed for ${binaryPath}: ${e instanceof Error ? e.message : String(e)}`)
+    log.warn({ binaryPath, err: e }, 'Binary verification failed')
     return false
   }
 }
@@ -81,7 +84,7 @@ export function getCachedBinary(): string | null {
     }
     catch (e) {
       // Log warning but continue - will trigger re-download
-      console.warn(`[ast-grep] Failed to read version marker at ${versionPath}: ${e instanceof Error ? e.message : String(e)}`)
+      log.warn({ versionPath, err: e }, 'Failed to read version marker')
       return null
     }
   }
@@ -129,13 +132,13 @@ async function extractZip(archivePath: string, destDir: string): Promise<void> {
 export async function downloadAstGrepBinary(platformId?: PlatformId): Promise<string | null> {
   const platform = platformId ?? getPlatformId()
   if (!platform) {
-    console.error('[dora] Unsupported platform for ast-grep binary download')
+    log.error('Unsupported platform for ast-grep binary download')
     return null
   }
 
   const config = PLATFORM_CONFIGS[platform]
   if (!config) {
-    console.error(`[dora] No binary configuration for platform: ${platform}`)
+    log.error({ platform }, 'No binary configuration for platform')
     return null
   }
 
@@ -153,7 +156,7 @@ export async function downloadAstGrepBinary(platformId?: PlatformId): Promise<st
     }
   }
 
-  console.log(`[dora] Downloading ast-grep binary v${AST_GREP_VERSION}...`)
+  log.info({ version: AST_GREP_VERSION }, 'Downloading ast-grep binary')
 
   try {
     // Create cache directory
@@ -188,12 +191,12 @@ export async function downloadAstGrepBinary(platformId?: PlatformId): Promise<st
     // Write version marker
     writeFileSync(getVersionMarkerPath(), AST_GREP_VERSION)
 
-    console.log(`[dora] ast-grep binary ready at ${binaryPath}`)
+    log.info({ binaryPath }, 'ast-grep binary ready')
 
     return binaryPath
   }
   catch (err) {
-    console.error(`[dora] Failed to download ast-grep: ${err instanceof Error ? err.message : err}`)
+    log.error({ err }, 'Failed to download ast-grep')
     return null
   }
 }

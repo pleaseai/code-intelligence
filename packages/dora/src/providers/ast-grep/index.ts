@@ -7,11 +7,14 @@
 import type { Provider, ToolDefinition, ToolResult } from '../provider'
 import type { RegistryConfig } from '../registry'
 import type { NapiLanguage } from './types'
+import { createLogger } from '@pleaseai/logger'
 import { z, ZodError } from 'zod'
 import { isCliAvailable, runSg } from './cli'
 import { CLI_LANGUAGES, NAPI_LANGUAGES } from './constants'
 import { analyzeCode, getNapiError, isNapiAvailable, transformCode } from './napi'
 import { formatAnalyzeResult, formatReplaceResult, formatSearchResult, formatTransformResult, getEmptyResultHint } from './utils'
+
+const log = createLogger('ast-grep')
 
 /**
  * Format error for tool result, with special handling for Zod validation errors
@@ -150,7 +153,7 @@ export class AstGrepProvider implements Provider {
     // Pre-check CLI availability (don't fail, just log)
     const cliAvailable = await isCliAvailable()
     if (!cliAvailable) {
-      console.log('[ast-grep] CLI not found, will download on first use')
+      log.debug('CLI not found, will download on first use')
     }
 
     // Check NAPI availability
@@ -158,9 +161,8 @@ export class AstGrepProvider implements Provider {
     if (!napiAvailable) {
       const error = getNapiError()
 
-      console.log(`[ast-grep] NAPI not available: ${error ?? 'unknown'}`)
-
-      console.log('[ast-grep] In-memory tools (analyze/transform) disabled')
+      log.debug({ error }, 'NAPI not available')
+      log.debug('In-memory tools (analyze/transform) disabled')
     }
 
     this.connected = true

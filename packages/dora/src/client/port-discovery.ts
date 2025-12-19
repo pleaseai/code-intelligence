@@ -3,8 +3,11 @@
  * Scans ports 24226-24245 to find the running IDE instance
  */
 
+import { createLogger } from '@pleaseai/logger'
 import { ServerNotFoundError } from '../errors'
 import { transformResponse } from './response-transformer'
+
+const log = createLogger('dora')
 
 const BASE_PORT = 0x5EA2 // 24226
 const PORT_RANGE = 20
@@ -74,7 +77,7 @@ export async function discoverPort(projectPath: string): Promise<number> {
     if (await checkPort(port, projectPath)) {
       cache.port = port
       cache.projectPath = projectPath
-      console.error(`[dora] Found JetBrains IDE service at port ${port}`)
+      log.debug({ port }, 'Found JetBrains IDE service')
       return port
     }
   }

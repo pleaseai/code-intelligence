@@ -28,6 +28,7 @@
     "test": "echo 'No tests yet'"
   },
   "dependencies": {
+    "@pleaseai/logger": "workspace:*",
     "yaml": "^2.8.2"
   },
   "devDependencies": {
