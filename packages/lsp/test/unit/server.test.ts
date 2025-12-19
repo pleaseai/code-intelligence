@@ -5,6 +5,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   DartServer,
   DenoServer,
+  EslintServer,
   getServerById,
   getServersForExtension,
   GoplsServer,
@@ -33,6 +34,7 @@ describe('LSP_SERVERS', () => {
     expect(serverIds).toContain('dart')
     expect(serverIds).toContain('vue')
     expect(serverIds).toContain('prisma')
+    expect(serverIds).toContain('eslint')
   })
 })
 
@@ -97,6 +99,118 @@ describe('OxlintServer', () => {
 
   test('has spawn function', () => {
     expect(typeof OxlintServer.spawn).toBe('function')
+  })
+})
+
+describe('EslintServer', () => {
+  test('has correct id', () => {
+    expect(EslintServer.id).toBe('eslint')
+  })
+
+  test('supports JavaScript/TypeScript extensions', () => {
+    expect(EslintServer.extensions).toContain('.ts')
+    expect(EslintServer.extensions).toContain('.tsx')
+    expect(EslintServer.extensions).toContain('.js')
+    expect(EslintServer.extensions).toContain('.jsx')
+    expect(EslintServer.extensions).toContain('.mjs')
+    expect(EslintServer.extensions).toContain('.cjs')
+    expect(EslintServer.extensions).toContain('.mts')
+    expect(EslintServer.extensions).toContain('.cts')
+  })
+
+  test('supports Vue extension', () => {
+    expect(EslintServer.extensions).toContain('.vue')
+  })
+
+  test('has root function', () => {
+    expect(typeof EslintServer.root).toBe('function')
+  })
+
+  test('has spawn function', () => {
+    expect(typeof EslintServer.spawn).toBe('function')
+  })
+
+  test('root function detects package-lock.json', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'eslint-test-'))
+    try {
+      // Create package-lock.json
+      await fs.writeFile(path.join(tempDir, 'package-lock.json'), '{"name": "test"}\n')
+
+      // Create a nested source file
+      const srcDir = path.join(tempDir, 'src')
+      await fs.mkdir(srcDir)
+      const tsFile = path.join(srcDir, 'index.ts')
+      await fs.writeFile(tsFile, '// test')
+
+      const root = await EslintServer.root(tsFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects bun.lock', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'eslint-bun-'))
+    try {
+      // Create bun.lock
+      await fs.writeFile(path.join(tempDir, 'bun.lock'), '')
+
+      const tsFile = path.join(tempDir, 'index.ts')
+      await fs.writeFile(tsFile, '// test')
+
+      const root = await EslintServer.root(tsFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function returns projectPath when no lock file found', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'eslint-no-lock-'))
+    try {
+      // No lock files
+      const tsFile = path.join(tempDir, 'index.ts')
+      await fs.writeFile(tsFile, '// test')
+
+      const root = await EslintServer.root(tsFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function finds nearest lock file in monorepo', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'eslint-monorepo-'))
+    try {
+      // Create root lock file
+      await fs.writeFile(path.join(tempDir, 'package-lock.json'), '{"name": "root"}\n')
+
+      // Create nested package with its own lock file
+      const innerDir = path.join(tempDir, 'packages', 'app')
+      await fs.mkdir(innerDir, { recursive: true })
+      await fs.writeFile(path.join(innerDir, 'package-lock.json'), '{"name": "app"}\n')
+
+      const srcDir = path.join(innerDir, 'src')
+      await fs.mkdir(srcDir)
+      const tsFile = path.join(srcDir, 'index.ts')
+      await fs.writeFile(tsFile, '// test')
+
+      // Should find the inner package's lock file
+      const root = await EslintServer.root(tsFile, tempDir)
+      expect(root).toBe(innerDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('spawn function returns promise', () => {
+    const spawnFn = EslintServer.spawn
+    expect(typeof spawnFn).toBe('function')
+    expect(spawnFn.constructor.name).toBe('AsyncFunction')
   })
 })
 

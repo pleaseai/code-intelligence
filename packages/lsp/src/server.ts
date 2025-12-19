@@ -1317,6 +1317,201 @@ export const PrismaServer: LSPServerInfo = {
   },
 }
 
+// =============================================================================
+// ESLint Language Server
+// =============================================================================
+
+/**
+ * Get the ESLint LSP resources directory
+ */
+function getEslintResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'eslint-lsp')
+}
+
+/**
+ * Setup ESLint runtime dependencies
+ * Downloads vscode-eslint from GitHub and builds it
+ *
+ * @returns Path to eslint server JS file, or undefined on failure
+ */
+async function setupEslintDependencies(): Promise<string | undefined> {
+  const resourcesDir = getEslintResourcesDir()
+  const vscodeEslintDir = path.join(resourcesDir, 'vscode-eslint')
+  const serverPath = path.join(vscodeEslintDir, 'server', 'out', 'eslintServer.js')
+
+  // Check if server already exists
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch (err) {
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (!isNotFound) {
+      console.error(`[eslint] Cannot access ESLint server at ${serverPath}:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
+  }
+
+  // Server not found, need to download and build
+  console.warn('[eslint] Downloading and building VS Code ESLint server...')
+
+  try {
+    await fs.mkdir(resourcesDir, { recursive: true })
+
+    // Download vscode-eslint from GitHub
+    const response = await fetch('https://github.com/microsoft/vscode-eslint/archive/refs/heads/main.zip')
+    if (!response.ok) {
+      console.error(`[eslint] Failed to download vscode-eslint: ${response.status} ${response.statusText}`)
+      return undefined
+    }
+
+    const zipPath = path.join(resourcesDir, 'vscode-eslint.zip')
+    const body = response.body
+    if (!body) {
+      console.error('[eslint] No response body for vscode-eslint download')
+      return undefined
+    }
+
+    // Write zip file
+    const writeStream = createWriteStream(zipPath)
+    await pipeline(body as unknown as NodeJS.ReadableStream, writeStream)
+
+    // Extract zip
+    console.warn('[eslint] Extracting vscode-eslint...')
+    await fs.mkdir(resourcesDir, { recursive: true })
+    const extractProc = Bun.spawn(['unzip', '-o', '-q', zipPath, '-d', resourcesDir], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const extractExitCode = await extractProc.exited
+    if (extractExitCode !== 0) {
+      const stderr = await new Response(extractProc.stderr).text()
+      console.error(`[eslint] Failed to extract vscode-eslint: ${stderr}`)
+      return undefined
+    }
+
+    // Cleanup zip file
+    await fs.rm(zipPath, { force: true })
+
+    // Rename extracted directory (vscode-eslint-main -> vscode-eslint)
+    const extractedPath = path.join(resourcesDir, 'vscode-eslint-main')
+    try {
+      await fs.access(vscodeEslintDir)
+      console.warn('[eslint] Removing old vscode-eslint installation...')
+      await fs.rm(vscodeEslintDir, { force: true, recursive: true })
+    }
+    catch {
+      // Directory doesn't exist, that's fine
+    }
+    await fs.rename(extractedPath, vscodeEslintDir)
+
+    // Run npm install
+    console.warn('[eslint] Running npm install...')
+    const npmInstallProc = Bun.spawn(['npm', 'install'], {
+      cwd: vscodeEslintDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const npmInstallExitCode = await npmInstallProc.exited
+    if (npmInstallExitCode !== 0) {
+      const stderr = await new Response(npmInstallProc.stderr).text()
+      console.error(`[eslint] npm install failed: ${stderr}`)
+      return undefined
+    }
+
+    // Run npm run compile
+    console.warn('[eslint] Building vscode-eslint (npm run compile)...')
+    const npmCompileProc = Bun.spawn(['npm', 'run', 'compile'], {
+      cwd: vscodeEslintDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const npmCompileExitCode = await npmCompileProc.exited
+    if (npmCompileExitCode !== 0) {
+      const stderr = await new Response(npmCompileProc.stderr).text()
+      console.error(`[eslint] npm run compile failed: ${stderr}`)
+      return undefined
+    }
+
+    console.warn('[eslint] VS Code ESLint server installed successfully')
+  }
+  catch (err) {
+    console.error('[eslint] Failed to setup ESLint dependencies:', err)
+    return undefined
+  }
+
+  // Verify server exists
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch {
+    console.error(`[eslint] ESLint server not found after installation: ${serverPath}`)
+    return undefined
+  }
+}
+
+/**
+ * ESLint Language Server
+ * Downloads and builds vscode-eslint from GitHub
+ * Requires eslint package in project (prerequisite check)
+ */
+export const EslintServer: LSPServerInfo = {
+  id: 'eslint',
+  extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts', '.vue'],
+  root: nearestRoot([
+    'package-lock.json',
+    'bun.lockb',
+    'bun.lock',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+  ]),
+  async spawn(root) {
+    // Prerequisite: Check eslint exists in project
+    const isWindows = process.platform === 'win32'
+    const eslintBin = path.join(root, 'node_modules', '.bin', `eslint${isWindows ? '.cmd' : ''}`)
+    try {
+      await fs.access(eslintBin)
+    }
+    catch {
+      console.warn('[eslint] eslint package not found in project. Install with: npm install eslint')
+      return undefined
+    }
+
+    // Check for node/npm availability
+    const node = Bun.which('node')
+    const npm = Bun.which('npm')
+    if (!node || !npm) {
+      console.warn('[eslint] Node.js and npm are required for ESLint Language Server')
+      return undefined
+    }
+
+    // Setup dependencies (download + build if needed)
+    const serverPath = await setupEslintDependencies()
+    if (!serverPath) {
+      console.warn('[eslint] Failed to setup ESLint LSP dependencies. Check previous logs for details.')
+      return undefined
+    }
+
+    try {
+      // Spawn server with increased memory for large codebases
+      const proc = spawn(node, ['--max-old-space-size=8192', serverPath, '--stdio'], {
+        cwd: root,
+      })
+
+      attachLSPProcessHandlers(proc, 'eslint')
+      return { process: proc }
+    }
+    catch (err) {
+      console.error('[eslint] Failed to spawn ESLint Language Server:', err)
+      return undefined
+    }
+  },
+}
+
 /**
  * All available LSP servers
  */
@@ -1325,6 +1520,7 @@ export const LSP_SERVERS: LSPServerInfo[] = [
   VueServer, // Vue before TypeScript for .vue files
   TypescriptServer,
   OxlintServer,
+  EslintServer, // ESLint after OxlintServer for JS/TS linting
   PyrightServer,
   GoplsServer,
   RustAnalyzerServer,

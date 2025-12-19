@@ -925,6 +925,7 @@ export { getLanguageId, LANGUAGE_EXTENSIONS } from './language'
 export {
   DartServer,
   DenoServer,
+  EslintServer,
   getServerById,
   getServersForExtension,
   GoplsServer,

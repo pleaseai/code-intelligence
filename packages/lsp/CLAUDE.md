@@ -25,6 +25,7 @@ src/
 | Deno | `deno` | .ts, .tsx, .js, .jsx, .mjs | deno.json, deno.jsonc |
 | Vue | `vue` | .vue | package.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
 | Oxlint | `oxlint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue, .astro, .svelte | .oxlintrc.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock, package.json |
+| ESLint | `eslint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue | package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
 | Pyright | `pyright` | .py, .pyi | pyproject.toml, setup.py, requirements.txt, pyrightconfig.json |
 | Gopls | `gopls` | .go | go.work, go.mod, go.sum |
 | Rust Analyzer | `rust-analyzer` | .rs | Cargo.toml, Cargo.lock |
