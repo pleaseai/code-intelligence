@@ -19,7 +19,7 @@ env:
 
 jobs:
   release-please:
-    runs-on: ["self-hosted", "linux", "x64", "ubuntu-2404", "aws"]
+    runs-on: [self-hosted, linux, x64, ubuntu-2404, aws]
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       release_created: ${{ steps.release.outputs.release_created }}
@@ -41,7 +41,7 @@ jobs:
   publish:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: ["self-hosted", "linux", "x64", "ubuntu-2404", "aws"]
+    runs-on: [self-hosted, linux, x64, ubuntu-2404, aws]
     permissions:
       contents: read
       id-token: write

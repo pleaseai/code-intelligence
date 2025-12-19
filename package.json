@@ -22,9 +22,6 @@
     "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && bun publish --access public --tolerate-republish); done && cd npm/code && bun publish --access public --tolerate-republish",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --fix"
-  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "vscode-jsonrpc": "^8.2.1",
@@ -40,5 +37,8 @@
     "lint-staged": "^16.2.7",
     "turbo": "^2.6.3",
     "typescript": "^5.7.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --fix"
   }
 }

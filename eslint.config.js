@@ -12,4 +12,8 @@ export default antfu({
     'specs/**',
     'docs/**',
   ],
+}, {
+  rules: {
+    'no-console': 'off',
+  },
 })

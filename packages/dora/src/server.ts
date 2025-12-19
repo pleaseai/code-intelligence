@@ -4,6 +4,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
+  createAstGrepProvider,
   createFileProvider,
   createLSPProvider,
 } from './providers'
@@ -27,19 +28,23 @@ export async function createDoraServer(
   // Initialize providers
   const lspProvider = createLSPProvider(config)
   const fileProvider = createFileProvider(config)
+  const astGrepProvider = createAstGrepProvider(config)
 
   // Connect providers immediately
   await lspProvider.connect()
   await fileProvider.connect()
+  await astGrepProvider.connect()
 
   // Collect tools from all providers
   const lspTools = lspProvider.listTools()
   const fileTools = fileProvider.listTools()
-  const allTools = [...lspTools, ...fileTools]
+  const astGrepTools = astGrepProvider.listTools()
+  const allTools = [...lspTools, ...fileTools, ...astGrepTools]
 
   // Map tool names to their providers
   const lspToolNames = new Set(lspTools.map(t => t.name))
   const fileToolNames = new Set(fileTools.map(t => t.name))
+  const astGrepToolNames = new Set(astGrepTools.map(t => t.name))
 
   // Register each tool dynamically
   for (const tool of allTools) {
@@ -57,6 +62,9 @@ export async function createDoraServer(
           }
           else if (lspToolNames.has(tool.name)) {
             return await lspProvider.callTool(tool.name, params)
+          }
+          else if (astGrepToolNames.has(tool.name)) {
+            return await astGrepProvider.callTool(tool.name, params)
           }
 
           return {
