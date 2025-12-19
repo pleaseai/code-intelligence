@@ -57,11 +57,11 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: runs-on/cache@v4
+      - uses: actions/cache@v4
         with:
-          path: ~/.bun/install/cache
-          key: bun-cache-${{ hashFiles('**/bun.lock') }}
-          restore-keys: bun-cache-
+          path: |
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
 
       - name: Install dependencies
         run: bun install
