@@ -92,8 +92,8 @@ Classify EVERY request into one of these categories before taking action:
 **Execute in parallel (3+ calls)**:
 ```bash
 # Tool 1: Context7 MCP for official docs
-mcp-cli call plugin_context_context7/resolve-library-id '{"libraryName": "library-name"}'
-# then: mcp-cli call plugin_context_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "specific-topic"}'
+mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "library-name"}'
+# then: mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "specific-topic"}'
 
 # Tool 2: WebSearch for latest info
 WebSearch("library-name topic 2025")
@@ -138,7 +138,7 @@ gh search code "function_name" --repo owner/repo
 gh api repos/owner/repo/commits/HEAD --jq '.sha'
 
 # Tool 4: Fetch related docs via Context7 MCP
-mcp-cli call plugin_context_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "relevant-api"}'
+mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "relevant-api"}'
 ```
 
 ---
@@ -179,7 +179,7 @@ gh api repos/owner/repo/pulls/<number>/files
 ```bash
 # Documentation & Web
 # Tool 1: Context7 MCP
-mcp-cli call plugin_context_context7/resolve-library-id '{"libraryName": "..."}'
+mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "..."}'
 # Tool 2: WebSearch
 WebSearch("topic recent updates 2025")
 
@@ -239,7 +239,7 @@ https://github.com/tanstack/query/blob/abc123def/packages/react-query/src/useQue
 
 | Purpose | Tool | Command/Usage |
 |---------|------|---------------|
-| **Official Docs** | Context7 MCP | `mcp-cli call plugin_context_context7/resolve-library-id` → `get-library-docs` |
+| **Official Docs** | Context7 MCP | `mcp-cli call plugin_context7_context7/resolve-library-id` → `get-library-docs` |
 | **Latest Info** | WebSearch | `WebSearch("query 2025")` |
 | **Fast Code Search** | gh CLI (Bash) | `gh search code "query" --repo owner/repo` |
 | **Clone Repo** | gh CLI (Bash) | `gh repo clone owner/repo ${TMPDIR:-/tmp}/name -- --depth 1` |

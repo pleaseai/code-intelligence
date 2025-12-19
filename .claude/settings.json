@@ -10,18 +10,11 @@
     "deny": [],
     "ask": []
   },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run \"$CLAUDE_PROJECT_DIR/hooks/format-hook.ts\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
+  "enabledPlugins": {
+    "context7@claude-plugin-official": true,
+    "hookify@claude-plugin-official": true,
+    "context7@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "asana@claude-plugins-official": true
   }
 }
