@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.8...code-please-v0.1.9) (2025-12-19)
+
+
+### Bug Fixes
+
+* **ci:** use actions/cache for GitHub-hosted runners ([#42](https://github.com/chatbot-pf/code-please/issues/42)) ([041da12](https://github.com/chatbot-pf/code-please/commit/041da12844457d42c41e7334df1636b8ac2e7390))
+
 ## [0.1.8](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.7...code-please-v0.1.8) (2025-12-19)
 
 
