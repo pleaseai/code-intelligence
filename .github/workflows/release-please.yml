@@ -69,9 +69,11 @@ jobs:
       - name: Build npm packages
         run: bun run build:npm
 
-      - name: Publish to npm with provenance
+      - name: Publish to npm
         run: |
           for dir in npm/code-*; do
-            (cd "$dir" && npm publish --access public --provenance)
+            (cd "$dir" && npm publish --access public)
           done
-          cd npm/code && npm publish --access public --provenance
+          cd npm/code && npm publish --access public
+        env:
+          NPM_CONFIG_PROVENANCE: false
