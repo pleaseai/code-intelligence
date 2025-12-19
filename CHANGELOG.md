@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.9...code-please-v0.1.10) (2025-12-19)
+
+
+### Bug Fixes
+
+* **ci:** upgrade to Node.js 24 for npm trusted publishing ([#44](https://github.com/chatbot-pf/code-please/issues/44)) ([0de05cf](https://github.com/chatbot-pf/code-please/commit/0de05cfe4d47e788f35c1262654590ff605546be))
+
 ## [0.1.9](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.8...code-please-v0.1.9) (2025-12-19)
 
 
