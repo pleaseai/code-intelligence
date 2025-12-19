@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.10...code-please-v0.1.11) (2025-12-19)
+
+
+### Bug Fixes
+
+* **ci:** disable npm provenance for private repository ([#46](https://github.com/chatbot-pf/code-please/issues/46)) ([ad277ab](https://github.com/chatbot-pf/code-please/commit/ad277abbe145393febc2ac9fa1c907675a258104))
+
 ## [0.1.10](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.9...code-please-v0.1.10) (2025-12-19)
 
 
