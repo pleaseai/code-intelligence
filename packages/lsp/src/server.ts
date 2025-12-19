@@ -28,6 +28,8 @@ type RootFunction = (
 export interface LSPServerInfo {
   id: string
   extensions: string[]
+  /** Optional filename patterns for files without conventional extensions (e.g., 'Dockerfile', 'Makefile') */
+  filenames?: string[]
   root: RootFunction
   spawn: (root: string) => Promise<LSPServerHandle | undefined>
 }
@@ -1708,6 +1710,7 @@ export const SvelteServer: LSPServerInfo = {
     // Setup dependencies
     const serverPath = await setupSvelteDependencies()
     if (!serverPath) {
+      log.error({ serverId: 'svelte', root }, 'Svelte LSP failed to start - dependency setup failed')
       return undefined
     }
 
@@ -1852,6 +1855,7 @@ export const AstroServer: LSPServerInfo = {
     // Setup dependencies
     const deps = await setupAstroDependencies()
     if (!deps) {
+      log.error({ serverId: 'astro', root }, 'Astro LSP failed to start - dependency setup failed')
       return undefined
     }
 
@@ -1984,6 +1988,7 @@ export const YamlServer: LSPServerInfo = {
     // Setup dependencies
     const serverPath = await setupYamlDependencies()
     if (!serverPath) {
+      log.error({ serverId: 'yaml', root }, 'YAML LSP failed to start - dependency setup failed')
       return undefined
     }
 
@@ -2103,6 +2108,7 @@ export const BashServer: LSPServerInfo = {
     // Setup dependencies
     const serverPath = await setupBashDependencies()
     if (!serverPath) {
+      log.error({ serverId: 'bash', root }, 'Bash LSP failed to start - dependency setup failed')
       return undefined
     }
 
@@ -2206,6 +2212,7 @@ async function setupDockerfileDependencies(): Promise<string | undefined> {
 export const DockerfileServer: LSPServerInfo = {
   id: 'dockerfile',
   extensions: ['.dockerfile'],
+  filenames: ['Dockerfile', 'Containerfile'],
   root: async (_file, projectPath) => projectPath,
   async spawn(root) {
     // Check system first
@@ -2222,6 +2229,7 @@ export const DockerfileServer: LSPServerInfo = {
     // Setup dependencies
     const serverPath = await setupDockerfileDependencies()
     if (!serverPath) {
+      log.error({ serverId: 'dockerfile', root }, 'Dockerfile LSP failed to start - dependency setup failed')
       return undefined
     }
 
@@ -2318,12 +2326,28 @@ export const ElixirLsServer: LSPServerInfo = {
     let binary = Bun.which('elixir-ls')
 
     if (!binary) {
-      binary = path.join(resourcesDir, 'elixir-ls-master', 'release', scriptName)
-
+      // Check for existing installation by looking for versioned directories
       try {
-        await fs.access(binary)
+        const entries = await fs.readdir(resourcesDir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (entry.isDirectory() && entry.name.startsWith('elixir-ls-v')) {
+            const candidate = path.join(resourcesDir, entry.name, 'release', scriptName)
+            try {
+              await fs.access(candidate)
+              binary = candidate
+              break
+            }
+            catch {
+              // Binary not accessible in this directory, try next
+            }
+          }
+        }
       }
       catch {
+        // resourcesDir doesn't exist yet, will create during download
+      }
+
+      if (!binary) {
         // Need to download and build
         const elixir = Bun.which('elixir')
         if (!elixir) {
@@ -2338,7 +2362,7 @@ export const ElixirLsServer: LSPServerInfo = {
         const zipPath = path.join(resourcesDir, 'elixir-ls.zip')
         const releaseResponse = await fetch('https://api.github.com/repos/elixir-lsp/elixir-ls/releases/latest')
         if (!releaseResponse.ok) {
-          log.error('Failed to fetch ElixirLS release info')
+          log.error({ status: releaseResponse.status, statusText: releaseResponse.statusText }, 'Failed to fetch ElixirLS release info from GitHub')
           return undefined
         }
         const releaseInfo = await releaseResponse.json() as { tag_name: string }
@@ -2349,6 +2373,8 @@ export const ElixirLsServer: LSPServerInfo = {
 
         // Build with Mix (directory name matches tag without leading 'v')
         const buildDir = path.join(resourcesDir, `elixir-ls-${releaseTag}`)
+        // Update binary path to use correct build directory
+        binary = path.join(buildDir, 'release', scriptName)
         const buildProc = Bun.spawn(['mix', 'deps.get'], {
           cwd: buildDir,
           env: { ...process.env, MIX_ENV: 'prod' },
@@ -2392,8 +2418,8 @@ export const ElixirLsServer: LSPServerInfo = {
         try {
           await fs.access(binary)
         }
-        catch {
-          log.error({ binary }, 'ElixirLS build failed')
+        catch (err) {
+          log.error({ binary, err }, 'ElixirLS binary not accessible after build')
           return undefined
         }
 
@@ -2451,7 +2477,7 @@ export const ZlsServer: LSPServerInfo = {
       // Fetch latest release
       const releaseResponse = await fetch('https://api.github.com/repos/zigtools/zls/releases/latest')
       if (!releaseResponse.ok) {
-        log.error('Failed to fetch ZLS release info')
+        log.error({ status: releaseResponse.status, statusText: releaseResponse.statusText }, 'Failed to fetch ZLS release info from GitHub')
         return undefined
       }
 
@@ -2738,7 +2764,7 @@ export const ClangdServer: LSPServerInfo = {
 
     const releaseResponse = await fetch('https://api.github.com/repos/clangd/clangd/releases/latest')
     if (!releaseResponse.ok) {
-      log.error('Failed to fetch clangd release info')
+      log.error({ status: releaseResponse.status, statusText: releaseResponse.statusText }, 'Failed to fetch clangd release info from GitHub')
       return undefined
     }
 
@@ -2844,7 +2870,11 @@ export const JdtlsServer: LSPServerInfo = {
     })
     await versionProc.exited
     const versionOutput = await new Response(versionProc.stderr).text()
-    const versionMatch = /"(\d+)\.\d+\.\d+"/.exec(versionOutput)
+    // Match various Java version formats:
+    // - openjdk version "21.0.2" 2024-01-16
+    // - java version "21.0.2" 2024-01-16 LTS
+    // - version "21" (short format)
+    const versionMatch = /version\s+"?(\d+)(?:\.\d+)*"?/.exec(versionOutput)
     const majorVersion = versionMatch && versionMatch[1] ? Number.parseInt(versionMatch[1]) : 0
 
     if (majorVersion < 21) {
@@ -2978,7 +3008,7 @@ export const LuaLsServer: LSPServerInfo = {
 
       const releaseResponse = await fetch('https://api.github.com/repos/LuaLS/lua-language-server/releases/latest')
       if (!releaseResponse.ok) {
-        log.error('Failed to fetch lua-language-server release info')
+        log.error({ status: releaseResponse.status, statusText: releaseResponse.statusText }, 'Failed to fetch lua-language-server release info from GitHub')
         return undefined
       }
 
@@ -2987,14 +3017,19 @@ export const LuaLsServer: LSPServerInfo = {
         assets: Array<{ name: string, browser_download_url: string }>
       }
 
+      // LuaLS uses platform/arch naming that matches Node.js convention
+      // darwin-arm64, darwin-x64, linux-arm64, linux-x64, win32-x64
       const platform = process.platform
       const arch = process.arch
       const archiveExt = isWindows ? 'zip' : 'tar.gz'
 
-      const assetName = `lua-language-server-${release.tag_name}-${platform}-${arch}.${archiveExt}`
+      // Remove 'v' prefix from tag if present (tag is v3.13.5, asset uses 3.13.5)
+      const version = release.tag_name.replace(/^v/, '')
+
+      const assetName = `lua-language-server-${version}-${platform}-${arch}.${archiveExt}`
       const asset = release.assets.find(a => a.name === assetName)
       if (!asset) {
-        log.error({ assetName }, 'lua-language-server asset not found')
+        log.error({ assetName, availableAssets: release.assets.map(a => a.name).slice(0, 10) }, 'lua-language-server asset not found for this platform')
         return undefined
       }
 
@@ -3160,6 +3195,7 @@ export const PhpServer: LSPServerInfo = {
     // Setup dependencies
     const serverPath = await setupPhpDependencies()
     if (!serverPath) {
+      log.error({ serverId: 'php', root }, 'PHP LSP failed to start - dependency setup failed')
       return undefined
     }
 
@@ -3229,7 +3265,7 @@ export const TerraformServer: LSPServerInfo = {
 
       const releaseResponse = await fetch('https://api.github.com/repos/hashicorp/terraform-ls/releases/latest')
       if (!releaseResponse.ok) {
-        log.error('Failed to fetch terraform-ls release info')
+        log.error({ status: releaseResponse.status, statusText: releaseResponse.statusText }, 'Failed to fetch terraform-ls release info from GitHub')
         return undefined
       }
 
@@ -3316,7 +3352,7 @@ export const TexlabServer: LSPServerInfo = {
 
       const releaseResponse = await fetch('https://api.github.com/repos/latex-lsp/texlab/releases/latest')
       if (!releaseResponse.ok) {
-        log.error('Failed to fetch texlab release info')
+        log.error({ status: releaseResponse.status, statusText: releaseResponse.statusText }, 'Failed to fetch texlab release info from GitHub')
         return undefined
       }
 
@@ -3455,4 +3491,35 @@ export function getServerById(id: string): LSPServerInfo | undefined {
  */
 export function getServersForExtension(extension: string): LSPServerInfo[] {
   return LSP_SERVERS.filter(s => s.extensions.includes(extension))
+}
+
+/**
+ * Get servers that support a specific filename (for files like Dockerfile, Makefile)
+ */
+export function getServersForFilename(filename: string): LSPServerInfo[] {
+  return LSP_SERVERS.filter(s => s.filenames?.includes(filename))
+}
+
+/**
+ * Get servers that support a file by checking both extension and filename
+ */
+export function getServersForFile(filePath: string): LSPServerInfo[] {
+  const ext = path.extname(filePath)
+  const filename = path.basename(filePath)
+
+  const byExtension = ext ? getServersForExtension(ext) : []
+  const byFilename = getServersForFilename(filename)
+
+  // Combine and deduplicate
+  const serverIds = new Set<string>()
+  const result: LSPServerInfo[] = []
+
+  for (const server of [...byExtension, ...byFilename]) {
+    if (!serverIds.has(server.id)) {
+      serverIds.add(server.id)
+      result.push(server)
+    }
+  }
+
+  return result
 }
