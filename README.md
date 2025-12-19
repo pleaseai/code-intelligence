@@ -1,5 +1,7 @@
 # Code Please
 
+English | [한국어](README.ko.md)
+
 CLI and Claude Code plugin for AI-assisted coding with auto-formatting and LSP diagnostics.
 
 ## Features
@@ -102,10 +104,13 @@ Create `dora.json` or `opencode.json` in your project root:
 | Go                    | gopls                      | go.mod                           |
 | Rust                  | rust-analyzer              | Cargo.toml                       |
 | Kotlin                | JetBrains Kotlin LSP       | build.gradle.kts, pom.xml        |
+| Dart                  | dart language-server       | pubspec.yaml                     |
+| Prisma                | @prisma/language-server    | schema.prisma                    |
+| Vue                   | @vue/language-server       | package.json (with vue)          |
 
 ### Formatters
 
-biome, prettier, gofmt, mix, zig fmt, clang-format, ktlint, ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam
+biome, prettier, gofmt, mix, zig fmt, clang-format, ktlint, ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam, prisma
 
 ## MCP Server
 

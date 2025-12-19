@@ -1,7 +1,7 @@
 {
   "name": "@pleaseai/code-lsp",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "LSP client for AI coding tools",
   "author": "Minsu Lee",
   "license": "MIT",
@@ -30,6 +30,7 @@
     "test:integration": "bun test ./test/integration"
   },
   "dependencies": {
+    "@pleaseai/code-format": "workspace:*",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageserver-types": "^3.17.5",
     "zod": "^3.25.32"

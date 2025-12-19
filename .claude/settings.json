@@ -5,7 +5,18 @@
       "Bash(bun run test)",
       "Bash(bun run lint)",
       "Bash(bun run lint:fix:*)",
-      "mcp__github__issue_write"
+      "mcp__github__issue_write",
+      "Bash(gh label list:*)",
+      "Bash(gh issue:*)",
+      "Bash(bun run tsc:*)",
+      "Bash(bun test:*)",
+      "Bash(bun install:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(bun run test:*)",
+      "SlashCommand(/please:review-pr:*)"
     ],
     "deny": [],
     "ask": []

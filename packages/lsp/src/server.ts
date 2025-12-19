@@ -180,8 +180,14 @@ function nearestRoot(
             await fs.access(target)
             return undefined // Excluded
           }
-          catch {
-            // Not found, continue
+          catch (err) {
+            // Only continue searching if file not found
+            const isNotFound = err instanceof Error
+              && 'code' in err
+              && (err as NodeJS.ErrnoException).code === 'ENOENT'
+            if (!isNotFound) {
+              console.warn(`[lsp] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+            }
           }
         }
         const parent = path.dirname(checkDir)
@@ -199,8 +205,14 @@ function nearestRoot(
           await fs.access(target)
           return current
         }
-        catch {
-          // Not found, continue
+        catch (err) {
+          // Only continue searching if file not found
+          const isNotFound = err instanceof Error
+            && 'code' in err
+            && (err as NodeJS.ErrnoException).code === 'ENOENT'
+          if (!isNotFound) {
+            console.warn(`[lsp] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+          }
         }
       }
       const parent = path.dirname(current)
@@ -233,17 +245,25 @@ export const TypescriptServer: LSPServerInfo = {
     const tsserver = Bun.which('typescript-language-server')
     if (!tsserver) {
       // Try via bunx
-      const proc = spawn('bunx', ['typescript-language-server', '--stdio'], {
-        cwd: root,
-        env: { ...process.env, BUN_BE_BUN: '1' },
-      })
-      return { process: proc }
+      try {
+        const proc = spawn('bunx', ['typescript-language-server', '--stdio'], {
+          cwd: root,
+          env: { ...process.env, BUN_BE_BUN: '1' },
+        })
+        attachLSPProcessHandlers(proc, 'typescript')
+        return { process: proc }
+      }
+      catch (err) {
+        console.error('[typescript] Failed to spawn via bunx. Install typescript-language-server globally or ensure bunx is available:', err)
+        return undefined
+      }
     }
 
     const proc = spawn(tsserver, ['--stdio'], {
       cwd: root,
       env: { ...process.env, BUN_BE_BUN: '1' },
     })
+    attachLSPProcessHandlers(proc, 'typescript')
     return { process: proc }
   },
 }
@@ -263,8 +283,14 @@ export const DenoServer: LSPServerInfo = {
           await fs.access(target)
           return current
         }
-        catch {
-          // Not found
+        catch (err) {
+          // Only continue searching if file not found
+          const isNotFound = err instanceof Error
+            && 'code' in err
+            && (err as NodeJS.ErrnoException).code === 'ENOENT'
+          if (!isNotFound) {
+            console.warn(`[deno] Unexpected error accessing ${target}:`, err instanceof Error ? err.message : err)
+          }
         }
       }
       const parent = path.dirname(current)
@@ -282,6 +308,7 @@ export const DenoServer: LSPServerInfo = {
     const proc = spawn(deno, ['lsp'], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'deno')
     return { process: proc }
   },
 }
@@ -302,15 +329,23 @@ export const PyrightServer: LSPServerInfo = {
     const pyright = Bun.which('pyright-langserver')
     if (!pyright) {
       // Try via bunx/npx
-      const proc = spawn('bunx', ['pyright-langserver', '--stdio'], {
-        cwd: root,
-      })
-      return { process: proc }
+      try {
+        const proc = spawn('bunx', ['pyright-langserver', '--stdio'], {
+          cwd: root,
+        })
+        attachLSPProcessHandlers(proc, 'pyright')
+        return { process: proc }
+      }
+      catch (err) {
+        console.error('[pyright] Failed to spawn via bunx. Install pyright-langserver globally or ensure bunx is available:', err)
+        return undefined
+      }
     }
 
     const proc = spawn(pyright, ['--stdio'], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'pyright')
     return { process: proc }
   },
 }
@@ -336,6 +371,7 @@ export const GoplsServer: LSPServerInfo = {
     const proc = spawn(gopls, ['serve'], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'gopls')
     return { process: proc }
   },
 }
@@ -355,6 +391,7 @@ export const RustAnalyzerServer: LSPServerInfo = {
     const proc = spawn(rustAnalyzer, [], {
       cwd: root,
     })
+    attachLSPProcessHandlers(proc, 'rust-analyzer')
     return { process: proc }
   },
 }
@@ -435,11 +472,11 @@ export const OxlintServer: LSPServerInfo = {
       else {
         const help = await new Response(proc.stdout).text()
         if (help.includes('--lsp')) {
-          return {
-            process: spawn(lintBin, ['--lsp'], {
-              cwd: root,
-            }),
-          }
+          const lspProc = spawn(lintBin, ['--lsp'], {
+            cwd: root,
+          })
+          attachLSPProcessHandlers(lspProc, 'oxlint')
+          return { process: lspProc }
         }
       }
     }
@@ -447,11 +484,11 @@ export const OxlintServer: LSPServerInfo = {
     // Fallback to oxc_language_server
     const serverBin = await resolveBin('oxc_language_server')
     if (serverBin) {
-      return {
-        process: spawn(serverBin, [], {
-          cwd: root,
-        }),
-      }
+      const serverProc = spawn(serverBin, [], {
+        cwd: root,
+      })
+      attachLSPProcessHandlers(serverProc, 'oxlint')
+      return { process: serverProc }
     }
 
     // Neither found - log diagnostic
@@ -1104,6 +1141,182 @@ export const VueServer: LSPServerInfo = {
   },
 }
 
+// =============================================================================
+// Prisma Language Server
+// =============================================================================
+
+/**
+ * Prisma Language Server runtime dependency configuration
+ * Uses @prisma/language-server npm package with auto-download
+ */
+const PRISMA_RUNTIME_DEPS = {
+  prismaLanguageServer: {
+    package: '@prisma/language-server',
+    version: '31.1.35',
+  },
+}
+
+/**
+ * Get the Prisma LSP resources directory
+ */
+function getPrismaResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'prisma-lsp')
+}
+
+/**
+ * Setup Prisma runtime dependencies using npm
+ * Installs to ~/.cache/dora/prisma-lsp/ if not already present or version mismatch
+ *
+ * @returns Path to prisma-language-server binary, or undefined on failure
+ */
+async function setupPrismaDependencies(): Promise<string | undefined> {
+  const resourcesDir = getPrismaResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const prismaServerPath = path.join(resourcesDir, 'node_modules', '.bin', `prisma-language-server${ext}`)
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = PRISMA_RUNTIME_DEPS.prismaLanguageServer.version
+
+  // Check if installation is needed
+  let needsInstall = false
+
+  try {
+    await fs.access(prismaServerPath)
+
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        console.warn(`[prisma] Version mismatch: installed=${installedVersion.trim()}, expected=${expectedVersion}`)
+        needsInstall = true
+      }
+    }
+    catch (err) {
+      const isNotFound = err instanceof Error
+        && 'code' in err
+        && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+      if (isNotFound) {
+        needsInstall = true
+      }
+      else {
+        console.warn(`[prisma] Unexpected error reading version file:`, err instanceof Error ? err.message : err)
+        needsInstall = true
+      }
+    }
+  }
+  catch (err) {
+    const isNotFound = err instanceof Error
+      && 'code' in err
+      && (err as NodeJS.ErrnoException).code === 'ENOENT'
+
+    if (isNotFound) {
+      needsInstall = true
+    }
+    else {
+      console.error(`[prisma] Cannot access Prisma LSP executable:`, err instanceof Error ? err.message : err)
+      return undefined
+    }
+  }
+
+  if (needsInstall) {
+    console.warn('[prisma] Installing Prisma Language Server...')
+
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const packageSpec = `${PRISMA_RUNTIME_DEPS.prismaLanguageServer.package}@${PRISMA_RUNTIME_DEPS.prismaLanguageServer.version}`
+
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        console.error(`[prisma] npm install failed with exit code ${exitCode}: ${stderr}`)
+        return undefined
+      }
+
+      // Write version marker (non-fatal if this fails)
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        console.warn(`[prisma] Failed to write version marker file:`, writeErr instanceof Error ? writeErr.message : writeErr, '- Dependencies will be reinstalled on next run')
+      }
+      console.warn('[prisma] Prisma Language Server installed successfully')
+    }
+    catch (err) {
+      console.error('[prisma] Failed to install dependencies:', err)
+      return undefined
+    }
+  }
+
+  // Verify binary exists
+  try {
+    await fs.access(prismaServerPath)
+    return prismaServerPath
+  }
+  catch (err) {
+    console.error(`[prisma] Prisma LSP binary not found after installation: ${prismaServerPath}:`, err instanceof Error ? err.message : err)
+    return undefined
+  }
+}
+
+/**
+ * Prisma Language Server
+ * Uses @prisma/language-server npm package with auto-download
+ *
+ * Features:
+ * - Diagnostics (real-time error highlighting)
+ * - Code completions
+ * - Hover information
+ * - Go-to-definition
+ * - Document formatting
+ * - Code actions
+ * - Rename symbol
+ * - Document symbols
+ */
+export const PrismaServer: LSPServerInfo = {
+  id: 'prisma',
+  extensions: ['.prisma'],
+  root: nearestRoot(['schema.prisma', 'prisma/schema.prisma']),
+  async spawn(root) {
+    // Check for node/npm availability
+    const node = Bun.which('node')
+    const npm = Bun.which('npm')
+
+    if (!node || !npm) {
+      console.warn('[prisma] Node.js and npm are required for Prisma Language Server')
+      return undefined
+    }
+
+    // Setup dependencies (npm install if needed)
+    const prismaServerPath = await setupPrismaDependencies()
+    if (!prismaServerPath) {
+      console.warn('[prisma] Failed to setup Prisma LSP dependencies. Check previous logs for details.')
+      return undefined
+    }
+
+    try {
+      const proc = spawn(prismaServerPath, ['--stdio'], {
+        cwd: root,
+      })
+
+      attachLSPProcessHandlers(proc, 'prisma')
+
+      return { process: proc }
+    }
+    catch (err) {
+      console.error('[prisma] Failed to spawn Prisma Language Server:', err)
+      return undefined
+    }
+  },
+}
+
 /**
  * All available LSP servers
  */
@@ -1117,6 +1330,7 @@ export const LSP_SERVERS: LSPServerInfo[] = [
   RustAnalyzerServer,
   KotlinServer,
   DartServer,
+  PrismaServer,
 ]
 
 /**

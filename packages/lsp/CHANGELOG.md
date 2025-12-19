@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.4](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.3...@pleaseai/code-lsp-v0.1.4) (2025-12-18)
+
+
+### Features
+
+* **config:** implement unified configuration system ([#26](https://github.com/chatbot-pf/code-please/issues/26)) ([1fe9cab](https://github.com/chatbot-pf/code-please/commit/1fe9cabcc25de195bbe13d947c618480f7eee436))
+* **lsp:** add Prisma Language Server support ([#23](https://github.com/chatbot-pf/code-please/issues/23)) ([9a691e1](https://github.com/chatbot-pf/code-please/commit/9a691e1955ca84665ab13f25a1942ee969c766e7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-format bumped to 0.1.1
+
+## [0.1.3](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.2...@pleaseai/code-lsp-v0.1.3) (2025-12-18)
+
+
+### Features
+
+* **lsp:** add Rename Symbol support ([#19](https://github.com/chatbot-pf/code-please/issues/19)) ([12ec597](https://github.com/chatbot-pf/code-please/commit/12ec59785b6eefdc8cdd56e18c21fdf2466e8a7d))
+
+## [0.1.2](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.1...@pleaseai/code-lsp-v0.1.2) (2025-12-18)
+
+
+### Features
+
+* **lsp:** add completion method to LSPManager ([#16](https://github.com/chatbot-pf/code-please/issues/16)) ([f9423ec](https://github.com/chatbot-pf/code-please/commit/f9423ecec193f49bf5ee49b7f071878d46b8239c))
+* **lsp:** add definition and references methods to LSPManager ([#14](https://github.com/chatbot-pf/code-please/issues/14)) ([45e82f3](https://github.com/chatbot-pf/code-please/commit/45e82f3068b5c26c5a874aa521d4f2dfa02f13ce)), closes [#13](https://github.com/chatbot-pf/code-please/issues/13)
+
 ## [0.1.1](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.0...@pleaseai/code-lsp-v0.1.1) (2025-12-17)
 
 

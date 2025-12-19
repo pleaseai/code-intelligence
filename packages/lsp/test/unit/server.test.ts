@@ -11,6 +11,7 @@ import {
   KotlinServer,
   LSP_SERVERS,
   OxlintServer,
+  PrismaServer,
   PyrightServer,
   RustAnalyzerServer,
   TypescriptServer,
@@ -31,6 +32,7 @@ describe('LSP_SERVERS', () => {
     expect(serverIds).toContain('kotlin')
     expect(serverIds).toContain('dart')
     expect(serverIds).toContain('vue')
+    expect(serverIds).toContain('prisma')
   })
 })
 
@@ -451,6 +453,119 @@ describe('VueServer', () => {
   })
 })
 
+describe('PrismaServer', () => {
+  test('has correct id', () => {
+    expect(PrismaServer.id).toBe('prisma')
+  })
+
+  test('supports Prisma extension', () => {
+    expect(PrismaServer.extensions).toContain('.prisma')
+  })
+
+  test('has root function', () => {
+    expect(typeof PrismaServer.root).toBe('function')
+  })
+
+  test('has spawn function', () => {
+    expect(typeof PrismaServer.spawn).toBe('function')
+  })
+
+  test('root function detects schema.prisma', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prisma-test-'))
+    try {
+      // Create schema.prisma at root
+      await fs.writeFile(path.join(tempDir, 'schema.prisma'), 'datasource db {\n  provider = "sqlite"\n  url = "file:./dev.db"\n}\n')
+
+      const prismaFile = path.join(tempDir, 'schema.prisma')
+      const root = await PrismaServer.root(prismaFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects prisma/schema.prisma from project root', async () => {
+    // Test that prisma/schema.prisma pattern works from project root
+    // When calling root() with a file outside prisma/, it should find the project root
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prisma-test-'))
+    try {
+      // Create prisma/schema.prisma (conventional location)
+      const prismaDir = path.join(tempDir, 'prisma')
+      await fs.mkdir(prismaDir)
+      await fs.writeFile(path.join(prismaDir, 'schema.prisma'), 'datasource db {\n  provider = "sqlite"\n  url = "file:./dev.db"\n}\n')
+
+      // Create a source file at project root level
+      const srcDir = path.join(tempDir, 'src')
+      await fs.mkdir(srcDir)
+      const srcFile = path.join(srcDir, 'index.ts')
+      await fs.writeFile(srcFile, '// test')
+
+      // When root() is called with src/index.ts, it should find tempDir via prisma/schema.prisma
+      const root = await PrismaServer.root(srcFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects nested monorepo package', async () => {
+    // Simulates a monorepo with nested Prisma schema
+    // root/
+    //   packages/
+    //     backend/
+    //       prisma/
+    //         schema.prisma
+    //       src/
+    //         index.ts
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prisma-monorepo-'))
+    try {
+      // Create nested package structure
+      const backendDir = path.join(tempDir, 'packages', 'backend')
+      const prismaDir = path.join(backendDir, 'prisma')
+      await fs.mkdir(prismaDir, { recursive: true })
+      await fs.writeFile(path.join(prismaDir, 'schema.prisma'), 'datasource db {\n  provider = "sqlite"\n  url = "file:./dev.db"\n}\n')
+
+      // Create a source file in backend/src
+      const srcDir = path.join(backendDir, 'src')
+      await fs.mkdir(srcDir)
+      const srcFile = path.join(srcDir, 'index.ts')
+      await fs.writeFile(srcFile, '// test')
+
+      // When root() is called with src/index.ts, it should find backendDir via prisma/schema.prisma
+      const root = await PrismaServer.root(srcFile, tempDir)
+      expect(root).toBe(backendDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('root function detects schema.prisma at project root', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prisma-root-schema-'))
+    try {
+      // schema.prisma at project root (not in prisma/ subdirectory)
+      const prismaFile = path.join(tempDir, 'schema.prisma')
+      await fs.writeFile(prismaFile, '// test')
+
+      const root = await PrismaServer.root(prismaFile, tempDir)
+      expect(root).toBe(tempDir)
+    }
+    finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('spawn function returns promise', () => {
+    // Verify spawn returns a promise (don't actually call it to avoid downloads)
+    const spawnFn = PrismaServer.spawn
+    expect(typeof spawnFn).toBe('function')
+    // Verify it's an async function by checking the constructor name
+    expect(spawnFn.constructor.name).toBe('AsyncFunction')
+  })
+})
+
 describe('getServerById', () => {
   test('returns typescript server', () => {
     const server = getServerById('typescript')
@@ -519,6 +634,14 @@ describe('getServersForExtension', () => {
 
     const serverIds = servers.map(s => s.id)
     expect(serverIds).toContain('vue')
+  })
+
+  test('returns servers for .prisma extension', () => {
+    const servers = getServersForExtension('.prisma')
+    expect(servers.length).toBeGreaterThan(0)
+
+    const serverIds = servers.map(s => s.id)
+    expect(serverIds).toContain('prisma')
   })
 
   test('returns empty array for unknown extension', () => {

@@ -81,7 +81,7 @@ packages/code/
 packages/format/
 ├── index.ts         # Public API
 ├── formatter.ts     # Formatter definitions (biome, prettier, etc.)
-└── config/          # Config loading (dora.json, opencode.json)
+└── config/          # Config loading (.please/config.json or .please/config.yml)
 ```
 
 ### packages/lsp
@@ -91,6 +91,7 @@ packages/lsp/
 ├── index.ts         # Public API
 ├── client.ts        # LSP client implementation
 ├── server.ts        # LSP server definitions
+├── config.ts        # LSP config from unified config file
 └── language.ts      # Language detection
 ```
 
@@ -126,10 +127,56 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 | Rust | rust-analyzer | Cargo.toml |
 | Kotlin | JetBrains Kotlin LSP (auto-download) | build.gradle.kts, build.gradle, pom.xml |
 | Dart | dart language-server (auto-download) | pubspec.yaml, pubspec.lock |
+| Prisma | @prisma/language-server (auto-download) | schema.prisma, prisma/schema.prisma |
+| Vue | @vue/language-server (auto-download) | package.json (with vue) |
 
 ### Built-in Formatters
 
-biome, prettier, gofmt, mix (Elixir), zig fmt, clang-format, ktlint (Kotlin), ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam
+biome, prettier, gofmt, mix (Elixir), zig fmt, clang-format, ktlint (Kotlin), ruff, air (R), uv format, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam, prisma
+
+### Configuration
+
+Configuration is loaded from `.please/config.json` or `.please/config.yml` in the project root.
+
+```yaml
+# .please/config.yml
+
+# Shared settings
+language: en
+ignore_patterns:
+  - node_modules
+  - dist
+
+# Formatter settings
+formatter:
+  biome:
+    command: ["biome", "format", "--write", "$FILE"]
+    extensions: [".ts", ".tsx", ".js", ".jsx"]
+  prettier:
+    disabled: true  # Disable a built-in formatter
+
+# LSP settings
+lsp:
+  typescript:
+    enabled: true
+  vue:
+    enabled: false  # Disable a specific LSP server
+  pyright:
+    root: "./backend"  # Custom root path
+```
+
+**Formatter Config:**
+- `disabled: true` - Disable a built-in formatter
+- `command: [...]` - Override command (use `$FILE` placeholder)
+- `extensions: [...]` - Override file extensions
+- `environment: {...}` - Environment variables
+
+**LSP Config:**
+- `enabled: true/false` - Enable/disable specific LSP servers
+- `root: "path"` - Custom project root path
+- `command: [...]` - Custom spawn command
+
+Set `lsp: false` or `formatter: false` to globally disable.
 
 ### Name Path Convention (JetBrains)
 

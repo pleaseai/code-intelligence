@@ -1,7 +1,7 @@
 {
   "name": "@pleaseai/code",
   "type": "module",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Auto-format and type-check hooks for AI coding",
   "author": "Minsu Lee",
   "license": "MIT",
@@ -28,7 +28,7 @@
     "dev": "bun --watch run src/cli.ts",
     "build": "echo 'Build handled by root build:npm'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test ./src"
+    "test": "bun test ./test"
   },
   "dependencies": {
     "@pleaseai/code-format": "workspace:*",

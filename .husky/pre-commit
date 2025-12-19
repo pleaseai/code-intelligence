@@ -1,0 +1,17 @@
+# Add common paths for Homebrew and Bun
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.bun/bin:$PATH"
+
+# Load Node.js version manager (fnm or nvm)
+if [ -d "$HOME/.local/share/fnm" ]; then
+  # Load fnm
+  export FNM_PATH="$HOME/.local/share/fnm"
+  if [ -f "$FNM_PATH/fnm" ]; then
+    eval "$($FNM_PATH/fnm env --shell bash)"
+  fi
+elif [ -s "$HOME/.nvm/nvm.sh" ]; then
+  # Load nvm
+  export NVM_DIR="$HOME/.nvm"
+  . "$NVM_DIR/nvm.sh"
+fi
+
+bunx lint-staged

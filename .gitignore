@@ -30,6 +30,11 @@ Thumbs.db
 # Coverage
 coverage/
 
-
 # Turborepo
 .turbo
+
+# Claude settings
+/.claude/settings.local.json
+
+# Please memory
+.please/memory/tasklist.json
