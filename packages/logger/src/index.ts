@@ -95,8 +95,21 @@ function createRootLogger(): pino.Logger {
         },
       })
     }
-    catch {
-      // Fallback if pino-pretty not available
+    catch (e) {
+      // Check if this is expected "module not found" or unexpected error
+      const error = e as Error & { code?: string }
+      const isModuleNotFound
+        = error.code === 'MODULE_NOT_FOUND'
+          || error.message?.includes('Cannot find module')
+          || error.message?.includes('pino-pretty')
+
+      if (!isModuleNotFound) {
+        // Unexpected error - notify user
+        console.error('[logger] Failed to initialize pretty printing:', error.message)
+        console.error('[logger] Falling back to JSON output')
+      }
+
+      // Fallback to JSON output
       return pino(options, pino.destination(2))
     }
   }
