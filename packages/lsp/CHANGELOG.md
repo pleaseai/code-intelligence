@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.5...@pleaseai/code-lsp-v0.1.6) (2025-12-19)
+
+
+### Features
+
+* **lsp:** add ESLint language server support ([#39](https://github.com/chatbot-pf/code-please/issues/39)) ([285a0d9](https://github.com/chatbot-pf/code-please/commit/285a0d9dca8eebd5479a7675188fbc6348f483cb)), closes [#38](https://github.com/chatbot-pf/code-please/issues/38)
+
 ## [0.1.5](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.4...@pleaseai/code-lsp-v0.1.5) (2025-12-19)
 
 

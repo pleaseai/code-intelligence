@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.6](https://github.com/chatbot-pf/code-please/compare/@pleaseai/dora-v0.1.5...@pleaseai/dora-v0.1.6) (2025-12-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-lsp bumped to 0.1.6
+
 ## [0.1.5](https://github.com/chatbot-pf/code-please/compare/@pleaseai/dora-v0.1.4...@pleaseai/dora-v0.1.5) (2025-12-19)
 
 
