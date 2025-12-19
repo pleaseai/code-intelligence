@@ -17,9 +17,6 @@
     "ai-coding"
   ],
   "main": "src/index.ts",
-  "bin": {
-    "code": "src/cli.ts"
-  },
   "files": [
     "hooks",
     "src"

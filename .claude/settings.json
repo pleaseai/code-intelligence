@@ -27,5 +27,24 @@
     "context7@claude-plugins-official": true,
     "github@claude-plugins-official": true,
     "asana@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bunx @pleaseai/code format --stdin",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "bunx @pleaseai/code lsp --stdin",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
   }
 }
