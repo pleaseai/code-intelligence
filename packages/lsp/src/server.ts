@@ -2334,20 +2334,21 @@ export const ElixirLsServer: LSPServerInfo = {
         log.info('Downloading and building ElixirLS')
         await fs.mkdir(resourcesDir, { recursive: true })
 
-        // Download from GitHub
-        const response = await fetch('https://github.com/elixir-lsp/elixir-ls/archive/refs/heads/master.zip')
-        if (!response.ok) {
-          log.error('Failed to download ElixirLS')
+        // Download from GitHub - using latest stable release
+        const zipPath = path.join(resourcesDir, 'elixir-ls.zip')
+        const releaseResponse = await fetch('https://api.github.com/repos/elixir-lsp/elixir-ls/releases/latest')
+        if (!releaseResponse.ok) {
+          log.error('Failed to fetch ElixirLS release info')
           return undefined
         }
-
-        const zipPath = path.join(resourcesDir, 'elixir-ls.zip')
-        await downloadFile('https://github.com/elixir-lsp/elixir-ls/archive/refs/heads/master.zip', zipPath)
+        const releaseInfo = await releaseResponse.json() as { tag_name: string }
+        const releaseTag = releaseInfo.tag_name
+        await downloadFile(`https://github.com/elixir-lsp/elixir-ls/archive/refs/tags/${releaseTag}.zip`, zipPath)
         await extractZip(zipPath, resourcesDir)
         await fs.rm(zipPath, { force: true })
 
-        // Build with Mix
-        const buildDir = path.join(resourcesDir, 'elixir-ls-master')
+        // Build with Mix (directory name matches tag without leading 'v')
+        const buildDir = path.join(resourcesDir, `elixir-ls-${releaseTag}`)
         const buildProc = Bun.spawn(['mix', 'deps.get'], {
           cwd: buildDir,
           env: { ...process.env, MIX_ENV: 'prod' },
@@ -2709,19 +2710,7 @@ export const ClangdServer: LSPServerInfo = {
       return { process: proc }
     }
 
-    // Check direct path
-    const directPath = path.join(resourcesDir, `clangd${ext}`)
-    try {
-      await fs.access(directPath)
-      const proc = spawn(directPath, args, { cwd: root })
-      attachLSPProcessHandlers(proc, 'clangd')
-      return { process: proc }
-    }
-    catch {
-      // Not found directly
-    }
-
-    // Check extracted directories
+    // Check extracted directories (clangd is always in versioned subdirectory like clangd_18.1.3/bin/)
     try {
       const entries = await fs.readdir(resourcesDir, { withFileTypes: true })
       for (const entry of entries) {
@@ -2874,18 +2863,12 @@ export const JdtlsServer: LSPServerInfo = {
       log.info('Downloading JDTLS from Eclipse')
       await fs.mkdir(distPath, { recursive: true })
 
+      // Use specific milestone version for stability
+      const JDTLS_VERSION = '1.40.0'
+      const JDTLS_TIMESTAMP = '202409261450'
       const archivePath = path.join(distPath, 'release.tar.gz')
-      const downloadProc = Bun.spawn([
-        'curl',
-        '-L',
-        '-o',
-        archivePath,
-        'https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz',
-      ], {
-        stdout: 'pipe',
-        stderr: 'pipe',
-      })
-      await downloadProc.exited
+      const downloadUrl = `https://download.eclipse.org/jdtls/milestones/${JDTLS_VERSION}/jdt-language-server-${JDTLS_VERSION}-${JDTLS_TIMESTAMP}.tar.gz`
+      await downloadFile(downloadUrl, archivePath)
 
       const extractProc = Bun.spawn(['tar', '-xzf', archivePath], {
         cwd: distPath,
