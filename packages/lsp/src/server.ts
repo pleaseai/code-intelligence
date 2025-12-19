@@ -1511,13 +1511,1928 @@ export const EslintServer: LSPServerInfo = {
   },
 }
 
+// =============================================================================
+// Biome Language Server
+// =============================================================================
+
+/**
+ * Biome Language Server
+ * JS/TS/JSON/CSS linter with auto-download support
+ */
+export const BiomeServer: LSPServerInfo = {
+  id: 'biome',
+  extensions: [
+    '.ts',
+    '.tsx',
+    '.js',
+    '.jsx',
+    '.mjs',
+    '.cjs',
+    '.mts',
+    '.cts',
+    '.json',
+    '.jsonc',
+    '.vue',
+    '.astro',
+    '.svelte',
+    '.css',
+    '.graphql',
+    '.gql',
+    '.html',
+  ],
+  root: nearestRoot([
+    'biome.json',
+    'biome.jsonc',
+    'package-lock.json',
+    'bun.lockb',
+    'bun.lock',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+  ]),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.cmd' : ''
+
+    // Check local node_modules/.bin first
+    const localBin = path.join(root, 'node_modules', '.bin', `biome${ext}`)
+    try {
+      await fs.access(localBin)
+      const proc = spawn(localBin, ['lsp-proxy', '--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'biome')
+      return { process: proc }
+    }
+    catch {
+      // Not found locally
+    }
+
+    // Check global PATH
+    const globalBin = Bun.which('biome')
+    if (globalBin) {
+      const proc = spawn(globalBin, ['lsp-proxy', '--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'biome')
+      return { process: proc }
+    }
+
+    // Fallback: Try via bunx if biome is resolvable in project
+    try {
+      const proc = spawn('bunx', ['biome', 'lsp-proxy', '--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'biome')
+      return { process: proc }
+    }
+    catch (err) {
+      log.warn({ root, err }, 'Biome not found. Install with: npm install @biomejs/biome')
+      return undefined
+    }
+  },
+}
+
+// =============================================================================
+// Svelte Language Server
+// =============================================================================
+
+/**
+ * Svelte Language Server runtime dependency configuration
+ */
+const SVELTE_RUNTIME_DEPS = {
+  svelteLanguageServer: {
+    package: 'svelte-language-server',
+    version: '0.17.7',
+  },
+}
+
+function getSvelteResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'svelte-lsp')
+}
+
+async function setupSvelteDependencies(): Promise<string | undefined> {
+  const resourcesDir = getSvelteResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `svelteserver${ext}`)
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = SVELTE_RUNTIME_DEPS.svelteLanguageServer.version
+
+  let needsInstall = false
+
+  try {
+    await fs.access(serverPath)
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        needsInstall = true
+      }
+    }
+    catch {
+      needsInstall = true
+    }
+  }
+  catch {
+    needsInstall = true
+  }
+
+  if (needsInstall) {
+    log.info('Installing Svelte Language Server')
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+      const packageSpec = `${SVELTE_RUNTIME_DEPS.svelteLanguageServer.package}@${SVELTE_RUNTIME_DEPS.svelteLanguageServer.version}`
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Svelte npm install failed')
+        return undefined
+      }
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        log.warn({ err: writeErr }, 'Failed to write Svelte version marker')
+      }
+      log.info('Svelte Language Server installed successfully')
+    }
+    catch (err) {
+      log.error({ err }, 'Failed to install Svelte dependencies')
+      return undefined
+    }
+  }
+
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch {
+    log.error({ serverPath }, 'Svelte LSP binary not found after installation')
+    return undefined
+  }
+}
+
+/**
+ * Svelte Language Server
+ */
+export const SvelteServer: LSPServerInfo = {
+  id: 'svelte',
+  extensions: ['.svelte'],
+  root: nearestRoot([
+    'package-lock.json',
+    'bun.lockb',
+    'bun.lock',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+  ]),
+  async spawn(root) {
+    // Check system first
+    const systemBin = Bun.which('svelteserver')
+    if (systemBin) {
+      const proc = spawn(systemBin, ['--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'svelte')
+      return { process: proc }
+    }
+
+    // Setup dependencies
+    const serverPath = await setupSvelteDependencies()
+    if (!serverPath) {
+      return undefined
+    }
+
+    const proc = spawn(serverPath, ['--stdio'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'svelte')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Astro Language Server
+// =============================================================================
+
+/**
+ * Astro Language Server runtime dependency configuration
+ */
+const ASTRO_RUNTIME_DEPS = {
+  astroLanguageServer: {
+    package: '@astrojs/language-server',
+    version: '2.16.6',
+  },
+  typescript: {
+    package: 'typescript',
+    version: '5.7.2',
+  },
+}
+
+function getAstroResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'astro-lsp')
+}
+
+function getAstroExpectedVersion(): string {
+  return [
+    ASTRO_RUNTIME_DEPS.astroLanguageServer.version,
+    ASTRO_RUNTIME_DEPS.typescript.version,
+  ].join('_')
+}
+
+async function setupAstroDependencies(): Promise<{
+  serverPath: string
+  tsdkPath: string
+} | undefined> {
+  const resourcesDir = getAstroResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `astro-ls${ext}`)
+  const tsdkPath = path.join(resourcesDir, 'node_modules', 'typescript', 'lib')
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = getAstroExpectedVersion()
+
+  let needsInstall = false
+
+  try {
+    await fs.access(serverPath)
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        needsInstall = true
+      }
+    }
+    catch {
+      needsInstall = true
+    }
+  }
+  catch {
+    needsInstall = true
+  }
+
+  if (needsInstall) {
+    log.info('Installing Astro Language Server')
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+      const packages = [
+        `${ASTRO_RUNTIME_DEPS.astroLanguageServer.package}@${ASTRO_RUNTIME_DEPS.astroLanguageServer.version}`,
+        `${ASTRO_RUNTIME_DEPS.typescript.package}@${ASTRO_RUNTIME_DEPS.typescript.version}`,
+      ]
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, ...packages], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Astro npm install failed')
+        return undefined
+      }
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        log.warn({ err: writeErr }, 'Failed to write Astro version marker')
+      }
+      log.info('Astro Language Server installed successfully')
+    }
+    catch (err) {
+      log.error({ err }, 'Failed to install Astro dependencies')
+      return undefined
+    }
+  }
+
+  try {
+    await fs.access(serverPath)
+    await fs.access(tsdkPath)
+    return { serverPath, tsdkPath }
+  }
+  catch {
+    log.error({ serverPath, tsdkPath }, 'Astro LSP files not found after installation')
+    return undefined
+  }
+}
+
+/**
+ * Astro Language Server
+ */
+export const AstroServer: LSPServerInfo = {
+  id: 'astro',
+  extensions: ['.astro'],
+  root: nearestRoot([
+    'package-lock.json',
+    'bun.lockb',
+    'bun.lock',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+  ]),
+  async spawn(root) {
+    // Check system first
+    const systemBin = Bun.which('astro-ls')
+    if (systemBin) {
+      const proc = spawn(systemBin, ['--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'astro')
+      return { process: proc }
+    }
+
+    // Setup dependencies
+    const deps = await setupAstroDependencies()
+    if (!deps) {
+      return undefined
+    }
+
+    const proc = spawn(deps.serverPath, ['--stdio'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'astro')
+    return {
+      process: proc,
+      initialization: {
+        typescript: {
+          tsdk: deps.tsdkPath,
+        },
+      },
+    }
+  },
+}
+
+// =============================================================================
+// YAML Language Server
+// =============================================================================
+
+/**
+ * YAML Language Server runtime dependency configuration
+ */
+const YAML_RUNTIME_DEPS = {
+  yamlLanguageServer: {
+    package: 'yaml-language-server',
+    version: '1.17.0',
+  },
+}
+
+function getYamlResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'yaml-lsp')
+}
+
+async function setupYamlDependencies(): Promise<string | undefined> {
+  const resourcesDir = getYamlResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `yaml-language-server${ext}`)
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = YAML_RUNTIME_DEPS.yamlLanguageServer.version
+
+  let needsInstall = false
+
+  try {
+    await fs.access(serverPath)
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        needsInstall = true
+      }
+    }
+    catch {
+      needsInstall = true
+    }
+  }
+  catch {
+    needsInstall = true
+  }
+
+  if (needsInstall) {
+    log.info('Installing YAML Language Server')
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+      const packageSpec = `${YAML_RUNTIME_DEPS.yamlLanguageServer.package}@${YAML_RUNTIME_DEPS.yamlLanguageServer.version}`
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'YAML npm install failed')
+        return undefined
+      }
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        log.warn({ err: writeErr }, 'Failed to write YAML version marker')
+      }
+      log.info('YAML Language Server installed successfully')
+    }
+    catch (err) {
+      log.error({ err }, 'Failed to install YAML dependencies')
+      return undefined
+    }
+  }
+
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch {
+    log.error({ serverPath }, 'YAML LSP binary not found after installation')
+    return undefined
+  }
+}
+
+/**
+ * YAML Language Server
+ */
+export const YamlServer: LSPServerInfo = {
+  id: 'yaml',
+  extensions: ['.yaml', '.yml'],
+  root: nearestRoot([
+    'package-lock.json',
+    'bun.lockb',
+    'bun.lock',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+  ]),
+  async spawn(root) {
+    // Check system first
+    const systemBin = Bun.which('yaml-language-server')
+    if (systemBin) {
+      const proc = spawn(systemBin, ['--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'yaml')
+      return { process: proc }
+    }
+
+    // Setup dependencies
+    const serverPath = await setupYamlDependencies()
+    if (!serverPath) {
+      return undefined
+    }
+
+    const proc = spawn(serverPath, ['--stdio'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'yaml')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Bash Language Server
+// =============================================================================
+
+/**
+ * Bash Language Server runtime dependency configuration
+ */
+const BASH_RUNTIME_DEPS = {
+  bashLanguageServer: {
+    package: 'bash-language-server',
+    version: '5.4.3',
+  },
+}
+
+function getBashResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'bash-lsp')
+}
+
+async function setupBashDependencies(): Promise<string | undefined> {
+  const resourcesDir = getBashResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `bash-language-server${ext}`)
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = BASH_RUNTIME_DEPS.bashLanguageServer.version
+
+  let needsInstall = false
+
+  try {
+    await fs.access(serverPath)
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        needsInstall = true
+      }
+    }
+    catch {
+      needsInstall = true
+    }
+  }
+  catch {
+    needsInstall = true
+  }
+
+  if (needsInstall) {
+    log.info('Installing Bash Language Server')
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+      const packageSpec = `${BASH_RUNTIME_DEPS.bashLanguageServer.package}@${BASH_RUNTIME_DEPS.bashLanguageServer.version}`
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Bash npm install failed')
+        return undefined
+      }
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        log.warn({ err: writeErr }, 'Failed to write Bash version marker')
+      }
+      log.info('Bash Language Server installed successfully')
+    }
+    catch (err) {
+      log.error({ err }, 'Failed to install Bash dependencies')
+      return undefined
+    }
+  }
+
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch {
+    log.error({ serverPath }, 'Bash LSP binary not found after installation')
+    return undefined
+  }
+}
+
+/**
+ * Bash Language Server
+ */
+export const BashServer: LSPServerInfo = {
+  id: 'bash',
+  extensions: ['.sh', '.bash', '.zsh', '.ksh'],
+  root: async (_file, projectPath) => projectPath,
+  async spawn(root) {
+    // Check system first
+    const systemBin = Bun.which('bash-language-server')
+    if (systemBin) {
+      const proc = spawn(systemBin, ['start'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'bash')
+      return { process: proc }
+    }
+
+    // Setup dependencies
+    const serverPath = await setupBashDependencies()
+    if (!serverPath) {
+      return undefined
+    }
+
+    const proc = spawn(serverPath, ['start'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'bash')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Dockerfile Language Server
+// =============================================================================
+
+/**
+ * Dockerfile Language Server runtime dependency configuration
+ */
+const DOCKERFILE_RUNTIME_DEPS = {
+  dockerfileLanguageServer: {
+    package: 'dockerfile-language-server-nodejs',
+    version: '0.13.0',
+  },
+}
+
+function getDockerfileResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'dockerfile-lsp')
+}
+
+async function setupDockerfileDependencies(): Promise<string | undefined> {
+  const resourcesDir = getDockerfileResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `docker-langserver${ext}`)
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = DOCKERFILE_RUNTIME_DEPS.dockerfileLanguageServer.version
+
+  let needsInstall = false
+
+  try {
+    await fs.access(serverPath)
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        needsInstall = true
+      }
+    }
+    catch {
+      needsInstall = true
+    }
+  }
+  catch {
+    needsInstall = true
+  }
+
+  if (needsInstall) {
+    log.info('Installing Dockerfile Language Server')
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+      const packageSpec = `${DOCKERFILE_RUNTIME_DEPS.dockerfileLanguageServer.package}@${DOCKERFILE_RUNTIME_DEPS.dockerfileLanguageServer.version}`
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Dockerfile npm install failed')
+        return undefined
+      }
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        log.warn({ err: writeErr }, 'Failed to write Dockerfile version marker')
+      }
+      log.info('Dockerfile Language Server installed successfully')
+    }
+    catch (err) {
+      log.error({ err }, 'Failed to install Dockerfile dependencies')
+      return undefined
+    }
+  }
+
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch {
+    log.error({ serverPath }, 'Dockerfile LSP binary not found after installation')
+    return undefined
+  }
+}
+
+/**
+ * Dockerfile Language Server
+ */
+export const DockerfileServer: LSPServerInfo = {
+  id: 'dockerfile',
+  extensions: ['.dockerfile'],
+  root: async (_file, projectPath) => projectPath,
+  async spawn(root) {
+    // Check system first
+    const systemBin = Bun.which('docker-langserver')
+    if (systemBin) {
+      const proc = spawn(systemBin, ['--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'dockerfile')
+      return { process: proc }
+    }
+
+    // Setup dependencies
+    const serverPath = await setupDockerfileDependencies()
+    if (!serverPath) {
+      return undefined
+    }
+
+    const proc = spawn(serverPath, ['--stdio'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'dockerfile')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Rubocop (Ruby) Language Server
+// =============================================================================
+
+function getRubocopResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'rubocop-lsp')
+}
+
+/**
+ * Rubocop (Ruby) Language Server
+ * Uses gem install for auto-download
+ */
+export const RubocopServer: LSPServerInfo = {
+  id: 'rubocop',
+  extensions: ['.rb', '.rake', '.gemspec', '.ru'],
+  root: nearestRoot(['Gemfile', 'Gemfile.lock']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getRubocopResourcesDir()
+
+    // Check PATH first (including our cache dir)
+    let bin = Bun.which('rubocop', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      // Check prerequisites
+      const ruby = Bun.which('ruby')
+      const gem = Bun.which('gem')
+      if (!ruby || !gem) {
+        log.warn('Ruby and gem are required for Rubocop. Install Ruby first.')
+        return undefined
+      }
+
+      log.info('Installing Rubocop')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const proc = Bun.spawn(['gem', 'install', 'rubocop', '--bindir', resourcesDir], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Failed to install rubocop')
+        return undefined
+      }
+
+      bin = path.join(resourcesDir, `rubocop${ext}`)
+      log.info({ bin }, 'Rubocop installed')
+    }
+
+    const proc = spawn(bin, ['--lsp'], { cwd: root })
+    attachLSPProcessHandlers(proc, 'rubocop')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// ElixirLS Language Server
+// =============================================================================
+
+function getElixirLsResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'elixir-lsp')
+}
+
+/**
+ * ElixirLS Language Server
+ * Auto-downloads and builds from GitHub
+ */
+export const ElixirLsServer: LSPServerInfo = {
+  id: 'elixir-ls',
+  extensions: ['.ex', '.exs'],
+  root: nearestRoot(['mix.exs', 'mix.lock']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const scriptName = isWindows ? 'language_server.bat' : 'language_server.sh'
+    const resourcesDir = getElixirLsResourcesDir()
+
+    // Check system binary first
+    let binary = Bun.which('elixir-ls')
+
+    if (!binary) {
+      binary = path.join(resourcesDir, 'elixir-ls-master', 'release', scriptName)
+
+      try {
+        await fs.access(binary)
+      }
+      catch {
+        // Need to download and build
+        const elixir = Bun.which('elixir')
+        if (!elixir) {
+          log.warn('Elixir is required for ElixirLS. Install Elixir first.')
+          return undefined
+        }
+
+        log.info('Downloading and building ElixirLS')
+        await fs.mkdir(resourcesDir, { recursive: true })
+
+        // Download from GitHub
+        const response = await fetch('https://github.com/elixir-lsp/elixir-ls/archive/refs/heads/master.zip')
+        if (!response.ok) {
+          log.error('Failed to download ElixirLS')
+          return undefined
+        }
+
+        const zipPath = path.join(resourcesDir, 'elixir-ls.zip')
+        await downloadFile('https://github.com/elixir-lsp/elixir-ls/archive/refs/heads/master.zip', zipPath)
+        await extractZip(zipPath, resourcesDir)
+        await fs.rm(zipPath, { force: true })
+
+        // Build with Mix
+        const buildDir = path.join(resourcesDir, 'elixir-ls-master')
+        const buildProc = Bun.spawn(['mix', 'deps.get'], {
+          cwd: buildDir,
+          env: { ...process.env, MIX_ENV: 'prod' },
+          stdout: 'pipe',
+          stderr: 'pipe',
+        })
+        const depsExitCode = await buildProc.exited
+        if (depsExitCode !== 0) {
+          const stderr = await new Response(buildProc.stderr).text()
+          log.error({ depsExitCode, stderr }, 'ElixirLS mix deps.get failed')
+          return undefined
+        }
+
+        const compileProc = Bun.spawn(['mix', 'compile'], {
+          cwd: buildDir,
+          env: { ...process.env, MIX_ENV: 'prod' },
+          stdout: 'pipe',
+          stderr: 'pipe',
+        })
+        const compileExitCode = await compileProc.exited
+        if (compileExitCode !== 0) {
+          const stderr = await new Response(compileProc.stderr).text()
+          log.error({ compileExitCode, stderr }, 'ElixirLS mix compile failed')
+          return undefined
+        }
+
+        const releaseProc = Bun.spawn(['mix', 'elixir_ls.release2', '-o', 'release'], {
+          cwd: buildDir,
+          env: { ...process.env, MIX_ENV: 'prod' },
+          stdout: 'pipe',
+          stderr: 'pipe',
+        })
+        const releaseExitCode = await releaseProc.exited
+        if (releaseExitCode !== 0) {
+          const stderr = await new Response(releaseProc.stderr).text()
+          log.error({ releaseExitCode, stderr }, 'ElixirLS mix release failed')
+          return undefined
+        }
+
+        // Verify binary exists
+        try {
+          await fs.access(binary)
+        }
+        catch {
+          log.error({ binary }, 'ElixirLS build failed')
+          return undefined
+        }
+
+        if (!isWindows) {
+          await fs.chmod(binary, 0o755)
+        }
+
+        log.info({ binary }, 'ElixirLS installed')
+      }
+    }
+
+    const proc = spawn(binary, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'elixir-ls')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Zls (Zig) Language Server
+// =============================================================================
+
+function getZlsResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'zls-lsp')
+}
+
+/**
+ * Zls (Zig) Language Server
+ * Auto-downloads from GitHub releases
+ */
+export const ZlsServer: LSPServerInfo = {
+  id: 'zls',
+  extensions: ['.zig', '.zon'],
+  root: nearestRoot(['build.zig']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getZlsResourcesDir()
+
+    // Check PATH first
+    let bin = Bun.which('zls', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      // Check prerequisite
+      const zig = Bun.which('zig')
+      if (!zig) {
+        log.warn('Zig is required for ZLS. Install Zig first.')
+        return undefined
+      }
+
+      log.info('Downloading ZLS from GitHub releases')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      // Fetch latest release
+      const releaseResponse = await fetch('https://api.github.com/repos/zigtools/zls/releases/latest')
+      if (!releaseResponse.ok) {
+        log.error('Failed to fetch ZLS release info')
+        return undefined
+      }
+
+      const release = await releaseResponse.json() as { assets: Array<{ name: string, browser_download_url: string }> }
+
+      // Map platform/arch
+      const archMap: Record<string, string> = { arm64: 'aarch64', x64: 'x86_64', ia32: 'x86' }
+      const platformMap: Record<string, string> = { darwin: 'macos', win32: 'windows', linux: 'linux' }
+      const zlsArch = archMap[process.arch] || process.arch
+      const zlsPlatform = platformMap[process.platform] || process.platform
+      const archiveExt = isWindows ? 'zip' : 'tar.xz'
+
+      const assetName = `zls-${zlsArch}-${zlsPlatform}.${archiveExt}`
+      const asset = release.assets.find(a => a.name === assetName)
+      if (!asset) {
+        log.error({ assetName }, 'ZLS asset not found for this platform')
+        return undefined
+      }
+
+      // Download and extract
+      const archivePath = path.join(resourcesDir, assetName)
+      await downloadFile(asset.browser_download_url, archivePath)
+
+      if (archiveExt === 'zip') {
+        await extractZip(archivePath, resourcesDir)
+      }
+      else {
+        const tarProc = Bun.spawn(['tar', '-xf', archivePath], {
+          cwd: resourcesDir,
+          stdout: 'pipe',
+          stderr: 'pipe',
+        })
+        const tarExitCode = await tarProc.exited
+        if (tarExitCode !== 0) {
+          const stderr = await new Response(tarProc.stderr).text()
+          log.error({ tarExitCode, stderr }, 'Failed to extract ZLS archive')
+          await fs.rm(archivePath, { force: true })
+          return undefined
+        }
+      }
+
+      await fs.rm(archivePath, { force: true })
+
+      bin = path.join(resourcesDir, `zls${ext}`)
+
+      try {
+        await fs.access(bin)
+      }
+      catch {
+        log.error({ bin }, 'ZLS binary not found after extraction')
+        return undefined
+      }
+
+      if (!isWindows) {
+        await fs.chmod(bin, 0o755)
+      }
+
+      log.info({ bin }, 'ZLS installed')
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'zls')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// C# Language Server (csharp-ls)
+// =============================================================================
+
+function getCsharpResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'csharp-lsp')
+}
+
+/**
+ * C# Language Server (csharp-ls)
+ * Uses dotnet tool install
+ */
+export const CsharpServer: LSPServerInfo = {
+  id: 'csharp',
+  extensions: ['.cs'],
+  root: nearestRoot(['.sln', '.csproj', 'global.json']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getCsharpResourcesDir()
+
+    // Check PATH first
+    let bin = Bun.which('csharp-ls', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      // Check prerequisite
+      const dotnet = Bun.which('dotnet')
+      if (!dotnet) {
+        log.warn('.NET SDK is required for csharp-ls. Install .NET SDK first.')
+        return undefined
+      }
+
+      log.info('Installing csharp-ls via dotnet tool')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const proc = Bun.spawn(['dotnet', 'tool', 'install', 'csharp-ls', '--tool-path', resourcesDir], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Failed to install csharp-ls')
+        return undefined
+      }
+
+      bin = path.join(resourcesDir, `csharp-ls${ext}`)
+      log.info({ bin }, 'csharp-ls installed')
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'csharp')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// F# Language Server (fsautocomplete)
+// =============================================================================
+
+function getFsharpResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'fsharp-lsp')
+}
+
+/**
+ * F# Language Server (fsautocomplete)
+ * Uses dotnet tool install
+ */
+export const FsharpServer: LSPServerInfo = {
+  id: 'fsharp',
+  extensions: ['.fs', '.fsi', '.fsx', '.fsscript'],
+  root: nearestRoot(['.sln', '.fsproj', 'global.json']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getFsharpResourcesDir()
+
+    // Check PATH first
+    let bin = Bun.which('fsautocomplete', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      // Check prerequisite
+      const dotnet = Bun.which('dotnet')
+      if (!dotnet) {
+        log.warn('.NET SDK is required for fsautocomplete. Install .NET SDK first.')
+        return undefined
+      }
+
+      log.info('Installing fsautocomplete via dotnet tool')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const proc = Bun.spawn(['dotnet', 'tool', 'install', 'fsautocomplete', '--tool-path', resourcesDir], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'Failed to install fsautocomplete')
+        return undefined
+      }
+
+      bin = path.join(resourcesDir, `fsautocomplete${ext}`)
+      log.info({ bin }, 'fsautocomplete installed')
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'fsharp')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// SourceKit (Swift) Language Server
+// =============================================================================
+
+/**
+ * SourceKit (Swift) Language Server
+ * System-only, comes with Swift toolchain or Xcode
+ */
+export const SourceKitServer: LSPServerInfo = {
+  id: 'sourcekit',
+  extensions: ['.swift'],
+  root: nearestRoot(['Package.swift']),
+  async spawn(root) {
+    // Check PATH first
+    let bin = Bun.which('sourcekit-lsp')
+
+    if (!bin) {
+      // macOS fallback: use xcrun
+      if (process.platform === 'darwin' && Bun.which('xcrun')) {
+        try {
+          const proc = Bun.spawn(['xcrun', '--find', 'sourcekit-lsp'], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+          })
+          const exitCode = await proc.exited
+          if (exitCode === 0) {
+            bin = (await new Response(proc.stdout).text()).trim()
+          }
+        }
+        catch {
+          // xcrun failed
+        }
+      }
+
+      if (!bin) {
+        log.warn('sourcekit-lsp not found. Install Swift toolchain or Xcode.')
+        return undefined
+      }
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'sourcekit')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Clangd (C/C++) Language Server
+// =============================================================================
+
+function getClangdResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'clangd-lsp')
+}
+
+/**
+ * Clangd (C/C++) Language Server
+ * Auto-downloads from GitHub releases
+ */
+export const ClangdServer: LSPServerInfo = {
+  id: 'clangd',
+  extensions: ['.c', '.cpp', '.cc', '.cxx', '.c++', '.h', '.hpp', '.hh', '.hxx', '.h++'],
+  root: nearestRoot(['compile_commands.json', 'compile_flags.txt', '.clangd', 'CMakeLists.txt', 'Makefile']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getClangdResourcesDir()
+    const args = ['--background-index', '--clang-tidy']
+
+    // Check PATH first
+    let bin = Bun.which('clangd')
+    if (bin) {
+      const proc = spawn(bin, args, { cwd: root })
+      attachLSPProcessHandlers(proc, 'clangd')
+      return { process: proc }
+    }
+
+    // Check direct path
+    const directPath = path.join(resourcesDir, `clangd${ext}`)
+    try {
+      await fs.access(directPath)
+      const proc = spawn(directPath, args, { cwd: root })
+      attachLSPProcessHandlers(proc, 'clangd')
+      return { process: proc }
+    }
+    catch {
+      // Not found directly
+    }
+
+    // Check extracted directories
+    try {
+      const entries = await fs.readdir(resourcesDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory() || !entry.name.startsWith('clangd_'))
+          continue
+        const candidate = path.join(resourcesDir, entry.name, 'bin', `clangd${ext}`)
+        try {
+          await fs.access(candidate)
+          const proc = spawn(candidate, args, { cwd: root })
+          attachLSPProcessHandlers(proc, 'clangd')
+          return { process: proc }
+        }
+        catch {
+          continue
+        }
+      }
+    }
+    catch {
+      // resourcesDir doesn't exist yet
+    }
+
+    // Download from GitHub releases
+    log.info('Downloading clangd from GitHub releases')
+    await fs.mkdir(resourcesDir, { recursive: true })
+
+    const releaseResponse = await fetch('https://api.github.com/repos/clangd/clangd/releases/latest')
+    if (!releaseResponse.ok) {
+      log.error('Failed to fetch clangd release info')
+      return undefined
+    }
+
+    const release = await releaseResponse.json() as {
+      tag_name: string
+      assets: Array<{ name: string, browser_download_url: string }>
+    }
+
+    const tag = release.tag_name
+    const platformTokens: Record<string, string> = {
+      darwin: 'mac',
+      linux: 'linux',
+      win32: 'windows',
+    }
+    const token = platformTokens[process.platform]
+    if (!token) {
+      log.error({ platform: process.platform }, 'Unsupported platform for clangd')
+      return undefined
+    }
+
+    const asset = release.assets.find(a =>
+      a.name.includes(token) && a.name.includes(tag),
+    )
+    if (!asset) {
+      log.error({ tag, platform: process.platform }, 'clangd asset not found')
+      return undefined
+    }
+
+    const archivePath = path.join(resourcesDir, asset.name)
+    await downloadFile(asset.browser_download_url, archivePath)
+
+    if (asset.name.endsWith('.zip')) {
+      await extractZip(archivePath, resourcesDir)
+    }
+    else {
+      const tarProc = Bun.spawn(['tar', '-xf', archivePath], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const tarExitCode = await tarProc.exited
+      if (tarExitCode !== 0) {
+        const stderr = await new Response(tarProc.stderr).text()
+        log.error({ tarExitCode, stderr }, 'Failed to extract clangd archive')
+        await fs.rm(archivePath, { force: true })
+        return undefined
+      }
+    }
+
+    await fs.rm(archivePath, { force: true })
+
+    bin = path.join(resourcesDir, `clangd_${tag}`, 'bin', `clangd${ext}`)
+    try {
+      await fs.access(bin)
+    }
+    catch {
+      log.error({ bin }, 'clangd binary not found after extraction')
+      return undefined
+    }
+
+    if (!isWindows) {
+      await fs.chmod(bin, 0o755)
+    }
+
+    log.info({ bin }, 'clangd installed')
+
+    const proc = spawn(bin, args, { cwd: root })
+    attachLSPProcessHandlers(proc, 'clangd')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// JDTLS (Java) Language Server
+// =============================================================================
+
+function getJdtlsResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'jdtls-lsp')
+}
+
+/**
+ * JDTLS (Java) Language Server
+ * Auto-downloads from Eclipse
+ */
+export const JdtlsServer: LSPServerInfo = {
+  id: 'jdtls',
+  extensions: ['.java'],
+  root: nearestRoot(['pom.xml', 'build.gradle', 'build.gradle.kts', '.project', '.classpath']),
+  async spawn(root) {
+    const resourcesDir = getJdtlsResourcesDir()
+
+    // Check prerequisite
+    const java = Bun.which('java')
+    if (!java) {
+      log.warn('Java 21 or newer is required for JDTLS. Install Java first.')
+      return undefined
+    }
+
+    // Check Java version
+    const versionProc = Bun.spawn(['java', '-version'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    await versionProc.exited
+    const versionOutput = await new Response(versionProc.stderr).text()
+    const versionMatch = /"(\d+)\.\d+\.\d+"/.exec(versionOutput)
+    const majorVersion = versionMatch && versionMatch[1] ? Number.parseInt(versionMatch[1]) : 0
+
+    if (majorVersion < 21) {
+      log.warn({ version: majorVersion }, 'JDTLS requires Java 21 or newer')
+      return undefined
+    }
+
+    const distPath = path.join(resourcesDir, 'jdtls')
+    const launcherDir = path.join(distPath, 'plugins')
+
+    // Check if installed
+    try {
+      await fs.access(launcherDir)
+    }
+    catch {
+      log.info('Downloading JDTLS from Eclipse')
+      await fs.mkdir(distPath, { recursive: true })
+
+      const archivePath = path.join(distPath, 'release.tar.gz')
+      const downloadProc = Bun.spawn([
+        'curl',
+        '-L',
+        '-o',
+        archivePath,
+        'https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz',
+      ], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      await downloadProc.exited
+
+      const extractProc = Bun.spawn(['tar', '-xzf', archivePath], {
+        cwd: distPath,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const extractExitCode = await extractProc.exited
+      if (extractExitCode !== 0) {
+        const stderr = await new Response(extractProc.stderr).text()
+        log.error({ extractExitCode, stderr }, 'Failed to extract JDTLS archive')
+        await fs.rm(archivePath, { force: true })
+        return undefined
+      }
+
+      await fs.rm(archivePath, { force: true })
+      log.info('JDTLS installed')
+    }
+
+    // Find launcher JAR using fs.readdir (cross-platform)
+    let files: string[]
+    try {
+      files = await fs.readdir(launcherDir)
+    }
+    catch {
+      log.error({ launcherDir }, 'Failed to read JDTLS launcher directory')
+      return undefined
+    }
+    const jarFileName = files.find(f => f.startsWith('org.eclipse.equinox.launcher_') && f.endsWith('.jar'))
+    if (!jarFileName) {
+      log.error('JDTLS launcher JAR not found')
+      return undefined
+    }
+
+    const launcherJar = path.join(launcherDir, jarFileName)
+
+    // Get platform-specific config
+    const configMap: Record<string, string> = {
+      darwin: 'config_mac',
+      linux: 'config_linux',
+      win32: 'config_windows',
+    }
+    const configFile = path.join(distPath, configMap[process.platform] || 'config_linux')
+
+    // Create temp data directory
+    const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dora-jdtls-data'))
+
+    const proc = spawn(java, [
+      '-jar',
+      launcherJar,
+      '-configuration',
+      configFile,
+      '-data',
+      dataDir,
+      '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+      '-Dosgi.bundles.defaultStartLevel=4',
+      '-Declipse.product=org.eclipse.jdt.ls.core.product',
+      '-Dlog.level=ALL',
+      '--add-modules=ALL-SYSTEM',
+      '--add-opens',
+      'java.base/java.util=ALL-UNNAMED',
+      '--add-opens',
+      'java.base/java.lang=ALL-UNNAMED',
+    ], { cwd: root })
+
+    attachLSPProcessHandlers(proc, 'jdtls')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// LuaLS (Lua) Language Server
+// =============================================================================
+
+function getLuaLsResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'lua-lsp')
+}
+
+/**
+ * LuaLS (Lua) Language Server
+ * Auto-downloads from GitHub releases
+ */
+export const LuaLsServer: LSPServerInfo = {
+  id: 'lua-ls',
+  extensions: ['.lua'],
+  root: nearestRoot([
+    '.luarc.json',
+    '.luarc.jsonc',
+    '.luacheckrc',
+    '.stylua.toml',
+    'stylua.toml',
+    'selene.toml',
+    'selene.yml',
+  ]),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getLuaLsResourcesDir()
+
+    // Check PATH first
+    let bin = Bun.which('lua-language-server', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      log.info('Downloading lua-language-server from GitHub releases')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const releaseResponse = await fetch('https://api.github.com/repos/LuaLS/lua-language-server/releases/latest')
+      if (!releaseResponse.ok) {
+        log.error('Failed to fetch lua-language-server release info')
+        return undefined
+      }
+
+      const release = await releaseResponse.json() as {
+        tag_name: string
+        assets: Array<{ name: string, browser_download_url: string }>
+      }
+
+      const platform = process.platform
+      const arch = process.arch
+      const archiveExt = isWindows ? 'zip' : 'tar.gz'
+
+      const assetName = `lua-language-server-${release.tag_name}-${platform}-${arch}.${archiveExt}`
+      const asset = release.assets.find(a => a.name === assetName)
+      if (!asset) {
+        log.error({ assetName }, 'lua-language-server asset not found')
+        return undefined
+      }
+
+      const installDir = path.join(resourcesDir, `lua-language-server-${arch}-${platform}`)
+
+      // Remove old installation
+      try {
+        await fs.rm(installDir, { force: true, recursive: true })
+      }
+      catch {
+        // Directory doesn't exist
+      }
+      await fs.mkdir(installDir, { recursive: true })
+
+      const archivePath = path.join(resourcesDir, assetName)
+      await downloadFile(asset.browser_download_url, archivePath)
+
+      if (archiveExt === 'zip') {
+        await extractZip(archivePath, installDir)
+      }
+      else {
+        const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', installDir], {
+          stdout: 'pipe',
+          stderr: 'pipe',
+        })
+        const tarExitCode = await tarProc.exited
+        if (tarExitCode !== 0) {
+          const stderr = await new Response(tarProc.stderr).text()
+          log.error({ tarExitCode, stderr }, 'Failed to extract lua-language-server archive')
+          await fs.rm(archivePath, { force: true })
+          return undefined
+        }
+      }
+
+      await fs.rm(archivePath, { force: true })
+
+      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
+      try {
+        await fs.access(bin)
+      }
+      catch {
+        log.error({ bin }, 'lua-language-server binary not found after extraction')
+        return undefined
+      }
+
+      if (!isWindows) {
+        await fs.chmod(bin, 0o755)
+      }
+
+      log.info({ bin }, 'lua-language-server installed')
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'lua-ls')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// PHP Intelephense Language Server
+// =============================================================================
+
+/**
+ * PHP Intelephense runtime dependency configuration
+ */
+const PHP_RUNTIME_DEPS = {
+  intelephense: {
+    package: 'intelephense',
+    version: '1.13.0',
+  },
+}
+
+function getPhpResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'php-lsp')
+}
+
+async function setupPhpDependencies(): Promise<string | undefined> {
+  const resourcesDir = getPhpResourcesDir()
+  const isWindows = process.platform === 'win32'
+  const ext = isWindows ? '.cmd' : ''
+
+  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `intelephense${ext}`)
+  const versionFile = path.join(resourcesDir, '.installed_version')
+  const expectedVersion = PHP_RUNTIME_DEPS.intelephense.version
+
+  let needsInstall = false
+
+  try {
+    await fs.access(serverPath)
+    try {
+      const installedVersion = await fs.readFile(versionFile, 'utf-8')
+      if (installedVersion.trim() !== expectedVersion) {
+        needsInstall = true
+      }
+    }
+    catch {
+      needsInstall = true
+    }
+  }
+  catch {
+    needsInstall = true
+  }
+
+  if (needsInstall) {
+    log.info('Installing PHP Intelephense')
+    try {
+      await fs.mkdir(resourcesDir, { recursive: true })
+      const packageSpec = `${PHP_RUNTIME_DEPS.intelephense.package}@${PHP_RUNTIME_DEPS.intelephense.version}`
+      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
+        cwd: resourcesDir,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+      const exitCode = await proc.exited
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        log.error({ exitCode, stderr }, 'PHP npm install failed')
+        return undefined
+      }
+      try {
+        await fs.writeFile(versionFile, expectedVersion)
+      }
+      catch (writeErr) {
+        log.warn({ err: writeErr }, 'Failed to write PHP version marker')
+      }
+      log.info('PHP Intelephense installed successfully')
+    }
+    catch (err) {
+      log.error({ err }, 'Failed to install PHP dependencies')
+      return undefined
+    }
+  }
+
+  try {
+    await fs.access(serverPath)
+    return serverPath
+  }
+  catch {
+    log.error({ serverPath }, 'PHP LSP binary not found after installation')
+    return undefined
+  }
+}
+
+/**
+ * PHP Intelephense Language Server
+ */
+export const PhpServer: LSPServerInfo = {
+  id: 'php',
+  extensions: ['.php'],
+  root: nearestRoot(['composer.json', 'composer.lock', '.php-version']),
+  async spawn(root) {
+    // Check system first
+    const systemBin = Bun.which('intelephense')
+    if (systemBin) {
+      const proc = spawn(systemBin, ['--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'php')
+      return { process: proc }
+    }
+
+    // Setup dependencies
+    const serverPath = await setupPhpDependencies()
+    if (!serverPath) {
+      return undefined
+    }
+
+    const proc = spawn(serverPath, ['--stdio'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'php')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// OCaml Language Server
+// =============================================================================
+
+/**
+ * OCaml Language Server (ocamllsp)
+ * System-only, must be installed via opam
+ */
+export const OcamlServer: LSPServerInfo = {
+  id: 'ocaml',
+  extensions: ['.ml', '.mli'],
+  root: nearestRoot(['dune-project', 'dune-workspace', '.merlin', 'opam']),
+  async spawn(root) {
+    const bin = Bun.which('ocamllsp')
+    if (!bin) {
+      log.warn('ocamllsp not found. Install with: opam install ocaml-lsp-server')
+      return undefined
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'ocaml')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// TerraformLS Language Server
+// =============================================================================
+
+function getTerraformResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'terraform-lsp')
+}
+
+/**
+ * TerraformLS Language Server
+ * Auto-downloads from GitHub releases
+ */
+export const TerraformServer: LSPServerInfo = {
+  id: 'terraform',
+  extensions: ['.tf', '.tfvars'],
+  root: nearestRoot(['.terraform.lock.hcl', 'terraform.tfstate']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getTerraformResourcesDir()
+
+    // Check PATH first
+    let bin = Bun.which('terraform-ls', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      log.info('Downloading terraform-ls from GitHub releases')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const releaseResponse = await fetch('https://api.github.com/repos/hashicorp/terraform-ls/releases/latest')
+      if (!releaseResponse.ok) {
+        log.error('Failed to fetch terraform-ls release info')
+        return undefined
+      }
+
+      const release = await releaseResponse.json() as {
+        tag_name: string
+        assets: Array<{ name: string, browser_download_url: string }>
+      }
+
+      const version = release.tag_name.replace('v', '')
+      const tfArch = process.arch === 'arm64' ? 'arm64' : 'amd64'
+      const tfPlatform = isWindows ? 'windows' : process.platform
+
+      const assetName = `terraform-ls_${version}_${tfPlatform}_${tfArch}.zip`
+      const asset = release.assets.find(a => a.name === assetName)
+      if (!asset) {
+        log.error({ assetName }, 'terraform-ls asset not found')
+        return undefined
+      }
+
+      const archivePath = path.join(resourcesDir, assetName)
+      await downloadFile(asset.browser_download_url, archivePath)
+      await extractZip(archivePath, resourcesDir)
+      await fs.rm(archivePath, { force: true })
+
+      bin = path.join(resourcesDir, `terraform-ls${ext}`)
+      try {
+        await fs.access(bin)
+      }
+      catch {
+        log.error({ bin }, 'terraform-ls binary not found after extraction')
+        return undefined
+      }
+
+      if (!isWindows) {
+        await fs.chmod(bin, 0o755)
+      }
+
+      log.info({ bin }, 'terraform-ls installed')
+    }
+
+    const proc = spawn(bin, ['serve'], { cwd: root })
+    attachLSPProcessHandlers(proc, 'terraform')
+    return {
+      process: proc,
+      initialization: {
+        experimentalFeatures: {
+          prefillRequiredFields: true,
+          validateOnSave: true,
+        },
+      },
+    }
+  },
+}
+
+// =============================================================================
+// TexLab (LaTeX) Language Server
+// =============================================================================
+
+function getTexlabResourcesDir(): string {
+  return path.join(os.homedir(), '.cache', 'dora', 'texlab-lsp')
+}
+
+/**
+ * TexLab (LaTeX) Language Server
+ * Auto-downloads from GitHub releases
+ */
+export const TexlabServer: LSPServerInfo = {
+  id: 'texlab',
+  extensions: ['.tex', '.bib'],
+  root: nearestRoot(['.latexmkrc', 'latexmkrc', '.texlabroot', 'texlabroot']),
+  async spawn(root) {
+    const isWindows = process.platform === 'win32'
+    const ext = isWindows ? '.exe' : ''
+    const resourcesDir = getTexlabResourcesDir()
+
+    // Check PATH first
+    let bin = Bun.which('texlab', {
+      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+    })
+
+    if (!bin) {
+      log.info('Downloading texlab from GitHub releases')
+      await fs.mkdir(resourcesDir, { recursive: true })
+
+      const releaseResponse = await fetch('https://api.github.com/repos/latex-lsp/texlab/releases/latest')
+      if (!releaseResponse.ok) {
+        log.error('Failed to fetch texlab release info')
+        return undefined
+      }
+
+      const release = await releaseResponse.json() as {
+        tag_name: string
+        assets: Array<{ name: string, browser_download_url: string }>
+      }
+
+      const texArch = process.arch === 'arm64' ? 'aarch64' : 'x86_64'
+      const texPlatform = process.platform === 'darwin' ? 'macos' : isWindows ? 'windows' : 'linux'
+      const archiveExt = isWindows ? 'zip' : 'tar.gz'
+
+      const assetName = `texlab-${texArch}-${texPlatform}.${archiveExt}`
+      const asset = release.assets.find(a => a.name === assetName)
+      if (!asset) {
+        log.error({ assetName }, 'texlab asset not found')
+        return undefined
+      }
+
+      const archivePath = path.join(resourcesDir, assetName)
+      await downloadFile(asset.browser_download_url, archivePath)
+
+      if (archiveExt === 'zip') {
+        await extractZip(archivePath, resourcesDir)
+      }
+      else {
+        const tarProc = Bun.spawn(['tar', '-xzf', archivePath], {
+          cwd: resourcesDir,
+          stdout: 'pipe',
+          stderr: 'pipe',
+        })
+        const tarExitCode = await tarProc.exited
+        if (tarExitCode !== 0) {
+          const stderr = await new Response(tarProc.stderr).text()
+          log.error({ tarExitCode, stderr }, 'Failed to extract texlab archive')
+          await fs.rm(archivePath, { force: true })
+          return undefined
+        }
+      }
+
+      await fs.rm(archivePath, { force: true })
+
+      bin = path.join(resourcesDir, `texlab${ext}`)
+      try {
+        await fs.access(bin)
+      }
+      catch {
+        log.error({ bin }, 'texlab binary not found after extraction')
+        return undefined
+      }
+
+      if (!isWindows) {
+        await fs.chmod(bin, 0o755)
+      }
+
+      log.info({ bin }, 'texlab installed')
+    }
+
+    const proc = spawn(bin, [], { cwd: root })
+    attachLSPProcessHandlers(proc, 'texlab')
+    return { process: proc }
+  },
+}
+
+// =============================================================================
+// Gleam Language Server
+// =============================================================================
+
+/**
+ * Gleam Language Server
+ * System-only, must be installed globally
+ */
+export const GleamServer: LSPServerInfo = {
+  id: 'gleam',
+  extensions: ['.gleam'],
+  root: nearestRoot(['gleam.toml']),
+  async spawn(root) {
+    const bin = Bun.which('gleam')
+    if (!bin) {
+      log.warn('gleam not found. Install Gleam first.')
+      return undefined
+    }
+
+    const proc = spawn(bin, ['lsp'], { cwd: root })
+    attachLSPProcessHandlers(proc, 'gleam')
+    return { process: proc }
+  },
+}
+
 /**
  * All available LSP servers
  */
 export const LSP_SERVERS: LSPServerInfo[] = [
   DenoServer, // Deno first, higher priority for Deno projects
   VueServer, // Vue before TypeScript for .vue files
+  SvelteServer, // Svelte before TypeScript for .svelte files
+  AstroServer, // Astro before TypeScript for .astro files
   TypescriptServer,
+  BiomeServer, // Biome after TypeScript for linting
   OxlintServer,
   EslintServer, // ESLint after OxlintServer for JS/TS linting
   PyrightServer,
@@ -1526,6 +3441,23 @@ export const LSP_SERVERS: LSPServerInfo[] = [
   KotlinServer,
   DartServer,
   PrismaServer,
+  YamlServer,
+  BashServer,
+  DockerfileServer,
+  RubocopServer,
+  ElixirLsServer,
+  ZlsServer,
+  CsharpServer,
+  FsharpServer,
+  SourceKitServer,
+  ClangdServer,
+  JdtlsServer,
+  LuaLsServer,
+  PhpServer,
+  OcamlServer,
+  TerraformServer,
+  TexlabServer,
+  GleamServer,
 ]
 
 /**
