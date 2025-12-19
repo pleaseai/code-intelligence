@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.7](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.6...code-please-v0.1.7) (2025-12-19)
+
+
+### Features
+
+* **agents:** add librarian agent for codebase exploration ([#32](https://github.com/chatbot-pf/code-please/issues/32)) ([9d74066](https://github.com/chatbot-pf/code-please/commit/9d740665164876702a5e0c619216cae2354e8d5a))
+* **dora:** add ast-grep provider for AST-aware code search ([#35](https://github.com/chatbot-pf/code-please/issues/35)) ([74117d3](https://github.com/chatbot-pf/code-please/commit/74117d32136181ecb03ab1e7a054524c12101c9e))
+* **logger:** add shared logger package with pino integration ([#37](https://github.com/chatbot-pf/code-please/issues/37)) ([c208f35](https://github.com/chatbot-pf/code-please/commit/c208f352d59a0c94d9664e29776334ac015e94ad))
+
 ## [0.1.6](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.5...code-please-v0.1.6) (2025-12-18)
 
 

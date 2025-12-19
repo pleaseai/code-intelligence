@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-format-v0.1.1...@pleaseai/code-format-v0.1.2) (2025-12-19)
+
+
+### Features
+
+* **logger:** add shared logger package with pino integration ([#37](https://github.com/chatbot-pf/code-please/issues/37)) ([c208f35](https://github.com/chatbot-pf/code-please/commit/c208f352d59a0c94d9664e29776334ac015e94ad))
+
 ## [0.1.1](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-format-v0.1.0...@pleaseai/code-format-v0.1.1) (2025-12-18)
 
 

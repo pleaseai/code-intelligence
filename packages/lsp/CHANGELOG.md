@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.5](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.4...@pleaseai/code-lsp-v0.1.5) (2025-12-19)
+
+
+### Features
+
+* **dora:** add ast-grep provider for AST-aware code search ([#35](https://github.com/chatbot-pf/code-please/issues/35)) ([74117d3](https://github.com/chatbot-pf/code-please/commit/74117d32136181ecb03ab1e7a054524c12101c9e))
+* **logger:** add shared logger package with pino integration ([#37](https://github.com/chatbot-pf/code-please/issues/37)) ([c208f35](https://github.com/chatbot-pf/code-please/commit/c208f352d59a0c94d9664e29776334ac015e94ad))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-format bumped to 0.1.2
+
 ## [0.1.4](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.3...@pleaseai/code-lsp-v0.1.4) (2025-12-18)
 
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.6](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.5...@pleaseai/code-v0.1.6) (2025-12-19)
+
+
+### Features
+
+* **logger:** add shared logger package with pino integration ([#37](https://github.com/chatbot-pf/code-please/issues/37)) ([c208f35](https://github.com/chatbot-pf/code-please/commit/c208f352d59a0c94d9664e29776334ac015e94ad))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-format bumped to 0.1.2
+    * @pleaseai/code-lsp bumped to 0.1.5
+
 ## [0.1.5](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.4...@pleaseai/code-v0.1.5) (2025-12-18)
 
 
