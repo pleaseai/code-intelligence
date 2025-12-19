@@ -10,3 +10,6 @@
 [submodule "ref/multispy"]
 	path = ref/multispy
 	url = https://github.com/microsoft/multilspy.git
+[submodule "ref/oh-my-opencode"]
+	path = ref/oh-my-opencode
+	url = https://github.com/code-yeongyu/oh-my-opencode
