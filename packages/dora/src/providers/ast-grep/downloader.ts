@@ -5,17 +5,18 @@
  * Caches to ~/.cache/dora/ast-grep/
  */
 
-import { existsSync, mkdirSync, chmodSync, unlinkSync, writeFileSync, readFileSync } from 'fs'
+import type { PlatformId } from './types'
+import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import process from 'node:process'
 import { spawn } from 'bun'
 import {
   AST_GREP_VERSION,
-  PLATFORM_CONFIGS,
   getAstGrepCacheDir,
   getCachedBinaryPath,
   getPlatformId,
   getVersionMarkerPath,
+  PLATFORM_CONFIGS,
 } from './constants'
-import type { PlatformId } from './types'
 
 /**
  * Verify a binary is actually ast-grep by checking --version output
@@ -95,8 +96,8 @@ async function extractZip(archivePath: string, destDir: string): Promise<void> {
   let proc
   if (process.platform === 'win32') {
     // Escape single quotes for PowerShell by doubling them
-    const escapedArchive = archivePath.replace(/'/g, "''")
-    const escapedDest = destDir.replace(/'/g, "''")
+    const escapedArchive = archivePath.replace(/'/g, '\'\'')
+    const escapedDest = destDir.replace(/'/g, '\'\'')
     proc = spawn(
       [
         'powershell',

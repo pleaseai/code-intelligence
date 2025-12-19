@@ -5,12 +5,11 @@
  * Provides faster in-memory analysis and transformation without spawning CLI
  */
 
-import { NAPI_LANGUAGES } from './constants'
 import type { AnalyzeResult, MetaVariable, NapiLanguage, Range } from './types'
+import { NAPI_LANGUAGES } from './constants'
 
-// eslint-disable-next-line ts/no-explicit-any -- Runtime-loaded optional dependency
 type AstGrepNapiModule = any
-// eslint-disable-next-line ts/no-explicit-any -- AST node from NAPI module
+
 type SgNode = any
 
 // Dynamic import for @ast-grep/napi (optional dependency)
@@ -21,8 +20,10 @@ let napiLoadError: Error | null = null
  * Check if NAPI is available
  */
 export function isNapiAvailable(): boolean {
-  if (napiModule !== null) return true
-  if (napiLoadError !== null) return false
+  if (napiModule !== null)
+    return true
+  if (napiLoadError !== null)
+    return false
 
   try {
     // eslint-disable-next-line ts/no-require-imports
@@ -67,11 +68,12 @@ function getLangEnum(lang: NapiLanguage): unknown {
 /**
  * Parse code using NAPI
  */
+// eslint-disable-next-line ts/explicit-function-return-type
 export function parseCode(code: string, lang: NapiLanguage) {
   if (!isNapiAvailable()) {
     throw new Error(
       `@ast-grep/napi not available: ${napiLoadError?.message ?? 'unknown error'}\n`
-        + 'Install with: bun add -D @ast-grep/napi',
+      + 'Install with: bun add -D @ast-grep/napi',
     )
   }
 
@@ -79,8 +81,8 @@ export function parseCode(code: string, lang: NapiLanguage) {
     const supportedLangs = NAPI_LANGUAGES.join(', ')
     throw new Error(
       `Unsupported language for NAPI: "${lang}"\n`
-        + `Supported languages: ${supportedLangs}\n\n`
-        + `Use ast_grep_search for other languages (25 supported via CLI).`,
+      + `Supported languages: ${supportedLangs}\n\n`
+      + `Use ast_grep_search for other languages (25 supported via CLI).`,
     )
   }
 
@@ -91,6 +93,7 @@ export function parseCode(code: string, lang: NapiLanguage) {
 /**
  * Find pattern matches in parsed tree
  */
+// eslint-disable-next-line ts/explicit-function-return-type
 export function findPattern(root: ReturnType<typeof parseCode>, pattern: string) {
   return root.root().findAll(pattern)
 }
@@ -166,7 +169,7 @@ export function transformCode(
   lang: NapiLanguage,
   pattern: string,
   rewrite: string,
-): { transformed: string; editCount: number } {
+): { transformed: string, editCount: number } {
   const root = parseCode(code, lang)
   const matches = findPattern(root, pattern)
 
@@ -192,7 +195,7 @@ export function transformCode(
 /**
  * Get root node info for debugging
  */
-export function getRootInfo(code: string, lang: NapiLanguage): { kind: string; childCount: number } {
+export function getRootInfo(code: string, lang: NapiLanguage): { kind: string, childCount: number } {
   const root = parseCode(code, lang)
   const rootNode = root.root()
   return {

@@ -4,14 +4,14 @@
  * Provides AST-aware code search and transformation tools
  */
 
-import { z, ZodError } from 'zod'
 import type { Provider, ToolDefinition, ToolResult } from '../provider'
 import type { RegistryConfig } from '../registry'
-import { CLI_LANGUAGES, NAPI_LANGUAGES } from './constants'
-import { runSg, isCliAvailable } from './cli'
-import { isNapiAvailable, getNapiError, analyzeCode, transformCode } from './napi'
-import { formatSearchResult, formatReplaceResult, formatAnalyzeResult, formatTransformResult, getEmptyResultHint } from './utils'
 import type { NapiLanguage } from './types'
+import { z, ZodError } from 'zod'
+import { isCliAvailable, runSg } from './cli'
+import { CLI_LANGUAGES, NAPI_LANGUAGES } from './constants'
+import { analyzeCode, getNapiError, isNapiAvailable, transformCode } from './napi'
+import { formatAnalyzeResult, formatReplaceResult, formatSearchResult, formatTransformResult, getEmptyResultHint } from './utils'
 
 /**
  * Format error for tool result, with special handling for Zod validation errors
@@ -157,7 +157,9 @@ export class AstGrepProvider implements Provider {
     const napiAvailable = isNapiAvailable()
     if (!napiAvailable) {
       const error = getNapiError()
+
       console.log(`[ast-grep] NAPI not available: ${error ?? 'unknown'}`)
+
       console.log('[ast-grep] In-memory tools (analyze/transform) disabled')
     }
 

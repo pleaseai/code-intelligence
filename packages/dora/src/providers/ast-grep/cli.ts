@@ -4,8 +4,9 @@
  * Executes sg CLI commands and parses results
  */
 
+import type { CliMatch, RunSgOptions, SgResult } from './types'
+import { existsSync } from 'node:fs'
 import { spawn } from 'bun'
-import { existsSync } from 'fs'
 import {
   CLI_LANGUAGES,
   DEFAULT_MAX_MATCHES,
@@ -13,7 +14,6 @@ import {
   DEFAULT_TIMEOUT_MS,
 } from './constants'
 import { ensureAstGrepBinary, getInstallInstructions } from './downloader'
-import type { CliMatch, RunSgOptions, SgResult } from './types'
 
 // Cached binary path
 let resolvedCliPath: string | null = null

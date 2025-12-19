@@ -2,9 +2,10 @@
  * Constants for ast-grep provider
  */
 
-import * as os from 'os'
-import * as path from 'path'
 import type { PlatformConfig, PlatformId } from './types'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import process from 'node:process'
 
 // CLI supported languages (25 total)
 export const CLI_LANGUAGES = [

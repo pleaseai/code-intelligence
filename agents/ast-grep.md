@@ -110,8 +110,8 @@ For complex queries, use YAML rules with operators.
 id: rule-name
 language: javascript
 rule:
-  # Rule definition here
-message: "Explanation of what was found"
+# Rule definition here
+message: Explanation of what was found
 ```
 
 ### Atomic Rules
@@ -161,7 +161,7 @@ rule:
     has:
       kind: try_statement
       stopBy: end
-
+---
 # Find React useState without dependency
 id: usestate-in-component
 language: tsx
@@ -170,7 +170,7 @@ rule:
   inside:
     kind: function_declaration
     stopBy: end
-
+---
 # Find console.log in production code
 id: no-console-log
 language: javascript
@@ -178,7 +178,7 @@ rule:
   pattern: console.log($$$)
   not:
     inside:
-      regex: "test|spec|__tests__"
+      regex: test|spec|__tests__
       kind: string
 ```
 
@@ -197,7 +197,7 @@ rule:
         kind: string
       nthChild: 1
       stopBy: end
-
+---
 # Find bare except clauses
 id: bare-except
 language: python

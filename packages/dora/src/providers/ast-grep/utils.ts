@@ -139,7 +139,7 @@ export function getEmptyResultHint(pattern: string, lang: CliLanguage): string |
   }
 
   if (['javascript', 'typescript', 'tsx'].includes(lang)) {
-    if (/^(export\s+)?(async\s+)?function\s+\$[A-Z_]+\s*$/i.test(src)) {
+    if (/^(?:export\s+)?(?:async\s+)?function\s+\$[A-Z_]+\s*$/i.test(src)) {
       return `Hint: Function patterns need params and body. Try "function $NAME($$$) { $$$ }"`
     }
   }

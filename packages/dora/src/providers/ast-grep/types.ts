@@ -26,13 +26,13 @@ export interface Range {
 export interface CliMatch {
   text: string
   range: {
-    byteOffset: { start: number; end: number }
+    byteOffset: { start: number, end: number }
     start: Position
     end: Position
   }
   file: string
   lines: string
-  charCount: { leading: number; trailing: number }
+  charCount: { leading: number, trailing: number }
   language: string
 }
 
@@ -96,12 +96,12 @@ export interface RunSgOptions {
 }
 
 /** Platform identifier */
-export type PlatformId =
-  | 'win-x64'
-  | 'linux-x64'
-  | 'linux-arm64'
-  | 'osx-x64'
-  | 'osx-arm64'
+export type PlatformId
+  = | 'win-x64'
+    | 'linux-x64'
+    | 'linux-arm64'
+    | 'osx-x64'
+    | 'osx-arm64'
 
 /** Platform-specific binary configuration */
 export interface PlatformConfig {
