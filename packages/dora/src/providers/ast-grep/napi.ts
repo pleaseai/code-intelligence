@@ -31,6 +31,8 @@ export function isNapiAvailable(): boolean {
   }
   catch (e) {
     napiLoadError = e instanceof Error ? e : new Error(String(e))
+    // Log full error on first load failure for diagnostics
+    console.error('[ast-grep] NAPI module load failed:', e)
     return false
   }
 }

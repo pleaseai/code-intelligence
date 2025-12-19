@@ -44,8 +44,11 @@ export async function isCliAvailable(): Promise<boolean> {
 
 /**
  * Run ast-grep CLI command
+ *
+ * @param options - Command options
+ * @param retried - Internal flag to prevent infinite retry loops
  */
-export async function runSg(options: RunSgOptions): Promise<SgResult> {
+export async function runSg(options: RunSgOptions, retried = false): Promise<SgResult> {
   const cliPath = await getAstGrepPath()
 
   if (!cliPath) {
@@ -117,7 +120,8 @@ export async function runSg(options: RunSgOptions): Promise<SgResult> {
       proc.kill()
       reject(new Error(`Search timeout after ${timeout}ms`))
     }, timeout)
-    proc.exited.then(() => clearTimeout(id))
+    // Use .finally() to ensure cleanup even if proc.exited rejects
+    proc.exited.finally(() => clearTimeout(id))
   })
 
   let stdout: string
@@ -147,19 +151,19 @@ export async function runSg(options: RunSgOptions): Promise<SgResult> {
       || nodeError.message?.includes('ENOENT')
       || nodeError.message?.includes('not found')
     ) {
-      // Binary not found, try to download
-      const downloadedPath = await ensureAstGrepBinary()
-      if (downloadedPath) {
-        resolvedCliPath = downloadedPath
-        return runSg(options) // Retry
-      }
-      else {
-        return {
-          matches: [],
-          totalMatches: 0,
-          truncated: false,
-          error: getInstallInstructions(),
+      // Binary not found, try to download (only once to prevent infinite loops)
+      if (!retried) {
+        const downloadedPath = await ensureAstGrepBinary()
+        if (downloadedPath) {
+          resolvedCliPath = downloadedPath
+          return runSg(options, true) // Retry once
         }
+      }
+      return {
+        matches: [],
+        totalMatches: 0,
+        truncated: false,
+        error: getInstallInstructions(),
       }
     }
 
@@ -179,7 +183,13 @@ export async function runSg(options: RunSgOptions): Promise<SgResult> {
     if (stderr.trim()) {
       return { matches: [], totalMatches: 0, truncated: false, error: stderr.trim() }
     }
-    return { matches: [], totalMatches: 0, truncated: false }
+    // Non-zero exit with no output - include exit code for diagnosis
+    return {
+      matches: [],
+      totalMatches: 0,
+      truncated: false,
+      error: `ast-grep exited with code ${exitCode} (no output)`,
+    }
   }
 
   // No output
@@ -196,7 +206,7 @@ export async function runSg(options: RunSgOptions): Promise<SgResult> {
   try {
     matches = JSON.parse(outputToProcess) as CliMatch[]
   }
-  catch {
+  catch (parseError) {
     if (outputTruncated) {
       // Try to parse partial JSON
       try {
@@ -209,18 +219,27 @@ export async function runSg(options: RunSgOptions): Promise<SgResult> {
           }
         }
       }
-      catch {
+      catch (recoveryError) {
+        const errorMsg = recoveryError instanceof Error ? recoveryError.message : 'unknown'
         return {
           matches: [],
           totalMatches: 0,
           truncated: true,
           truncatedReason: 'max_output_bytes',
-          error: 'Output too large and could not be parsed',
+          error: `Output too large and could not be parsed: ${errorMsg}`,
         }
       }
     }
     else {
-      return { matches: [], totalMatches: 0, truncated: false }
+      // Non-truncated output but failed to parse - log and return error
+      const errorMsg = parseError instanceof Error ? parseError.message : 'unknown'
+      console.error(`[ast-grep] Failed to parse output: ${errorMsg}`)
+      return {
+        matches: [],
+        totalMatches: 0,
+        truncated: false,
+        error: `Failed to parse ast-grep output: ${errorMsg}`,
+      }
     }
   }
 

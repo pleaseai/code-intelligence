@@ -32,7 +32,8 @@ async function verifyAstGrepBinary(binaryPath: string): Promise<boolean> {
     // ast-grep version output contains "ast-grep" or version number like "0.x.x"
     return stdout.includes('ast-grep') || /^\d+\.\d+\.\d+/.test(stdout.trim())
   }
-  catch {
+  catch (e) {
+    console.error(`[ast-grep] Binary verification failed for ${binaryPath}: ${e instanceof Error ? e.message : String(e)}`)
     return false
   }
 }
@@ -77,8 +78,9 @@ export function getCachedBinary(): string | null {
         return null
       }
     }
-    catch {
-      // Can't read version, assume outdated
+    catch (e) {
+      // Log warning but continue - will trigger re-download
+      console.warn(`[ast-grep] Failed to read version marker at ${versionPath}: ${e instanceof Error ? e.message : String(e)}`)
       return null
     }
   }
@@ -90,17 +92,23 @@ export function getCachedBinary(): string | null {
  * Extract zip archive
  */
 async function extractZip(archivePath: string, destDir: string): Promise<void> {
-  const proc
-    = process.platform === 'win32'
-      ? spawn(
-          [
-            'powershell',
-            '-command',
-            `Expand-Archive -Path '${archivePath}' -DestinationPath '${destDir}' -Force`,
-          ],
-          { stdout: 'pipe', stderr: 'pipe' },
-        )
-      : spawn(['unzip', '-o', archivePath, '-d', destDir], { stdout: 'pipe', stderr: 'pipe' })
+  let proc
+  if (process.platform === 'win32') {
+    // Escape single quotes for PowerShell by doubling them
+    const escapedArchive = archivePath.replace(/'/g, "''")
+    const escapedDest = destDir.replace(/'/g, "''")
+    proc = spawn(
+      [
+        'powershell',
+        '-command',
+        `Expand-Archive -LiteralPath '${escapedArchive}' -DestinationPath '${escapedDest}' -Force`,
+      ],
+      { stdout: 'pipe', stderr: 'pipe' },
+    )
+  }
+  else {
+    proc = spawn(['unzip', '-o', archivePath, '-d', destDir], { stdout: 'pipe', stderr: 'pipe' })
+  }
 
   const exitCode = await proc.exited
 

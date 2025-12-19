@@ -4,7 +4,7 @@
  * Provides AST-aware code search and transformation tools
  */
 
-import { z } from 'zod'
+import { z, ZodError } from 'zod'
 import type { Provider, ToolDefinition, ToolResult } from '../provider'
 import type { RegistryConfig } from '../registry'
 import { CLI_LANGUAGES, NAPI_LANGUAGES } from './constants'
@@ -12,6 +12,17 @@ import { runSg, isCliAvailable } from './cli'
 import { isNapiAvailable, getNapiError, analyzeCode, transformCode } from './napi'
 import { formatSearchResult, formatReplaceResult, formatAnalyzeResult, formatTransformResult, getEmptyResultHint } from './utils'
 import type { NapiLanguage } from './types'
+
+/**
+ * Format error for tool result, with special handling for Zod validation errors
+ */
+function formatToolError(e: unknown): string {
+  if (e instanceof ZodError) {
+    const issues = e.issues.map(i => `  - ${i.path.join('.')}: ${i.message}`).join('\n')
+    return `Invalid arguments:\n${issues}`
+  }
+  return `Error: ${e instanceof Error ? e.message : String(e)}`
+}
 
 // Tool definitions
 const AST_GREP_TOOLS: ToolDefinition[] = [
@@ -228,7 +239,7 @@ export class AstGrepProvider implements Provider {
     }
     catch (e) {
       return {
-        content: [{ type: 'text', text: `Error: ${e instanceof Error ? e.message : String(e)}` }],
+        content: [{ type: 'text', text: formatToolError(e) }],
         isError: true,
       }
     }
@@ -267,7 +278,7 @@ export class AstGrepProvider implements Provider {
     }
     catch (e) {
       return {
-        content: [{ type: 'text', text: `Error: ${e instanceof Error ? e.message : String(e)}` }],
+        content: [{ type: 'text', text: formatToolError(e) }],
         isError: true,
       }
     }
@@ -312,7 +323,7 @@ export class AstGrepProvider implements Provider {
     }
     catch (e) {
       return {
-        content: [{ type: 'text', text: `Error: ${e instanceof Error ? e.message : String(e)}` }],
+        content: [{ type: 'text', text: formatToolError(e) }],
         isError: true,
       }
     }
@@ -357,7 +368,7 @@ export class AstGrepProvider implements Provider {
     }
     catch (e) {
       return {
-        content: [{ type: 'text', text: `Error: ${e instanceof Error ? e.message : String(e)}` }],
+        content: [{ type: 'text', text: formatToolError(e) }],
         isError: true,
       }
     }

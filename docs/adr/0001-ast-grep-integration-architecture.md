@@ -27,10 +27,12 @@ We will implement **both MCP Tools and an Agent/Skill** for ast-grep integration
 
 Create a new `ast-grep` provider in `packages/dora/src/providers/ast-grep/` with:
 
-| Tool | Purpose |
-|------|---------|
-| `ast_grep_search` | Pattern-based code search across files |
-| `ast_grep_replace` | AST-aware code transformation (dry-run by default) |
+| Tool | Purpose | Backend |
+|------|---------|---------|
+| `ast_grep_search` | Pattern-based code search across files | CLI (25 languages) |
+| `ast_grep_replace` | AST-aware code transformation (dry-run by default) | CLI (25 languages) |
+| `ast_grep_analyze` | In-memory code analysis with meta-variable extraction | NAPI (5 languages) |
+| `ast_grep_transform` | In-memory code transformation (no file I/O) | NAPI (5 languages) |
 
 **Features:**
 - Both inline patterns (`console.log($MSG)`) and YAML rule files (`--rule file.yaml`)
@@ -69,10 +71,11 @@ agents/
 ### Binary Management
 
 Follow the Dart LSP pattern:
-1. Check system PATH first (`Bun.which('sg')`)
+1. Check system PATH first (`Bun.which('ast-grep')` or `Bun.which('sg')`)
 2. If not found, download to `~/.cache/dora/ast-grep/`
 3. Platform-specific binaries (win-x64, linux-x64, linux-arm64, osx-x64, osx-arm64)
 4. Version tracking via marker file
+5. Binary verification to ensure it's actually ast-grep (checks `--version` output)
 
 ## Consequences
 

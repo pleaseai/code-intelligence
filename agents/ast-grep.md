@@ -40,7 +40,7 @@ description: |
   Pattern debugging - common mistake with Python syntax.
   </commentary>
   </example>
-tools: Bash, Read, Write
+tools: ast_grep_search, ast_grep_replace, ast_grep_analyze, ast_grep_transform
 model: sonnet
 ---
 
@@ -288,6 +288,38 @@ Transform code (dry-run by default):
   "dryRun": true
 }
 ```
+
+### ast_grep_analyze (NAPI - In-Memory)
+
+Analyze code in-memory without file I/O (faster, supports 5 languages: html, javascript, tsx, css, typescript):
+
+```json
+{
+  "code": "console.log('hello'); console.log('world');",
+  "pattern": "console.log($MSG)",
+  "lang": "javascript",
+  "extractMetaVars": true
+}
+```
+
+Returns matches with optional meta-variable extraction. Use for single-file analysis or quick pattern testing.
+
+### ast_grep_transform (NAPI - In-Memory)
+
+Transform code in-memory without modifying files (supports 5 languages: html, javascript, tsx, css, typescript):
+
+```json
+{
+  "code": "console.log('hello');",
+  "pattern": "console.log($MSG)",
+  "rewrite": "logger.info($MSG)",
+  "lang": "javascript"
+}
+```
+
+Returns transformed code without writing to disk. Use for previewing transformations or processing code strings.
+
+**Note:** NAPI tools require `@ast-grep/napi` optional dependency. If not installed, use CLI-based `ast_grep_search` and `ast_grep_replace` instead.
 
 ---
 
