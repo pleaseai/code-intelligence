@@ -30,6 +30,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@pleaseai/code-lsp": "workspace:*",
+    "@pleaseai/logger": "workspace:*",
     "zod": "^3.25.0"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@
 
 import type { CliMatch, RunSgOptions, SgResult } from './types'
 import { existsSync } from 'node:fs'
+import { createLogger } from '@pleaseai/logger'
 import { spawn } from 'bun'
 import {
   CLI_LANGUAGES,
@@ -14,6 +15,8 @@ import {
   DEFAULT_TIMEOUT_MS,
 } from './constants'
 import { ensureAstGrepBinary, getInstallInstructions } from './downloader'
+
+const log = createLogger('ast-grep')
 
 // Cached binary path
 let resolvedCliPath: string | null = null
@@ -233,7 +236,7 @@ export async function runSg(options: RunSgOptions, retried = false): Promise<SgR
     else {
       // Non-truncated output but failed to parse - log and return error
       const errorMsg = parseError instanceof Error ? parseError.message : 'unknown'
-      console.error(`[ast-grep] Failed to parse output: ${errorMsg}`)
+      log.error({ err: errorMsg }, 'Failed to parse output')
       return {
         matches: [],
         totalMatches: 0,

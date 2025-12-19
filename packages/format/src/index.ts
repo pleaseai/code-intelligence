@@ -2,14 +2,12 @@ import type { FormatterConfig } from './config'
 import path from 'node:path'
 import process from 'node:process'
 
+import { createLogger } from '@pleaseai/logger'
 import z from 'zod'
 import { loadConfig } from './config'
 import * as Formatter from './formatter'
 
-const log = {
-  info: (...args: unknown[]) => console.error('[format]', ...args),
-  error: (...args: unknown[]) => console.error('[format:error]', ...args),
-}
+const log = createLogger('format')
 
 export const FormatStatusSchema = z
   .object({
@@ -97,7 +95,7 @@ function init(config: FormatConfig): void {
   }
 
   cachedState = { enabled, formatters, projectDir: config.projectDir }
-  log.info('initialized with', Object.keys(formatters).length, 'formatters')
+  log.info({ count: Object.keys(formatters).length }, 'initialized formatters')
 }
 
 function getState(): State {
@@ -121,12 +119,12 @@ async function getFormatter(ext: string): Promise<Formatter.Info[]> {
   const s = getState()
   const result: Formatter.Info[] = []
   for (const item of Object.values(s.formatters)) {
-    log.info('checking', { name: item.name, ext })
+    log.debug({ name: item.name, ext }, 'checking formatter')
     if (!item.extensions.includes(ext))
       continue
     if (!(await isEnabled(item)))
       continue
-    log.info('enabled', { name: item.name, ext })
+    log.debug({ name: item.name, ext }, 'formatter enabled')
     result.push(item)
   }
   return result
@@ -152,17 +150,17 @@ async function status(): Promise<FormatStatus[]> {
 async function formatFile(file: string): Promise<boolean> {
   const s = getState()
   const ext = path.extname(file)
-  log.info('formatting', { file, ext })
+  log.debug({ file, ext }, 'formatting file')
 
   const formatters = await getFormatter(ext)
   if (formatters.length === 0) {
-    log.info('no formatter found for', ext)
+    log.debug({ ext }, 'no formatter found')
     return false
   }
 
   let success = true
   for (const item of formatters) {
-    log.info('running', { command: item.command })
+    log.debug({ command: item.command }, 'running formatter')
     try {
       const proc = Bun.spawn({
         cmd: item.command.map(x => x.replace('$FILE', file)),
@@ -173,20 +171,12 @@ async function formatFile(file: string): Promise<boolean> {
       })
       const exit = await proc.exited
       if (exit !== 0) {
-        log.error('failed', {
-          command: item.command,
-          ...item.environment,
-        })
+        log.error({ command: item.command, env: item.environment }, 'formatter failed')
         success = false
       }
     }
     catch (error) {
-      log.error('failed to format file', {
-        error,
-        command: item.command,
-        ...item.environment,
-        file,
-      })
+      log.error({ err: error, file, command: item.command, env: item.environment }, 'failed to format file')
       success = false
     }
   }

@@ -10,8 +10,11 @@
 
 import process from 'node:process'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { createLogger } from '@pleaseai/logger'
 import pkg from '../package.json'
 import { createDoraServer } from './server'
+
+const log = createLogger('dora')
 
 const VERSION = pkg.version
 
@@ -48,13 +51,13 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function serveCommand(projectPath: string, timeout: number): Promise<void> {
-  console.error(`[dora] Starting MCP server for project: ${projectPath}`)
+  log.info({ projectPath }, 'Starting MCP server')
 
   const server = await createDoraServer({ projectPath, timeout })
   const transport = new StdioServerTransport()
 
   await server.connect(transport)
-  console.error('[dora] MCP server connected and ready')
+  log.info('MCP server connected and ready')
 }
 
 function versionCommand(): void {
@@ -122,6 +125,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error('[dora] Error:', error)
+  log.fatal({ err: error }, 'Unhandled error')
   process.exit(1)
 })

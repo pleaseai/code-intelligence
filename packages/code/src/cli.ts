@@ -15,9 +15,12 @@
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
 import { Format } from '@pleaseai/code-format'
+import { createLogger } from '@pleaseai/logger'
 import pkg from '../package.json'
 import { runLSPDiagnostics } from './hooks/lsp'
 import { parseArgs } from './utils'
+
+const log = createLogger('code')
 
 const VERSION = pkg.version
 
@@ -203,6 +206,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error('[code] Error:', error)
+  log.fatal({ err: error }, 'Unhandled error')
   process.exit(1)
 })
