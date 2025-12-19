@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.8](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.7...code-please-v0.1.8) (2025-12-19)
+
+
+### Features
+
+* **lsp:** add ESLint language server support ([#39](https://github.com/chatbot-pf/code-please/issues/39)) ([285a0d9](https://github.com/chatbot-pf/code-please/commit/285a0d9dca8eebd5479a7675188fbc6348f483cb)), closes [#38](https://github.com/chatbot-pf/code-please/issues/38)
+
+
+### Bug Fixes
+
+* **ci:** use GitHub-hosted runners for npm publish workflow ([#41](https://github.com/chatbot-pf/code-please/issues/41)) ([17db1f4](https://github.com/chatbot-pf/code-please/commit/17db1f4f17bc89c56eafbfd9cff939d07b3c02b8))
+
 ## [0.1.7](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.6...code-please-v0.1.7) (2025-12-19)
 
 
