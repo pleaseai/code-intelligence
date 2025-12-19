@@ -1,0 +1,45 @@
+{
+  "name": "@pleaseai/logger",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Structured logging with pino for AI coding tools",
+  "author": "Minsu Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chatbot-pf/code-please"
+  },
+  "keywords": [
+    "logger",
+    "pino",
+    "structured-logging",
+    "ai-coding"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test ./test"
+  },
+  "dependencies": {
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "pino-pretty": "^13.0.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "pino-pretty": "^13.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pino-pretty": {
+      "optional": true
+    }
+  }
+}
