@@ -75,6 +75,38 @@
       "extensionToLanguage": {
         ".astro": "astro"
       }
+    },
+    "eslint": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "eslint"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".vue": "vue"
+      }
+    },
+    "oxlint": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "oxlint"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte"
+      }
     }
   }
 }
