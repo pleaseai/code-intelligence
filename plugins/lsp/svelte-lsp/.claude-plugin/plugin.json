@@ -1,9 +1,0 @@
-{
-  "name": "svelte-lsp",
-  "version": "1.0.0",
-  "description": "Svelte language server for Claude Code - Svelte component support",
-  "author": {
-    "name": "PassionFactory"
-  },
-  "repository": "https://github.com/chatbot-pf/code-please"
-}

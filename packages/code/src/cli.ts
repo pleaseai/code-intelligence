@@ -3,9 +3,10 @@
  * Code CLI - Entry Point
  *
  * Commands:
- *   code format <file>     Format a file
- *   code lsp <file>        Get LSP diagnostics for a file
- *   code version           Show version
+ *   code format <file>       Format a file
+ *   code lsp <file>          Get LSP diagnostics for a file
+ *   code lsp-server <id>     Start an LSP server (for Claude Code plugin)
+ *   code version             Show version
  *
  * Hook mode (--stdin):
  *   code format --stdin    Read hook input from stdin
@@ -15,6 +16,7 @@
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
 import { Format } from '@pleaseai/code-format'
+import { getServerById } from '@pleaseai/code-lsp'
 import { createLogger } from '@pleaseai/logger'
 import pkg from '../package.json'
 import { runLSPDiagnostics } from './hooks/lsp'
@@ -98,6 +100,57 @@ async function lspCommand(filePath: string, projectDir: string, isHookMode: bool
   // Silent exit if no issues
 }
 
+/**
+ * Start an LSP server for Claude Code plugin integration.
+ * Uses root detection to ensure server only starts when appropriate config exists.
+ */
+async function lspServerCommand(serverId: string, projectDir: string): Promise<void> {
+  const server = getServerById(serverId)
+  if (!server) {
+    log.error({ serverId }, 'Unknown LSP server')
+    process.exit(1)
+  }
+
+  // Run root detection - only start if config file exists
+  const root = await server.root(projectDir, projectDir)
+  if (!root) {
+    // No config file found - exit silently (don't start server)
+    log.debug({ serverId, projectDir }, 'No root found, skipping LSP server')
+    process.exit(0)
+  }
+
+  // Spawn the server
+  const handle = await server.spawn(root)
+  if (!handle) {
+    // Server binary not found - exit silently
+    log.debug({ serverId, root }, 'Failed to spawn LSP server')
+    process.exit(0)
+  }
+
+  // Pipe stdio between this process and the LSP server
+  const serverProcess = handle.process
+
+  // Forward stdin to server
+  process.stdin.pipe(serverProcess.stdin!)
+
+  // Forward server stdout/stderr to this process
+  serverProcess.stdout?.pipe(process.stdout)
+  serverProcess.stderr?.pipe(process.stderr)
+
+  // Handle server exit
+  serverProcess.on('exit', (code) => {
+    process.exit(code ?? 0)
+  })
+
+  // Handle this process being killed
+  process.on('SIGTERM', () => {
+    serverProcess.kill('SIGTERM')
+  })
+  process.on('SIGINT', () => {
+    serverProcess.kill('SIGINT')
+  })
+}
+
 function versionCommand(): void {
   console.log(`code ${VERSION}`)
 }
@@ -110,14 +163,19 @@ Usage:
   code <command> [options]
 
 Commands:
-  format <file>      Format a file using configured formatters
-  lsp <file>         Get LSP diagnostics for a file
-  version            Show version
-  help               Show this help
+  format <file>        Format a file using configured formatters
+  lsp <file>           Get LSP diagnostics for a file
+  lsp-server <id>      Start an LSP server (for Claude Code plugin)
+  version              Show version
+  help                 Show this help
 
 Hook mode (for Claude Code):
   code format --stdin    Format file from hook input
   code lsp --stdin       Get diagnostics from hook input
+
+LSP Servers:
+  biome, vue, svelte, deno, kotlin, dart, prisma, astro, typescript,
+  pyright, gopls, rust-analyzer, and more.
 
 Options:
   --project=<path>   Project directory (default: cwd)
@@ -187,6 +245,17 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       await lspCommand(file, dir, isHookMode)
+      break
+    }
+
+    case 'lsp-server': {
+      const serverId = args[0]
+      if (!serverId) {
+        console.error('Usage: code lsp-server <server-id>')
+        console.error('Example: code lsp-server biome')
+        process.exit(1)
+      }
+      await lspServerCommand(serverId, projectDir)
       break
     }
 

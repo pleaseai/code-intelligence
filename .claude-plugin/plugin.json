@@ -1,9 +1,80 @@
 {
   "name": "code-please",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "MCP server and CLI tool for AI-assisted coding with auto-formatting and LSP diagnostics",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
     "name": "PassionFactory"
+  },
+  "lspServers": {
+    "biome": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "biome"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".json": "json",
+        ".jsonc": "jsonc",
+        ".css": "css"
+      }
+    },
+    "vue": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "vue"],
+      "extensionToLanguage": {
+        ".vue": "vue"
+      }
+    },
+    "svelte": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "svelte"],
+      "extensionToLanguage": {
+        ".svelte": "svelte"
+      }
+    },
+    "deno": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "deno"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript"
+      }
+    },
+    "kotlin": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "kotlin"],
+      "extensionToLanguage": {
+        ".kt": "kotlin",
+        ".kts": "kotlin"
+      }
+    },
+    "dart": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "dart"],
+      "extensionToLanguage": {
+        ".dart": "dart"
+      }
+    },
+    "prisma": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "prisma"],
+      "extensionToLanguage": {
+        ".prisma": "prisma"
+      }
+    },
+    "astro": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "astro"],
+      "extensionToLanguage": {
+        ".astro": "astro"
+      }
+    }
   }
 }

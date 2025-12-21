@@ -1,9 +1,0 @@
-{
-  "prisma": {
-    "command": "npx",
-    "args": ["@prisma/language-server", "--stdio"],
-    "extensionToLanguage": {
-      ".prisma": "prisma"
-    }
-  }
-}
