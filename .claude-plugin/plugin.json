@@ -17,9 +17,17 @@
         ".jsx": "javascriptreact",
         ".mjs": "javascript",
         ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
         ".json": "json",
         ".jsonc": "jsonc",
-        ".css": "css"
+        ".css": "css",
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte",
+        ".graphql": "graphql",
+        ".gql": "graphql",
+        ".html": "html"
       }
     },
     "vue": {

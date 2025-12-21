@@ -119,26 +119,61 @@ async function lspServerCommand(serverId: string, projectDir: string): Promise<v
     process.exit(0)
   }
 
-  // Spawn the server
-  const handle = await server.spawn(root)
+  // Spawn the server with error handling
+  let handle: Awaited<ReturnType<typeof server.spawn>>
+  try {
+    handle = await server.spawn(root)
+  }
+  catch (err) {
+    // Spawn threw an exception - this is an unexpected failure
+    log.error({ serverId, root, err }, 'LSP server spawn failed unexpectedly')
+    console.error(`Error: Failed to start ${serverId} LSP server: ${err instanceof Error ? err.message : String(err)}`)
+    process.exit(1)
+  }
+
   if (!handle) {
-    // Server binary not found - exit silently
-    log.debug({ serverId, root }, 'Failed to spawn LSP server')
+    // Server binary not found - exit silently (expected when server not installed)
+    log.debug({ serverId, root }, 'LSP server not available (binary not found)')
     process.exit(0)
   }
 
   // Pipe stdio between this process and the LSP server
   const serverProcess = handle.process
 
-  // Forward stdin to server
-  process.stdin.pipe(serverProcess.stdin!)
+  // Forward stdin to server - with null check
+  if (!serverProcess.stdin) {
+    log.error({ serverId }, 'LSP server process has no stdin')
+    console.error(`Error: ${serverId} LSP server cannot receive input`)
+    process.exit(1)
+  }
+
+  process.stdin.on('error', (err) => {
+    // EPIPE is expected when server closes stdin
+    if ((err as NodeJS.ErrnoException).code !== 'EPIPE') {
+      log.error({ serverId, err }, 'stdin pipe error')
+    }
+  })
+  process.stdin.pipe(serverProcess.stdin)
 
   // Forward server stdout/stderr to this process
   serverProcess.stdout?.pipe(process.stdout)
   serverProcess.stderr?.pipe(process.stderr)
 
+  // Handle process errors
+  serverProcess.on('error', (err) => {
+    log.error({ serverId, err }, 'LSP server process error')
+    console.error(`Error: ${serverId} LSP server encountered an error: ${err.message}`)
+    process.exit(1)
+  })
+
   // Handle server exit
-  serverProcess.on('exit', (code) => {
+  serverProcess.on('exit', (code, signal) => {
+    if (signal) {
+      log.debug({ serverId, signal }, 'LSP server killed by signal')
+    }
+    else if (code !== 0) {
+      log.warn({ serverId, code }, 'LSP server exited with non-zero code')
+    }
     process.exit(code ?? 0)
   })
 
