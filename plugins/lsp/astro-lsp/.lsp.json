@@ -1,0 +1,9 @@
+{
+  "astro": {
+    "command": "npx",
+    "args": ["@astrojs/language-server", "--stdio"],
+    "extensionToLanguage": {
+      ".astro": "astro"
+    }
+  }
+}

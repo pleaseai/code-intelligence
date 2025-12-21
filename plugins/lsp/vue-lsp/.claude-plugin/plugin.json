@@ -1,0 +1,9 @@
+{
+  "name": "vue-lsp",
+  "version": "1.0.0",
+  "description": "Vue language server for Claude Code - Vue 3 Single File Component support",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "repository": "https://github.com/chatbot-pf/code-please"
+}

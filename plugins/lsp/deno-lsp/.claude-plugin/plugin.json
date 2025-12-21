@@ -1,0 +1,9 @@
+{
+  "name": "deno-lsp",
+  "version": "1.0.0",
+  "description": "Deno language server for Claude Code - Deno runtime support",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "repository": "https://github.com/chatbot-pf/code-please"
+}

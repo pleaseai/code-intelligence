@@ -1,0 +1,9 @@
+{
+  "kotlin": {
+    "command": "${CLAUDE_PLUGIN_ROOT}/bin/kotlin-lsp-launcher",
+    "extensionToLanguage": {
+      ".kt": "kotlin",
+      ".kts": "kotlin"
+    }
+  }
+}

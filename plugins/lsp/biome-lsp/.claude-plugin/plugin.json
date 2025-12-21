@@ -1,0 +1,9 @@
+{
+  "name": "biome-lsp",
+  "version": "1.0.0",
+  "description": "Biome language server for Claude Code - linting and formatting for JS/TS/JSON/CSS",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "repository": "https://github.com/chatbot-pf/code-please"
+}

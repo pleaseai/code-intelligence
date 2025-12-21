@@ -1,0 +1,13 @@
+{
+  "deno": {
+    "command": "deno",
+    "args": ["lsp"],
+    "extensionToLanguage": {
+      ".ts": "typescript",
+      ".tsx": "typescriptreact",
+      ".js": "javascript",
+      ".jsx": "javascriptreact",
+      ".mjs": "javascript"
+    }
+  }
+}

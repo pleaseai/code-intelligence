@@ -16,6 +16,9 @@
     "python",
     "ai-coding"
   ],
+  "bin": {
+    "lsp": "./src/cli.ts"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

@@ -1,0 +1,9 @@
+{
+  "name": "kotlin-lsp",
+  "version": "1.0.0",
+  "description": "Kotlin language server for Claude Code - JetBrains Kotlin LSP with auto-download",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "repository": "https://github.com/chatbot-pf/code-please"
+}

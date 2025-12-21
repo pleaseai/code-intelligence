@@ -1,0 +1,14 @@
+{
+  "vue": {
+    "command": "npx",
+    "args": ["@vue/language-server", "--stdio"],
+    "extensionToLanguage": {
+      ".vue": "vue"
+    },
+    "initializationOptions": {
+      "vue": {
+        "hybridMode": true
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "prisma-lsp",
+  "version": "1.0.0",
+  "description": "Prisma language server for Claude Code - Prisma schema support",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "repository": "https://github.com/chatbot-pf/code-please"
+}
