@@ -418,6 +418,53 @@ describe('CLI Integration', () => {
     })
   })
 
+  describe('lsp-server command', () => {
+    test('requires server-id argument', async () => {
+      const proc = Bun.spawn(['bun', 'run', CLI_PATH, 'lsp-server'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+
+      const exitCode = await proc.exited
+      const stderr = await new Response(proc.stderr).text()
+
+      expect(exitCode).toBe(1)
+      expect(stderr).toContain('Usage:')
+      expect(stderr).toContain('lsp-server')
+    })
+
+    test('exits with code 1 for unknown server', async () => {
+      const proc = Bun.spawn(['bun', 'run', CLI_PATH, 'lsp-server', 'nonexistent-server'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+
+      const exitCode = await proc.exited
+      expect(exitCode).toBe(1)
+    })
+
+    test('exits silently when no root config found', async () => {
+      // Use /tmp which should have no biome.json or similar config
+      const proc = Bun.spawn(
+        ['bun', 'run', CLI_PATH, 'lsp-server', 'biome', '--project=/tmp'],
+        {
+          stdout: 'pipe',
+          stderr: 'pipe',
+        },
+      )
+
+      const exitCode = await proc.exited
+      // Should exit 0 silently when no config found (not applicable)
+      expect(exitCode).toBe(0)
+    })
+
+    test('help includes lsp-server command', async () => {
+      const result = await $`bun run ${CLI_PATH} help`.text()
+      expect(result).toContain('lsp-server')
+      expect(result).toContain('LSP Servers:')
+    })
+  })
+
   describe('no command (default)', () => {
     test('shows help when no command provided', async () => {
       const result = await $`bun run ${CLI_PATH}`.text()

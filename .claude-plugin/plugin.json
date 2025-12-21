@@ -1,9 +1,120 @@
 {
   "name": "code-please",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "MCP server and CLI tool for AI-assisted coding with auto-formatting and LSP diagnostics",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
     "name": "PassionFactory"
+  },
+  "lspServers": {
+    "biome": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "biome"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".json": "json",
+        ".jsonc": "jsonc",
+        ".css": "css",
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte",
+        ".graphql": "graphql",
+        ".gql": "graphql",
+        ".html": "html"
+      }
+    },
+    "vue": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "vue"],
+      "extensionToLanguage": {
+        ".vue": "vue"
+      }
+    },
+    "svelte": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "svelte"],
+      "extensionToLanguage": {
+        ".svelte": "svelte"
+      }
+    },
+    "deno": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "deno"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript"
+      }
+    },
+    "kotlin": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "kotlin"],
+      "extensionToLanguage": {
+        ".kt": "kotlin",
+        ".kts": "kotlin"
+      }
+    },
+    "dart": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "dart"],
+      "extensionToLanguage": {
+        ".dart": "dart"
+      }
+    },
+    "prisma": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "prisma"],
+      "extensionToLanguage": {
+        ".prisma": "prisma"
+      }
+    },
+    "astro": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "astro"],
+      "extensionToLanguage": {
+        ".astro": "astro"
+      }
+    },
+    "eslint": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "eslint"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".vue": "vue"
+      }
+    },
+    "oxlint": {
+      "command": "bunx",
+      "args": ["@pleaseai/code", "lsp-server", "oxlint"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte"
+      }
+    }
   }
 }
