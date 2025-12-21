@@ -19,19 +19,53 @@ src/
 
 ## Supported Language Servers
 
+### Core Languages
+
 | Server | ID | Extensions | Root Detection |
 |--------|-----|------------|----------------|
 | TypeScript | `typescript` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts | package-lock.json, bun.lockb, bun.lock, yarn.lock, pnpm-lock.yaml |
 | Deno | `deno` | .ts, .tsx, .js, .jsx, .mjs | deno.json, deno.jsonc |
 | Vue | `vue` | .vue | package.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
-| Oxlint | `oxlint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue, .astro, .svelte | .oxlintrc.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock, package.json |
-| ESLint | `eslint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue | package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
+| Svelte | `svelte` | .svelte | package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
+| Astro | `astro` | .astro | package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
 | Pyright | `pyright` | .py, .pyi | pyproject.toml, setup.py, requirements.txt, pyrightconfig.json |
 | Gopls | `gopls` | .go | go.work, go.mod, go.sum |
 | Rust Analyzer | `rust-analyzer` | .rs | Cargo.toml, Cargo.lock |
 | Kotlin | `kotlin` | .kt, .kts | build.gradle.kts, build.gradle, settings.gradle.kts, settings.gradle, pom.xml |
 | Dart | `dart` | .dart | pubspec.yaml, pubspec.lock |
-| Prisma | `prisma` | .prisma | schema.prisma, prisma/schema.prisma |
+
+### Linters
+
+| Server | ID | Extensions | Root Detection |
+|--------|-----|------------|----------------|
+| Biome | `biome` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .json, .jsonc, .vue, .astro, .svelte, .css, .graphql, .gql, .html | biome.json, biome.jsonc, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
+| Oxlint | `oxlint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue, .astro, .svelte | .oxlintrc.json, package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock, package.json |
+| ESLint | `eslint` | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts, .vue | package-lock.json, bun.lockb, bun.lock, pnpm-lock.yaml, yarn.lock |
+| Rubocop | `rubocop` | .rb, .rake, .gemspec, .ru | Gemfile, Gemfile.lock |
+
+### Additional Languages
+
+| Server | ID | Extensions/Filenames | Root Detection | Auto-Download |
+|--------|-----|----------------------|----------------|---------------|
+| Prisma | `prisma` | .prisma | schema.prisma, prisma/schema.prisma | npm |
+| YAML | `yaml` | .yaml, .yml | package-lock.json | npm |
+| Bash | `bash` | .sh, .bash, .zsh, .ksh | (project root) | npm |
+| Dockerfile | `dockerfile` | .dockerfile, Dockerfile*, Containerfile* | (project root) | npm |
+| PHP | `php` | .php | composer.json, composer.lock, .php-version | npm |
+| ElixirLS | `elixir-ls` | .ex, .exs | mix.exs, mix.lock | GitHub + Mix |
+| ZLS | `zls` | .zig, .zon | build.zig | GitHub |
+| C# | `csharp` | .cs | .sln, .csproj, global.json | dotnet tool |
+| F# | `fsharp` | .fs, .fsi, .fsx, .fsscript | .sln, .fsproj, global.json | dotnet tool |
+| SourceKit | `sourcekit` | .swift | Package.swift | (system only) |
+| Clangd | `clangd` | .c, .cpp, .cc, .cxx, .c++, .h, .hpp, .hh, .hxx, .h++ | compile_commands.json, compile_flags.txt, .clangd, CMakeLists.txt, Makefile | GitHub |
+| JDTLS | `jdtls` | .java | pom.xml, build.gradle, build.gradle.kts, .project, .classpath | Eclipse |
+| LuaLS | `lua-ls` | .lua | .luarc.json, .luarc.jsonc, .luacheckrc, .stylua.toml, stylua.toml, selene.toml, selene.yml | GitHub |
+| OCaml | `ocaml` | .ml, .mli | dune-project, dune-workspace, .merlin, opam | (system only) |
+| TerraformLS | `terraform` | .tf, .tfvars | .terraform.lock.hcl, terraform.tfstate | GitHub |
+| TexLab | `texlab` | .tex, .bib | .latexmkrc, latexmkrc, .texlabroot, texlabroot | GitHub |
+| Gleam | `gleam` | .gleam | gleam.toml | (system only) |
+
+**Note:** Dockerfile server also matches files named `Dockerfile` or `Containerfile` (without extension).
 
 ## Adding a New Server
 
@@ -142,10 +176,16 @@ await manager.shutdown()
 ### Server Utilities
 
 ```typescript
-import { getServerById, getServersForExtension } from '@pleaseai/code-lsp'
+import { getServerById, getServersForExtension, getServersForFile, getServersForFilename } from '@pleaseai/code-lsp'
 
 const server = getServerById('typescript')
 const servers = getServersForExtension('.ts')
+
+// For files like Dockerfile that don't have extensions
+const dockerServers = getServersForFilename('Dockerfile')
+
+// Best practice: use getServersForFile which checks both extension and filename
+const allServers = getServersForFile('/path/to/Dockerfile')
 ```
 
 ## Configuration

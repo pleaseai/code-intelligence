@@ -94,9 +94,9 @@ describe('LSPProvider', () => {
     provider = new LSPProvider({ projectPath: process.cwd() })
     await provider.connect()
 
-    // Call on a position that doesn't have a symbol (no LSP servers connected)
+    // Use an extension that doesn't match any LSP server to avoid triggering server spawn
     const result = await provider.callTool('lsp_references', {
-      file: 'test.ts',
+      file: 'test.notreal',
       line: 0,
       character: 0,
     })

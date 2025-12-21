@@ -931,6 +931,8 @@ export {
   EslintServer,
   getServerById,
   getServersForExtension,
+  getServersForFile,
+  getServersForFilename,
   GoplsServer,
   KotlinServer,
   LSP_SERVERS,
