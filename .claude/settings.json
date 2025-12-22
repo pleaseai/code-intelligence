@@ -21,13 +21,6 @@
     "deny": [],
     "ask": []
   },
-  "enabledPlugins": {
-    "context7@claude-plugin-official": true,
-    "hookify@claude-plugin-official": true,
-    "context7@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
-    "asana@claude-plugins-official": true
-  },
   "hooks": {
     "PostToolUse": [
       {
@@ -46,5 +39,12 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "hookify@claude-plugins-official": false,
+    "github@claude-plugins-official": true,
+    "asana@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "context7@claude-plugins-official": true
   }
 }
