@@ -13,3 +13,6 @@
 [submodule "ref/oh-my-opencode"]
 	path = ref/oh-my-opencode
 	url = https://github.com/code-yeongyu/oh-my-opencode
+[submodule "ref/docs-please"]
+	path = ref/docs-please
+	url = https://github.com/pleaseai/docs.git

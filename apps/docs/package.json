@@ -1,0 +1,19 @@
+{
+  "name": "@pleaseai/docs-site",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "docs-please": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "nuxt": "^4.2.1"
+  }
+}

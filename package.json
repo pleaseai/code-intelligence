@@ -5,7 +5,9 @@
   "packageManager": "bun@1.3.5",
   "description": "Auto-format and type-check hooks for AI coding",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*",
+    "ref/docs-please/packages/*"
   ],
   "engines": {
     "bun": ">=1.0.0"
