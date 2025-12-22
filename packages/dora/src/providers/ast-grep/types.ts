@@ -95,13 +95,8 @@ export interface RunSgOptions {
   ruleFile?: string
 }
 
-/** Platform identifier */
-export type PlatformId
-  = | 'win-x64'
-    | 'linux-x64'
-    | 'linux-arm64'
-    | 'osx-x64'
-    | 'osx-arm64'
+// Re-export PlatformId from binaries for consistency
+export type { PlatformId } from '@pleaseai/binaries'
 
 /** Platform-specific binary configuration */
 export interface PlatformConfig {

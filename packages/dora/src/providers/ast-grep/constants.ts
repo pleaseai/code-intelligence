@@ -5,7 +5,10 @@
 import type { PlatformConfig, PlatformId } from './types'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import process from 'node:process'
+import { getPlatformId as getPlatformIdBase } from '@pleaseai/binaries'
+
+// Re-export getPlatformId from binaries
+export const getPlatformId = getPlatformIdBase
 
 // CLI supported languages (25 total)
 export const CLI_LANGUAGES = [
@@ -82,7 +85,8 @@ const GITHUB_RELEASE_BASE = 'https://github.com/ast-grep/ast-grep/releases/downl
 // Platform-specific binary configurations
 // Note: Release asset names use "app-" prefix, e.g., app-x86_64-unknown-linux-gnu.zip
 // The binary inside the archive is named "ast-grep" (or "ast-grep.exe" on Windows)
-export const PLATFORM_CONFIGS: Record<PlatformId, PlatformConfig> = {
+// Note: win-arm64 is not supported as ast-grep doesn't provide binaries for that platform
+export const PLATFORM_CONFIGS: Partial<Record<PlatformId, PlatformConfig>> = {
   'win-x64': {
     url: `${GITHUB_RELEASE_BASE}/${AST_GREP_VERSION}/app-x86_64-pc-windows-msvc.zip`,
     binaryPath: 'ast-grep.exe',
@@ -106,34 +110,6 @@ export const PLATFORM_CONFIGS: Record<PlatformId, PlatformConfig> = {
 }
 
 /**
- * Get platform identifier for current system
- */
-export function getPlatformId(): PlatformId | undefined {
-  const platform = process.platform
-  const arch = process.arch
-
-  const platformMap: Record<string, string> = {
-    win32: 'win',
-    darwin: 'osx',
-    linux: 'linux',
-  }
-
-  const archMap: Record<string, string> = {
-    x64: 'x64',
-    arm64: 'arm64',
-  }
-
-  const platformKey = platformMap[platform]
-  const archKey = archMap[arch]
-
-  if (!platformKey || !archKey) {
-    return undefined
-  }
-
-  return `${platformKey}-${archKey}` as PlatformId
-}
-
-/**
  * Get cache directory for ast-grep binary
  */
 export function getAstGrepCacheDir(): string {
@@ -146,10 +122,14 @@ export function getAstGrepCacheDir(): string {
 export function getCachedBinaryPath(): string {
   const platformId = getPlatformId()
   if (!platformId) {
-    return 'sg' // Fallback to PATH
+    return 'ast-grep' // Fallback to PATH
   }
 
   const config = PLATFORM_CONFIGS[platformId]
+  if (!config) {
+    return 'ast-grep' // Fallback to PATH for unsupported platforms
+  }
+
   return path.join(getAstGrepCacheDir(), config.binaryPath)
 }
 

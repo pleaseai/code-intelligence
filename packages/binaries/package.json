@@ -1,0 +1,37 @@
+{
+  "name": "@pleaseai/binaries",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Binary download, caching, and platform utilities for AI coding tools",
+  "author": "Minsu Lee",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chatbot-pf/code-please"
+  },
+  "keywords": [
+    "binary",
+    "download",
+    "cache",
+    "platform",
+    "ai-coding"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test ./test"
+  },
+  "dependencies": {
+    "@pleaseai/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.0"
+  }
+}

@@ -30,6 +30,7 @@
     "test:integration": "bun test ./test/integration"
   },
   "dependencies": {
+    "@pleaseai/binaries": "workspace:*",
     "@pleaseai/code-format": "workspace:*",
     "@pleaseai/logger": "workspace:*",
     "vscode-jsonrpc": "^8.2.1",

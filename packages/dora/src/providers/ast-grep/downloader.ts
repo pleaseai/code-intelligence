@@ -5,7 +5,7 @@
  * Caches to ~/.cache/dora/ast-grep/
  */
 
-import type { PlatformId } from './types'
+import type { PlatformId } from '@pleaseai/binaries'
 import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import process from 'node:process'
 import { createLogger } from '@pleaseai/logger'

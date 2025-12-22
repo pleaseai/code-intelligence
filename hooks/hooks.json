@@ -1,18 +1,29 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun $PLUGIN_DIR/hooks/scripts/ast-grep-context.ts",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "npx @pleaseai/code format --stdin",
-            "timeout": 30
+            "command": "bunx @pleaseai/code format --stdin",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "npx @pleaseai/code lsp --stdin",
-            "timeout": 30
+            "command": "bunx @pleaseai/code lsp --stdin",
+            "timeout": 10
           }
         ]
       }

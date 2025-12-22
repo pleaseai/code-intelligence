@@ -19,6 +19,7 @@ import { Format } from '@pleaseai/code-format'
 import { getServerById } from '@pleaseai/code-lsp'
 import { createLogger } from '@pleaseai/logger'
 import pkg from '../package.json'
+import { createSetupCommand } from './commands/setup'
 import { runLSPDiagnostics } from './hooks/lsp'
 import { parseArgs } from './utils'
 
@@ -201,12 +202,18 @@ Commands:
   format <file>        Format a file using configured formatters
   lsp <file>           Get LSP diagnostics for a file
   lsp-server <id>      Start an LSP server (for Claude Code plugin)
+  setup [tool]         Check and install required tools
   version              Show version
   help                 Show this help
 
 Hook mode (for Claude Code):
   code format --stdin    Format file from hook input
   code lsp --stdin       Get diagnostics from hook input
+
+Setup:
+  code setup              Check and install all tools
+  code setup --check      Check only, do not install
+  code setup ast-grep     Setup specific tool
 
 LSP Servers:
   biome, vue, svelte, deno, kotlin, dart, prisma, astro, typescript,
@@ -291,6 +298,15 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       await lspServerCommand(serverId, projectDir)
+      break
+    }
+
+    case 'setup': {
+      const setupCommand = createSetupCommand()
+      // Parse remaining args with commander
+      await setupCommand.parseAsync(['node', 'setup', ...args, ...Object.entries(flags)
+        .filter(([k]) => k !== 'project')
+        .flatMap(([k, v]) => v === true ? [`--${k}`] : [`--${k}`, String(v)])])
       break
     }
 

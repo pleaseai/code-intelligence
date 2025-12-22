@@ -5,6 +5,9 @@
 
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 
+// Re-export PlatformId from binaries for consistency
+export type { PlatformId } from '@pleaseai/binaries'
+
 export interface LSPServerHandle {
   process: ChildProcessWithoutNullStreams
   initialization?: Record<string, unknown>
@@ -23,9 +26,3 @@ export interface LSPServerInfo {
   root: RootFunction
   spawn: (root: string) => Promise<LSPServerHandle | undefined>
 }
-
-/**
- * Supported platform identifiers for auto-download dependencies
- * Note: win-arm64 is not supported as JRE distributions are not available
- */
-export type PlatformId = 'win-x64' | 'linux-x64' | 'linux-arm64' | 'osx-x64' | 'osx-arm64'
