@@ -1,19 +1,23 @@
 {
-  "name": "@pleaseai/docs-site",
+  "name": "@pleaseai/code-please-docs-site",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nuxt dev",
+    "dev": "NITRO_PRESET=node_server nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": ""
   },
   "dependencies": {
-    "docs-please": "^0.2.1-beta.0"
+    "better-sqlite3": "^12.2.0",
+    "docs-please": "^0.2.5",
+    "nuxt": "^4.2.1",
+    "zod": "^4.2.1",
+    "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.17",
-    "nuxt": "^4.2.1"
+    "typescript": "^5.9.3"
   }
 }
