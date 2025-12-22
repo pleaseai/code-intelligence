@@ -6,8 +6,7 @@
   "description": "Auto-format and type-check hooks for AI coding",
   "workspaces": [
     "packages/*",
-    "apps/*",
-    "ref/docs-please/packages/*"
+    "apps/*"
   ],
   "engines": {
     "bun": ">=1.0.0"
@@ -22,14 +21,14 @@
     "build": "turbo build",
     "build:npm": "bun run scripts/generate-packages.ts",
     "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && bun publish --access public --tolerate-republish); done && cd npm/code && bun publish --access public --tolerate-republish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:docs": "turbo run build --filter=@pleaseai/code-please-docs-site..."
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageserver-types": "^3.17.5",
-    "yaml": "^2.8.2",
-    "zod": "^3.25.0"
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.7.1",
