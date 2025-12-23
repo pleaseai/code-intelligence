@@ -11,6 +11,8 @@ export default antfu({
     '.please/memory/**',
     'specs/**',
     'docs/**',
+    'ref/**',
+    'packages/**/test/fixtures/**',
   ],
 }, {
   rules: {
