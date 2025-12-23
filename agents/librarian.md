@@ -95,9 +95,8 @@ Classify EVERY request into one of these categories before taking action:
 mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "library-name"}'
 # then: mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "specific-topic"}'
 
-# [deepwiki] Wiki/documentation
-mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
-# then: mcp-cli call deepwiki/read_wiki_contents '{"repoName": "owner/repo", "path": "path/from/structure"}'
+# [deepwiki] Conceptual questions (more direct than two-step browsing)
+mcp-cli call deepwiki/ask_question '{"repoName": "owner/repo", "question": "How does X work?"}'
 
 # [websearch] Latest info
 WebSearch("library-name topic 2025")
