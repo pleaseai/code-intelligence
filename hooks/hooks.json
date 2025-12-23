@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun $PLUGIN_DIR/hooks/scripts/ast-grep-context.ts",
+            "command": "bun $CLAUDE_PLUGIN_ROOT/hooks/scripts/ast-grep-context.ts",
             "timeout": 5
           }
         ]
