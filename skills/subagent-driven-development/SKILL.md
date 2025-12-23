@@ -95,15 +95,16 @@ Task tool (general-purpose):
 
 ### 3. Review Subagent's Work
 
-Dispatch code-reviewer subagent after each task:
+Run code review using SlashCommand after each task:
 
 ```
-Task tool (code-reviewer):
-  WHAT_WAS_IMPLEMENTED: [from subagent's report]
-  PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
-  DESCRIPTION: [task summary]
+SlashCommand("/please:review-pr")
+```
+
+Or with specific review aspects:
+
+```
+SlashCommand("/please:review-pr code tests errors")
 ```
 
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment
@@ -127,10 +128,16 @@ If fixes needed, dispatch follow-up subagent:
 
 ### 6. Final Review
 
-After all tasks complete, dispatch final code-reviewer:
-- Reviews entire implementation
-- Checks all plan requirements met
-- Validates overall architecture
+After all tasks complete, run comprehensive code review:
+
+```
+SlashCommand("/please:review-pr all")
+```
+
+This reviews:
+- Entire implementation
+- All plan requirements met
+- Overall architecture validation
 
 ## Example Workflow
 
@@ -144,7 +151,7 @@ Task 1: Hook installation script
 [Dispatch implementation subagent]
 Subagent: Implemented install-hook with tests, 5/5 passing
 
-[Get git SHAs, dispatch code-reviewer]
+[Run SlashCommand("/please:review-pr")]
 Reviewer: Strengths: Good test coverage. Issues: None. Ready.
 
 [Mark Task 1 complete]
@@ -154,7 +161,7 @@ Task 2: Recovery modes
 [Dispatch implementation subagent]
 Subagent: Added verify/repair, 8/8 tests passing
 
-[Dispatch code-reviewer]
+[Run SlashCommand("/please:review-pr")]
 Reviewer: Strengths: Solid. Issues (Important): Missing progress reporting
 
 [Dispatch fix subagent]
@@ -165,7 +172,7 @@ Fix subagent: Added progress every 100 conversations
 ...
 
 [After all tasks]
-[Dispatch final code-reviewer]
+[Run SlashCommand("/please:review-pr all")]
 Final reviewer: All requirements met, ready to merge
 
 Done!
@@ -215,7 +222,7 @@ Good agent prompts are:
 - `references/parallel_execution.md` - Parallel task execution
 - `references/parallel_investigation.md` - Debugging independent failures
 
-## Related Skills
+## Related Commands & Skills
 
-- `please:please-code-reviewer` - Code review agent
-- `general-purpose` - General implementation agent
+- `/please:review-pr` - Code review slash command (preferred for reviews)
+- `general-purpose` - General implementation agent for task execution

@@ -42,15 +42,16 @@ Task tool (general-purpose):
 
 ### Step 3: Review Subagent's Work
 
-Dispatch code-reviewer subagent:
+Run code review using SlashCommand:
 
 ```
-Task tool (please:please-code-reviewer):
-  WHAT_WAS_IMPLEMENTED: [from subagent's report]
-  PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
-  DESCRIPTION: [task summary]
+SlashCommand("/please:review-pr")
+```
+
+Or with specific aspects:
+
+```
+SlashCommand("/please:review-pr code tests errors")
 ```
 
 **Code reviewer returns:**
@@ -79,10 +80,16 @@ Task tool (please:please-code-reviewer):
 
 ### Step 6: Final Review
 
-After all tasks complete, dispatch final code-reviewer:
-- Reviews entire implementation
-- Checks all plan requirements met
-- Validates overall architecture
+After all tasks complete, run comprehensive code review:
+
+```
+SlashCommand("/please:review-pr all")
+```
+
+This reviews:
+- Entire implementation
+- All plan requirements met
+- Overall architecture validation
 
 ### Step 7: Complete Development
 
@@ -110,7 +117,7 @@ After final review passes:
 
 1. Stop implementation of new tasks
 2. Dispatch fix subagent
-3. Re-run code review
+3. Re-run code review: `SlashCommand("/please:review-pr")`
 4. Only proceed when Critical issues resolved
 
 ## Tips for Success
@@ -126,10 +133,11 @@ After final review passes:
 
 ### Effective Code Reviews
 
-Get git SHAs before dispatching reviewer:
-```bash
-git rev-parse HEAD~1  # BASE_SHA (before task)
-git rev-parse HEAD    # HEAD_SHA (after task)
+Run code review after each task commit:
+```
+SlashCommand("/please:review-pr")        # Default review
+SlashCommand("/please:review-pr code")   # Code quality focus
+SlashCommand("/please:review-pr all")    # Comprehensive review
 ```
 
 ### Tracking Progress
