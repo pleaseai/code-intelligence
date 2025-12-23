@@ -11,6 +11,11 @@ export default antfu({
     '.please/memory/**',
     'specs/**',
     'docs/**',
+    'ref/**',
+    'packages/lsp/test/fixtures/**',
+    'packages/lsp/test/fixture/**',
+    'packages/format/test/fixtures/**',
+    'packages/format/test/fixture/**',
   ],
 }, {
   rules: {

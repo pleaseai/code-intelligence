@@ -12,7 +12,7 @@ export const FormatterItemSchema = z.object({
   /** File extensions this formatter handles (e.g., [".js", ".ts"]) */
   extensions: z.array(z.string()).optional(),
   /** Environment variables to pass to the formatter */
-  environment: z.record(z.string()).optional(),
+  environment: z.record(z.string(), z.string()).optional(),
 })
 
 export type FormatterItem = z.infer<typeof FormatterItemSchema>
