@@ -12,7 +12,10 @@ export default antfu({
     'specs/**',
     'docs/**',
     'ref/**',
-    'packages/**/test/fixtures/**',
+    'packages/lsp/test/fixtures/**',
+    'packages/lsp/test/fixture/**',
+    'packages/format/test/fixtures/**',
+    'packages/format/test/fixture/**',
   ],
 }, {
   rules: {
