@@ -23,7 +23,7 @@ Plugin is based on papers like [Self-Refine](https://arxiv.org/abs/2303.17651) a
 
 They are proven to **increase output quality by 8–21%** based on both automatic metrics and human preferences across seven diverse tasks, including dialogue generation, coding, and mathematical reasoning, when compared to standard one-step model outputs.
 
-On top of that, the plugin is based on the [Agentic Context Engineering](https://arxiv.org/abs/2510.04618) paper that uses memory updates after reflection, and **consistently outperforms strong baselines by 10.6%** on agents.
+On top of that, the plugin is based on the [Agentic Context Engineering](https://arxiv.org/abs/2405.04618) paper that uses memory updates after reflection, and **consistently outperforms strong baselines by 10.6%** on agents.
 
 ## When to Use
 
@@ -257,11 +257,11 @@ The Reflexion plugin is based on peer-reviewed research demonstrating **8-21% im
 - **[Constitutional AI (CAI)](https://arxiv.org/abs/2212.08073)** - Critique based on principles and guidelines
 - **[LLM-as-a-Judge](https://arxiv.org/abs/2306.05685)** - Using LLMs to evaluate other LLM outputs
 - **[Multi-Agent Debate](https://arxiv.org/abs/2305.14325)** - Multiple models proposing and critiquing solutions
-- **[Agentic Context Engineering](https://arxiv.org/abs/2510.04618)** - Memory updates after reflection (**10.6% improvement**)
+- **[Agentic Context Engineering](https://arxiv.org/abs/2405.04618)** - Memory updates after reflection (**10.6% improvement**)
 
 ### Additional Techniques
 
-- **[Chain-of-Verification (CoVe)](https://arxiv.org/abs/2305.13888)** - Generate, verify, revise cycle
+- **[Chain-of-Verification (CoVe)](https://arxiv.org/abs/2309.11495)** - Generate, verify, revise cycle
 - **[Tree of Thoughts (ToT)](https://arxiv.org/abs/2305.10601)** - Multiple reasoning path exploration
 - **[Process Reward Models](https://arxiv.org/abs/2211.07633)** - Step-by-step evaluation
 

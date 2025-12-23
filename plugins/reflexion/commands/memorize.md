@@ -169,7 +169,7 @@ Create the file if missing with these sections (top‑level headings):
    - Documentation standards
    - Debugging techniques
 
-7. **Strategies and Hard Rules**
+6. **Strategies and Hard Rules**
    - Verification Checklist
    - Patterns and Playbooks
    - Anti‑patterns and Pitfalls
@@ -294,7 +294,7 @@ After effective memory consolidation:
 ## Notes
 
 - This command is the counterpart to `/reflexion:reflect`: reflect → curate → memorize.  
-- The design follows ACE to avoid brevity bias and context collapse by accumulating granular, organized knowledge over time (`https://arxiv.org/pdf/2510.04618`).  
+- The design follows ACE to avoid brevity bias and context collapse by accumulating granular, organized knowledge over time (`https://arxiv.org/pdf/2405.04618`).  
 - Do not overwrite or compress existing context; only add high‑signal bullets.
 
 ---
