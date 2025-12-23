@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.15](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.14...code-please-v0.1.15) (2025-12-23)
+
+
+### Features
+
+* **librarian:** add DeepWiki MCP integration for documentation lookup ([#70](https://github.com/chatbot-pf/code-please/issues/70)) ([e5488e1](https://github.com/chatbot-pf/code-please/commit/e5488e1af3849991d22ef26751500b786f889a1b))
+
+
+### Bug Fixes
+
+* **hooks:** use versioned bunx to avoid cache issues ([#67](https://github.com/chatbot-pf/code-please/issues/67)) ([36abb66](https://github.com/chatbot-pf/code-please/commit/36abb6658ef1487b0a0a9a2f3ffac193b7aca382))
+
 ## [0.1.14](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.13...code-please-v0.1.14) (2025-12-23)
 
 
