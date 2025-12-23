@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.9](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.8...@pleaseai/code-v0.1.9) (2025-12-23)
+
+
+### Bug Fixes
+
+* **deps:** add zod dependency to format package ([#61](https://github.com/chatbot-pf/code-please/issues/61)) ([a7ab870](https://github.com/chatbot-pf/code-please/commit/a7ab870cd37d665ba1a7c1a50c250fe454bd516c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-format bumped to 0.1.3
+    * @pleaseai/code-lsp bumped to 0.1.8
+
 ## [0.1.8](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.7...@pleaseai/code-v0.1.8) (2025-12-23)
 
 
