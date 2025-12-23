@@ -2,8 +2,8 @@
 name: ast-grep
 description: Guide for writing ast-grep rules to perform structural code search and analysis. Use when users need to search codebases using Abstract Syntax Tree (AST) patterns, find specific code structures, or perform complex code queries that go beyond simple text search. This skill should be used when users ask to search for code patterns, find specific language constructs, or locate code with particular structural characteristics.
 metadata:
-  version: "1.0.0"
-  lastUpdated: "2025-12-19"
+  version: "1.1.0"
+  lastUpdated: "2025-12-23"
 ---
 
 # ast-grep Code Search
@@ -267,6 +267,14 @@ rule:
 ## Supported Languages (25)
 
 bash, c, cpp, csharp, css, elixir, go, haskell, html, java, javascript, json, kotlin, lua, nix, php, python, ruby, rust, scala, solidity, swift, typescript, tsx, yaml
+
+## Note for Linux Users
+
+On Linux, `sg` is a system command for `setgroups`. Always use the full command name `ast-grep` instead of the `sg` alias. If you prefer the shorter alias, add this to your shell profile:
+
+```bash
+alias sg=ast-grep
+```
 
 ## References
 

@@ -28,9 +28,12 @@
     "test": "bun test ./test"
   },
   "dependencies": {
+    "@pleaseai/binaries": "workspace:*",
     "@pleaseai/code-format": "workspace:*",
     "@pleaseai/code-lsp": "workspace:*",
-    "@pleaseai/logger": "workspace:*"
+    "@pleaseai/logger": "workspace:*",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@types/bun": "latest",

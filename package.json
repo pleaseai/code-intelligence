@@ -6,7 +6,8 @@
   "description": "Auto-format and type-check hooks for AI coding",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "hooks/scripts"
   ],
   "engines": {
     "bun": ">=1.0.0"

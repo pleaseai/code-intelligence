@@ -72,7 +72,7 @@
   "code_workspace": {
     "enabled": true
   },
-  "lsp": {},
+  "lsp": false,
   "ignore_patterns": [],
   "language": "en",
   "integrations": {

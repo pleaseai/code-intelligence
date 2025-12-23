@@ -1,0 +1,8 @@
+# Please:Dev Progress
+Feature: Create documentation site at apps/docs
+Session: 20251221-docs-site
+Phase: 1/8 (Discovery)
+Tasks: 0/0 completed
+Last Task: None
+Last Checkpoint: None
+Updated: 2025-12-21T10:00:00Z
