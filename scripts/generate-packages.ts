@@ -1,16 +1,24 @@
 #!/usr/bin/env bun
 /**
- * Generate platform-specific npm packages for dora CLI
+ * Generate platform-specific npm packages for @pleaseai/code CLI
  *
  * Based on oxc-project's approach:
  * https://github.com/oxc-project/oxc/blob/main/npm/oxfmt/scripts/generate-packages.js
  *
+ * Features:
+ *   - Bytecode compilation for 2x faster startup
+ *   - Minification for smaller binary size
+ *   - Cross-platform compilation
+ *
  * Creates:
- *   npm/@dora/darwin-arm64/
- *   npm/@dora/darwin-x64/
- *   npm/@dora/linux-x64/
- *   npm/@dora/linux-arm64/
- *   npm/@dora/win32-x64/
+ *   npm/code-darwin-arm64/
+ *   npm/code-darwin-x64/
+ *   npm/code-linux-x64-glibc/
+ *   npm/code-linux-arm64-glibc/
+ *   npm/code-linux-x64-musl/
+ *   npm/code-linux-arm64-musl/
+ *   npm/code-win32-x64/
+ *   npm/code/  (main package with launcher)
  */
 
 import * as fs from 'node:fs'
@@ -65,27 +73,36 @@ async function compileForTarget(target: Target): Promise<string | null> {
   const outDir = path.resolve(NPM_DIR, `${PACKAGE_NAME}-${targetName}`)
   const binaryName = getBinaryName(target)
   const outFile = path.resolve(outDir, binaryName)
+  const entrypoint = path.resolve(CODE_PKG_DIR, 'src/cli.ts')
 
   console.log(`Compiling for ${targetName}...`)
 
   try {
     const result = await Bun.build({
-      entrypoints: [path.resolve(CODE_PKG_DIR, 'src/cli.ts')],
+      entrypoints: [entrypoint],
       // @ts-expect-error - compile option for single executable
       compile: {
         target: target.bunTarget,
         outfile: outFile,
       },
+      // bytecode: 2x faster startup by pre-compiling to bytecode
+      bytecode: true,
+      // minify: Reduce binary size
+      minify: true,
+      // No sourcemaps for production
+      sourcemap: 'none',
     })
+
     if (!result.success) {
-      console.error(`  Failed to compile for ${targetName}:`, result.logs)
+      console.error(`  ✗ Failed to compile for ${targetName}:`, result.logs)
       return null
     }
-    console.log(`  Compiled: ${outFile}`)
+
+    console.log(`  ✓ Compiled: ${outFile}`)
     return outFile
   }
   catch (error) {
-    console.error(`  Failed to compile for ${targetName}:`, error)
+    console.error(`  ✗ Failed to compile for ${targetName}:`, error)
     return null
   }
 }
@@ -197,13 +214,14 @@ async function generateMainPackage(rootManifest: Record<string, unknown>): Promi
     outdir: distDir,
     target: 'node',
     format: 'esm',
+    minify: true,
   })
 
   if (!result.success) {
     console.error('Failed to compile launcher:', result.logs)
     throw new Error('Launcher compilation failed')
   }
-  console.log(`Compiled launcher: ${path.resolve(distDir, 'cli.js')}`)
+  console.log(`  ✓ Compiled launcher: ${path.resolve(distDir, 'cli.js')}`)
 
   // Create bin directory with minimal entry point
   const binDir = path.resolve(packageRoot, 'bin')
@@ -220,16 +238,22 @@ import "../dist/cli.js";
 }
 
 async function main(): Promise<void> {
-  console.log('Generating platform-specific packages for dora...\n')
+  console.log('╔════════════════════════════════════════════════════════════╗')
+  console.log('║  Generating platform-specific packages for @pleaseai/code  ║')
+  console.log('║  Features: bytecode (2x startup), minify, cross-compile    ║')
+  console.log('╚════════════════════════════════════════════════════════════╝\n')
 
   // Read root manifest
   const rootManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
+  console.log(`Version: ${rootManifest.version}\n`)
 
   // Ensure npm directory exists
   fs.mkdirSync(NPM_DIR, { recursive: true })
 
   // Generate native packages for each target
-  console.log('=== Compiling native binaries ===\n')
+  console.log('=== Compiling native binaries (--bytecode --minify) ===\n')
+  const startTime = performance.now()
+
   for (const target of TARGETS) {
     await generateNativePackage(target, rootManifest)
     console.log()
@@ -239,10 +263,14 @@ async function main(): Promise<void> {
   console.log('=== Generating main package ===\n')
   await generateMainPackage(rootManifest)
 
-  console.log('\n=== Done ===')
+  const elapsed = ((performance.now() - startTime) / 1000).toFixed(1)
+
+  console.log('\n╔════════════════════════════════════════════════════════════╗')
+  console.log(`║  ✓ Done in ${elapsed}s                                          ║`)
+  console.log('╚════════════════════════════════════════════════════════════╝')
   console.log(`\nGenerated packages in: ${NPM_DIR}`)
   console.log('\nTo publish all packages:')
-  console.log('  bun publish --access public')
+  console.log('  bun run publish:npm')
 }
 
 main().catch((error) => {
