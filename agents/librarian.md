@@ -279,6 +279,9 @@ ${TMPDIR:-/tmp}/repo-name
 DeepWiki provides AI-generated documentation for GitHub repositories:
 
 ```bash
+# Step 0: Check schema (mandatory before first use)
+mcp-cli info deepwiki/read_wiki_structure
+
 # Step 1: Get wiki structure (required first)
 mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
 
