@@ -1,3 +1,7 @@
+---
+paths: skills/**/*, .claude/skills/**/*
+---
+
 # Agent Skills
 
 ## Docs

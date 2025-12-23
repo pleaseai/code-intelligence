@@ -11,6 +11,7 @@ export default antfu({
     '.please/memory/**',
     'specs/**',
     'docs/**',
+    'ref/**',
   ],
 }, {
   rules: {
