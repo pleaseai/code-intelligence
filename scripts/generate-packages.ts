@@ -266,7 +266,7 @@ async function main(): Promise<void> {
   const elapsed = ((performance.now() - startTime) / 1000).toFixed(1)
 
   console.log('\n╔════════════════════════════════════════════════════════════╗')
-  console.log(`║  ✓ Done in ${elapsed}s                                          ║`)
+  console.log(`║${`  ✓ Done in ${elapsed}s`.padEnd(60)}║`)
   console.log('╚════════════════════════════════════════════════════════════╝')
   console.log(`\nGenerated packages in: ${NPM_DIR}`)
   console.log('\nTo publish all packages:')
