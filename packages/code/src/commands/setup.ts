@@ -52,10 +52,18 @@ async function confirm(message: string): Promise<boolean> {
     stdin.resume()
     stdin.setEncoding('utf8')
 
+    const onSigint = (): void => {
+      stdin.setRawMode(false)
+      stdin.pause()
+      console.log()
+      process.exit(130)
+    }
+
     const onData = (key: string): void => {
       stdin.setRawMode(false)
       stdin.pause()
       stdin.removeListener('data', onData)
+      process.removeListener('SIGINT', onSigint)
 
       console.log(key.trim() || 'y')
 
@@ -67,6 +75,7 @@ async function confirm(message: string): Promise<boolean> {
       }
     }
 
+    process.on('SIGINT', onSigint)
     stdin.on('data', onData)
   })
 }

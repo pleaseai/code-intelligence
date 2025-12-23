@@ -24,8 +24,11 @@ import {
 const TOOL_ID = 'ast-grep'
 const BINARY_NAME = process.platform === 'win32' ? 'ast-grep.exe' : 'ast-grep'
 
-/** GitHub release URL pattern */
-const GITHUB_RELEASE_URL = 'https://github.com/ast-grep/ast-grep/releases/latest/download'
+/** Pinned ast-grep version for stability and reproducibility */
+const AST_GREP_VERSION = '0.40.3'
+
+/** GitHub release URL for the pinned version */
+const GITHUB_RELEASE_URL = `https://github.com/ast-grep/ast-grep/releases/download/${AST_GREP_VERSION}`
 
 /**
  * Get the platform-specific archive name for ast-grep

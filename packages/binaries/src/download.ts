@@ -40,19 +40,34 @@ export async function extractTarGz(archivePath: string, destDir: string): Promis
 }
 
 /**
- * Extract a zip archive
+ * Extract a zip archive (cross-platform: uses PowerShell on Windows, unzip on Unix)
  */
 export async function extractZip(archivePath: string, destDir: string): Promise<void> {
   await fs.mkdir(destDir, { recursive: true })
 
-  const proc = Bun.spawn(['unzip', '-o', '-q', archivePath, '-d', destDir], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
+  const isWindows = os.platform() === 'win32'
+
+  let proc: ReturnType<typeof Bun.spawn>
+  if (isWindows) {
+    proc = Bun.spawn(
+      ['powershell', '-NoProfile', '-Command', `Expand-Archive -Force -Path '${archivePath}' -DestinationPath '${destDir}'`],
+      { stdout: 'pipe', stderr: 'pipe' },
+    )
+  }
+  else {
+    proc = Bun.spawn(['unzip', '-o', '-q', archivePath, '-d', destDir], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+  }
+
   const exitCode = await proc.exited
 
   if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text()
+    const stderrStream = proc.stderr
+    const stderr = stderrStream && typeof stderrStream !== 'number'
+      ? await new Response(stderrStream).text()
+      : 'Unknown error'
     throw new Error(`Failed to extract ${archivePath}: ${stderr}`)
   }
 }
