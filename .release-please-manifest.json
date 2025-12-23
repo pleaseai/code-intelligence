@@ -1,7 +1,7 @@
 {
-  ".": "0.1.11",
-  "packages/code": "0.1.7",
-  "packages/dora": "0.1.6",
+  ".": "0.1.12",
+  "packages/code": "0.1.8",
+  "packages/dora": "0.1.7",
   "packages/format": "0.1.2",
-  "packages/lsp": "0.1.6"
+  "packages/lsp": "0.1.7"
 }

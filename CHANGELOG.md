@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.12](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.11...code-please-v0.1.12) (2025-12-23)
+
+
+### Features
+
+* add ast-grep SessionStart hook and setup command ([#58](https://github.com/chatbot-pf/code-please/issues/58)) ([b2d2910](https://github.com/chatbot-pf/code-please/commit/b2d291047dd105091f6340104bcb067c7a307400))
+* add PostToolUse hooks for auto-format and LSP diagnostics ([#48](https://github.com/chatbot-pf/code-please/issues/48)) ([c78da98](https://github.com/chatbot-pf/code-please/commit/c78da98f7e299285a22f6e24c2a04e9d12144215))
+* **agents:** add code-explorer and code-architect agents ([#60](https://github.com/chatbot-pf/code-please/issues/60)) ([2851b5a](https://github.com/chatbot-pf/code-please/commit/2851b5af51e936969694efddb6a7f91c3abe94f1))
+* **docs:** add documentation site at apps/docs ([#54](https://github.com/chatbot-pf/code-please/issues/54)) ([ad05127](https://github.com/chatbot-pf/code-please/commit/ad051278d3294e0e291346eafe269a0741f4ea55))
+* **lsp:** add 20 additional LSP servers from OpenCode reference ([#51](https://github.com/chatbot-pf/code-please/issues/51)) ([bd66e30](https://github.com/chatbot-pf/code-please/commit/bd66e305f23ad347e5e3133a50915f846b254a6e))
+* **lsp:** add Claude Code LSP plugins with multi-language server support ([#52](https://github.com/chatbot-pf/code-please/issues/52)) ([06366c2](https://github.com/chatbot-pf/code-please/commit/06366c21795934efa371ef35cb24df5a4e3e3726))
+
+
+### Bug Fixes
+
+* **docs:** resolve bun build issues and update component syntax ([#57](https://github.com/chatbot-pf/code-please/issues/57)) ([204ef32](https://github.com/chatbot-pf/code-please/commit/204ef32993dd0d532b7fb07a0c249b6c37329f66))
+* **docs:** use nodejs_compat_v2 for Cloudflare Pages ([#56](https://github.com/chatbot-pf/code-please/issues/56)) ([1703e51](https://github.com/chatbot-pf/code-please/commit/1703e5104b10c02b62ece72c1d1813fae2e6e33a))
+
 ## [0.1.11](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.10...code-please-v0.1.11) (2025-12-19)
 
 

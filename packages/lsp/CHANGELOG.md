@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.7](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.6...@pleaseai/code-lsp-v0.1.7) (2025-12-23)
+
+
+### Features
+
+* add ast-grep SessionStart hook and setup command ([#58](https://github.com/chatbot-pf/code-please/issues/58)) ([b2d2910](https://github.com/chatbot-pf/code-please/commit/b2d291047dd105091f6340104bcb067c7a307400))
+* **lsp:** add 20 additional LSP servers from OpenCode reference ([#51](https://github.com/chatbot-pf/code-please/issues/51)) ([bd66e30](https://github.com/chatbot-pf/code-please/commit/bd66e305f23ad347e5e3133a50915f846b254a6e))
+
 ## [0.1.6](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.5...@pleaseai/code-lsp-v0.1.6) (2025-12-19)
 
 

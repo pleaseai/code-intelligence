@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.8](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.7...@pleaseai/code-v0.1.8) (2025-12-23)
+
+
+### Features
+
+* add ast-grep SessionStart hook and setup command ([#58](https://github.com/chatbot-pf/code-please/issues/58)) ([b2d2910](https://github.com/chatbot-pf/code-please/commit/b2d291047dd105091f6340104bcb067c7a307400))
+* add PostToolUse hooks for auto-format and LSP diagnostics ([#48](https://github.com/chatbot-pf/code-please/issues/48)) ([c78da98](https://github.com/chatbot-pf/code-please/commit/c78da98f7e299285a22f6e24c2a04e9d12144215))
+* **lsp:** add Claude Code LSP plugins with multi-language server support ([#52](https://github.com/chatbot-pf/code-please/issues/52)) ([06366c2](https://github.com/chatbot-pf/code-please/commit/06366c21795934efa371ef35cb24df5a4e3e3726))
+
+
+### Bug Fixes
+
+* **docs:** resolve bun build issues and update component syntax ([#57](https://github.com/chatbot-pf/code-please/issues/57)) ([204ef32](https://github.com/chatbot-pf/code-please/commit/204ef32993dd0d532b7fb07a0c249b6c37329f66))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-lsp bumped to 0.1.7
+
 ## [0.1.7](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-v0.1.6...@pleaseai/code-v0.1.7) (2025-12-19)
 
 
