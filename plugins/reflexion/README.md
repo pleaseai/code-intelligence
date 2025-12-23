@@ -119,7 +119,7 @@ If confidence threshold isn't met, the command will iterate automatically.
 
 ### /reflexion:critique - Multi-Perspective Critique
 
-Memorize insights from reflections and updates CLAUDE.md file with this knowledge. Curates insights from reflections and critiques into CLAUDE.md using Agentic Context Engineering
+Comprehensive multi-perspective review using specialized judges with debate and consensus building.
 
 - Purpose - Multi-perspective comprehensive review
 - Output - Structured feedback from multiple judges
@@ -177,7 +177,7 @@ Each judge provides a score out of 10:
 
 ### /reflexion:memorize - Memory Updates
 
-Comprehensive multi-perspective review using specialized judges with debate and consensus building
+Memorize insights from reflections and update CLAUDE.md file with this knowledge. Curates insights from reflections and critiques into CLAUDE.md using Agentic Context Engineering.
 
 - Purpose - Save insights to project memory
 - Output - Updated CLAUDE.md with learnings
@@ -252,7 +252,7 @@ The Reflexion plugin is based on peer-reviewed research demonstrating **8-21% im
 
 ### Core Papers
 
-- **[Self-Refine](https://arxiv.org/abs/2305.12966)** - Iterative refinement where the model reviews and improves its own output
+- **[Self-Refine](https://arxiv.org/abs/2303.17651)** - Iterative refinement where the model reviews and improves its own output
 - **[Reflexion](https://arxiv.org/abs/2303.11366)** - Self-reflection for autonomous agents with memory
 - **[Constitutional AI (CAI)](https://arxiv.org/abs/2212.08073)** - Critique based on principles and guidelines
 - **[LLM-as-a-Judge](https://arxiv.org/abs/2306.05685)** - Using LLMs to evaluate other LLM outputs
