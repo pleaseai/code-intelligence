@@ -1,0 +1,8 @@
+{
+  "name": "reflexion",
+  "version": "1.0.0",
+  "description": "Self-refinement framework with feedback and refinement loops to improve output quality. Based on Self-Refine and Reflexion papers (8-21% improvement).",
+  "author": {
+    "name": "PassionFactory"
+  }
+}
