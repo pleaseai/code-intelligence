@@ -25,6 +25,14 @@ They are proven to **increase output quality by 8–21%** based on both automati
 
 On top of that, the plugin is based on the [Agentic Context Engineering](https://arxiv.org/abs/2510.04618) paper that uses memory updates after reflection, and **consistently outperforms strong baselines by 10.6%** on agents.
 
+## When to Use
+
+| Command | When to Use |
+|---------|-------------|
+| `/reflexion:reflect` | After completing a task, when output quality matters, before committing significant changes |
+| `/reflexion:critique` | For important code reviews, architectural decisions, before major commits |
+| `/reflexion:memorize` | After discovering patterns, making decisions, learning something worth remembering |
+
 ## Quick Start
 
 ```bash

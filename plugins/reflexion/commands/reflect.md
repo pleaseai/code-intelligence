@@ -1,5 +1,5 @@
 ---
-description: Reflect on previous response and output, based on Self-refinement framework for iterative improvement with complexity triage and verification
+description: Reflect on previous response and output using Self-refinement framework. Use after completing a task, when output quality matters, or before committing significant changes
 argument-hint: Optional focus area or confidence threshold to use, for example "security" or "deep reflect if less than 90% confidence"
 ---
 

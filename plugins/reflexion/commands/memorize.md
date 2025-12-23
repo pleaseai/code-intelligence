@@ -1,5 +1,5 @@
 ---
-description: Curates insights from reflections and critiques into CLAUDE.md using Agentic Context Engineering
+description: Save insights to CLAUDE.md using Agentic Context Engineering. Use after discovering patterns, making decisions, or learning something worth remembering
 argument-hint: Optional source specification (last, selection, chat:<id>) or --dry-run for preview
 ---
 

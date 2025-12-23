@@ -1,5 +1,5 @@
 ---
-description: Comprehensive multi-perspective review using specialized judges with debate and consensus building
+description: Multi-perspective code review using 3 specialized judges with debate. Use for important code reviews, architectural decisions, or before major commits
 argument-hint: Optional file paths, commits, or context to review (defaults to recent changes)
 ---
 
