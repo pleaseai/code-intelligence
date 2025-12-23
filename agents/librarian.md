@@ -91,18 +91,18 @@ Classify EVERY request into one of these categories before taking action:
 
 **Execute in parallel (4+ calls)**:
 ```bash
-# Tool 1: Context7 MCP for official docs
+# [context7] Official docs
 mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "library-name"}'
 # then: mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "specific-topic"}'
 
-# Tool 2: DeepWiki MCP for wiki/documentation
+# [deepwiki] Wiki/documentation
 mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
 # then: mcp-cli call deepwiki/read_wiki_contents '{"repoName": "owner/repo", "path": "path/from/structure"}'
 
-# Tool 3: WebSearch for latest info
+# [websearch] Latest info
 WebSearch("library-name topic 2025")
 
-# Tool 4: GitHub code search
+# [gh-search] Code search
 gh search code "usage pattern" --language TypeScript
 ```
 
@@ -132,19 +132,19 @@ cd ${TMPDIR:-/tmp}/repo-name && git rev-parse HEAD
 
 **Parallel acceleration (5+ calls)**:
 ```bash
-# Tool 1: Clone repository
+# [clone] Clone repository
 gh repo clone owner/repo ${TMPDIR:-/tmp}/repo -- --depth 1
 
-# Tool 2: Search code on GitHub
+# [gh-search] Search code on GitHub
 gh search code "function_name" --repo owner/repo
 
-# Tool 3: Get HEAD SHA via API
+# [gh-api] Get HEAD SHA via API
 gh api repos/owner/repo/commits/HEAD --jq '.sha'
 
-# Tool 4: Fetch related docs via Context7 MCP
+# [context7] Fetch related docs
 mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "relevant-api"}'
 
-# Tool 5: DeepWiki for architectural understanding
+# [deepwiki] Architectural understanding
 mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
 ```
 
@@ -155,18 +155,18 @@ mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
 
 **Execute in parallel (4+ calls)**:
 ```bash
-# Tool 1: Search issues
+# [gh-issues] Search issues
 gh search issues "keyword" --repo owner/repo --state all --limit 10
 
-# Tool 2: Search PRs
+# [gh-prs] Search PRs
 gh search prs "keyword" --repo owner/repo --state merged --limit 10
 
-# Tool 3: Clone and get history
+# [clone+history] Clone and get history
 gh repo clone owner/repo ${TMPDIR:-/tmp}/repo -- --depth 50
 cd ${TMPDIR:-/tmp}/repo && git log --oneline -n 20 -- path/to/file
 git blame -L 10,30 path/to/file
 
-# Tool 4: Get releases
+# [gh-api] Get releases
 gh api repos/owner/repo/releases --jq '.[0:5]'
 ```
 
@@ -185,24 +185,24 @@ gh api repos/owner/repo/pulls/<number>/files
 **Execute ALL in parallel (7+ calls)**:
 ```bash
 # Documentation & Web
-# Tool 1: Context7 MCP
+# [context7] Official docs
 mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "..."}'
-# Tool 2: DeepWiki MCP
+# [deepwiki] Wiki/documentation
 mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
-# Tool 3: WebSearch
+# [websearch] Latest info
 WebSearch("topic recent updates 2025")
 
 # Code Search
-# Tool 4-5: GitHub code search with varied queries
+# [gh-search-1] [gh-search-2] Varied queries
 gh search code "pattern1" --language TypeScript
 gh search code "pattern2" --language TypeScript
 
 # Source Analysis
-# Tool 6: Clone repository
+# [clone] Clone repository
 gh repo clone owner/repo ${TMPDIR:-/tmp}/repo -- --depth 1
 
 # Context
-# Tool 7: Search issues
+# [gh-issues] Search issues
 gh search issues "topic" --repo owner/repo
 ```
 
@@ -297,6 +297,11 @@ mcp-cli call deepwiki/ask_question '{"repoName": "owner/repo", "question": "How 
 - Getting high-level explanations of complex codebases
 - Finding how components interact
 - Complement to Context7 for richer documentation
+
+**Limitations**:
+- DeepWiki generates documentation for public repositories only
+- Not all repositories have documentation generated yet
+- If no content is available, fall back to Context7 or direct source reading
 
 ---
 
