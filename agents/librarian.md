@@ -89,16 +89,19 @@ Classify EVERY request into one of these categories before taking action:
 ### TYPE A: CONCEPTUAL QUESTION
 **Trigger**: "How do I...", "What is...", "Best practice for...", rough/general questions
 
-**Execute in parallel (3+ calls)**:
+**Execute in parallel (4+ calls)**:
 ```bash
-# Tool 1: Context7 MCP for official docs
+# [context7] Official docs
 mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "library-name"}'
 # then: mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "specific-topic"}'
 
-# Tool 2: WebSearch for latest info
+# [deepwiki] Conceptual questions (more direct than two-step browsing)
+mcp-cli call deepwiki/ask_question '{"repoName": "owner/repo", "question": "How does X work?"}'
+
+# [websearch] Latest info
 WebSearch("library-name topic 2025")
 
-# Tool 3: GitHub code search
+# [gh-search] Code search
 gh search code "usage pattern" --language TypeScript
 ```
 
@@ -126,19 +129,22 @@ cd ${TMPDIR:-/tmp}/repo-name && git rev-parse HEAD
 # https://github.com/owner/repo/blob/<sha>/path/to/file#L10-L20
 ```
 
-**Parallel acceleration (4+ calls)**:
+**Parallel acceleration (5+ calls)**:
 ```bash
-# Tool 1: Clone repository
+# [clone] Clone repository
 gh repo clone owner/repo ${TMPDIR:-/tmp}/repo -- --depth 1
 
-# Tool 2: Search code on GitHub
+# [gh-search] Search code on GitHub
 gh search code "function_name" --repo owner/repo
 
-# Tool 3: Get HEAD SHA via API
+# [gh-api] Get HEAD SHA via API
 gh api repos/owner/repo/commits/HEAD --jq '.sha'
 
-# Tool 4: Fetch related docs via Context7 MCP
+# [context7] Fetch related docs
 mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibraryID": "<id>", "topic": "relevant-api"}'
+
+# [deepwiki] Architectural understanding
+mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
 ```
 
 ---
@@ -148,18 +154,18 @@ mcp-cli call plugin_context7_context7/get-library-docs '{"context7CompatibleLibr
 
 **Execute in parallel (4+ calls)**:
 ```bash
-# Tool 1: Search issues
+# [gh-issues] Search issues
 gh search issues "keyword" --repo owner/repo --state all --limit 10
 
-# Tool 2: Search PRs
+# [gh-prs] Search PRs
 gh search prs "keyword" --repo owner/repo --state merged --limit 10
 
-# Tool 3: Clone and get history
+# [clone+history] Clone and get history
 gh repo clone owner/repo ${TMPDIR:-/tmp}/repo -- --depth 50
 cd ${TMPDIR:-/tmp}/repo && git log --oneline -n 20 -- path/to/file
 git blame -L 10,30 path/to/file
 
-# Tool 4: Get releases
+# [gh-api] Get releases
 gh api repos/owner/repo/releases --jq '.[0:5]'
 ```
 
@@ -175,25 +181,27 @@ gh api repos/owner/repo/pulls/<number>/files
 ### TYPE D: COMPREHENSIVE RESEARCH
 **Trigger**: Complex questions, ambiguous requests, "deep dive into..."
 
-**Execute ALL in parallel (6+ calls)**:
+**Execute ALL in parallel (7+ calls)**:
 ```bash
 # Documentation & Web
-# Tool 1: Context7 MCP
+# [context7] Official docs
 mcp-cli call plugin_context7_context7/resolve-library-id '{"libraryName": "..."}'
-# Tool 2: WebSearch
+# [deepwiki] Wiki/documentation
+mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
+# [websearch] Latest info
 WebSearch("topic recent updates 2025")
 
 # Code Search
-# Tool 3-4: GitHub code search with varied queries
+# [gh-search-1] [gh-search-2] Varied queries
 gh search code "pattern1" --language TypeScript
 gh search code "pattern2" --language TypeScript
 
 # Source Analysis
-# Tool 5: Clone repository
+# [clone] Clone repository
 gh repo clone owner/repo ${TMPDIR:-/tmp}/repo -- --depth 1
 
 # Context
-# Tool 6: Search issues
+# [gh-issues] Search issues
 gh search issues "topic" --repo owner/repo
 ```
 
@@ -240,6 +248,7 @@ https://github.com/tanstack/query/blob/abc123def/packages/react-query/src/useQue
 | Purpose | Tool | Command/Usage |
 |---------|------|---------------|
 | **Official Docs** | Context7 MCP | `mcp-cli call plugin_context7_context7/resolve-library-id` → `get-library-docs` |
+| **Wiki/Docs Search** | DeepWiki MCP | `mcp-cli call deepwiki/read_wiki_structure` → `deepwiki/read_wiki_contents` |
 | **Latest Info** | WebSearch | `WebSearch("query 2025")` |
 | **Fast Code Search** | gh CLI (Bash) | `gh search code "query" --repo owner/repo` |
 | **Clone Repo** | gh CLI (Bash) | `gh repo clone owner/repo ${TMPDIR:-/tmp}/name -- --depth 1` |
@@ -264,16 +273,45 @@ ${TMPDIR:-/tmp}/repo-name
 # Windows: C:\Users\...\AppData\Local\Temp\repo-name
 ```
 
+### DeepWiki MCP
+
+DeepWiki provides AI-generated documentation for GitHub repositories:
+
+```bash
+# Step 0: Check schema (mandatory before first use)
+mcp-cli info deepwiki/read_wiki_structure
+
+# Step 1: Get wiki structure (required first)
+mcp-cli call deepwiki/read_wiki_structure '{"repoName": "owner/repo"}'
+
+# Step 2: Read specific content from the structure
+mcp-cli call deepwiki/read_wiki_contents '{"repoName": "owner/repo", "path": "path/from/structure"}'
+
+# Alternative: Ask questions about a repository
+mcp-cli call deepwiki/ask_question '{"repoName": "owner/repo", "question": "How does X work?"}'
+```
+
+**When to use DeepWiki**:
+- Understanding repository architecture
+- Getting high-level explanations of complex codebases
+- Finding how components interact
+- Complement to Context7 for richer documentation
+
+**Limitations**:
+- DeepWiki generates documentation for public repositories only
+- Not all repositories have documentation generated yet
+- If no content is available, fall back to Context7 or direct source reading
+
 ---
 
 ## PARALLEL EXECUTION REQUIREMENTS
 
 | Request Type | Minimum Parallel Calls |
 |--------------|----------------------|
-| TYPE A (Conceptual) | 3+ |
-| TYPE B (Implementation) | 4+ |
+| TYPE A (Conceptual) | 4+ |
+| TYPE B (Implementation) | 5+ |
 | TYPE C (Context) | 4+ |
-| TYPE D (Comprehensive) | 6+ |
+| TYPE D (Comprehensive) | 7+ |
 
 **Always vary queries** when searching:
 ```bash
@@ -293,7 +331,8 @@ gh search code "useQuery"
 
 | Failure | Recovery Action |
 |---------|-----------------|
-| Context7 not found | Clone repo, read source + README directly |
+| Context7 not found | Try DeepWiki, or clone repo and read source + README directly |
+| DeepWiki not available | Use Context7 MCP or clone repo directly |
 | Search no results | Broaden query, try concept instead of exact name |
 | gh API rate limit | Use cloned repo in temp directory |
 | Repo not found | Search for forks or mirrors |
