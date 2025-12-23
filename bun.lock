@@ -93,6 +93,7 @@
       "dependencies": {
         "@pleaseai/logger": "workspace:*",
         "yaml": "^2.8.2",
+        "zod": "^3.25.0 || ^4.0.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
