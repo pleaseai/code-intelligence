@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.14](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.13...code-please-v0.1.14) (2025-12-23)
+
+
+### Features
+
+* **plugins:** add reflexion plugin for self-refinement ([#65](https://github.com/chatbot-pf/code-please/issues/65)) ([b0ebea5](https://github.com/chatbot-pf/code-please/commit/b0ebea5b2e0edf97ee35bb66e340272892330694))
+
 ## [0.1.13](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.12...code-please-v0.1.13) (2025-12-23)
 
 
