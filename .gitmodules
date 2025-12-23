@@ -16,3 +16,6 @@
 [submodule "ref/docs-please"]
 	path = ref/docs-please
 	url = https://github.com/pleaseai/docs.git
+[submodule "ref/context-engineering-kit"]
+	path = ref/context-engineering-kit
+	url = https://github.com/NeoLabHQ/context-engineering-kit
