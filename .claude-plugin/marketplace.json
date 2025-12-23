@@ -1,0 +1,16 @@
+{
+  "name": "code-please",
+  "owner": {
+    "name": "Passion Factory"
+  },
+  "plugins": [
+    {
+      "name": "code-please",
+      "source": "./"
+    },
+    {
+      "name": "reflexion",
+      "source": "./plugins/reflexion"
+    }
+  ]
+}
