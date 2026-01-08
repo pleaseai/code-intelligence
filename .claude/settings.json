@@ -41,11 +41,8 @@
     ]
   },
   "enabledPlugins": {
-    "hookify@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
     "asana@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true
   }
 }
