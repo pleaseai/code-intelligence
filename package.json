@@ -1,7 +1,7 @@
 {
   "name": "code-please",
   "type": "module",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "packageManager": "bun@1.3.5",
   "description": "Auto-format and type-check hooks for AI coding",
   "workspaces": [

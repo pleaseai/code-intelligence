@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.16](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.15...code-please-v0.1.16) (2026-01-15)
+
+
+### Features
+
+* **examples:** Add LSP TypeScript example project ([#74](https://github.com/chatbot-pf/code-please/issues/74)) ([9df0bd4](https://github.com/chatbot-pf/code-please/commit/9df0bd4fb6b7f889bdcd1d5786139b293a1adccd))
+
 ## [0.1.15](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.14...code-please-v0.1.15) (2025-12-23)
 
 

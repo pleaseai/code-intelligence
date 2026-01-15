@@ -1,6 +1,6 @@
 {
   "name": "code-please",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "MCP server and CLI tool for AI-assisted coding with auto-formatting and LSP diagnostics",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
