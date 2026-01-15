@@ -23,7 +23,8 @@
     "build:npm": "bun run scripts/generate-packages.ts",
     "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && bun publish --access public --tolerate-republish); done && cd npm/code && bun publish --access public --tolerate-republish",
     "prepare": "husky",
-    "build:docs": "turbo run build --filter=@pleaseai/code-please-docs-site..."
+    "build:docs": "turbo run build --filter=@pleaseai/code-please-docs-site...",
+    "ref:clone": "git clone https://github.com/oraios/serena ref/serena && git clone https://github.com/JetBrains/mcp-server-plugin ref/mcp-server-plugin && git clone https://github.com/sst/opencode ref/opencode && git clone https://github.com/microsoft/multilspy ref/multispy && git clone https://github.com/code-yeongyu/oh-my-opencode ref/oh-my-opencode && git clone https://github.com/pleaseai/docs ref/docs-please && git clone https://github.com/NeoLabHQ/context-engineering-kit ref/context-engineering-kit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

@@ -38,3 +38,7 @@ coverage/
 
 # Please memory
 .please/memory/tasklist.json
+
+# Reference repositories (local checkout only)
+ref/*
+!ref/README.md
