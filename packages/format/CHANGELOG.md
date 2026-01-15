@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-format-v0.1.3...@pleaseai/code-format-v0.1.4) (2026-01-15)
+
+
+### Features
+
+* **format:** add file-based root detection for formatter enabled checks ([#76](https://github.com/chatbot-pf/code-please/issues/76)) ([a09dbd8](https://github.com/chatbot-pf/code-please/commit/a09dbd8b7303e3adbe16f6d76f751a4ee90d2234))
+
 ## [0.1.3](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-format-v0.1.2...@pleaseai/code-format-v0.1.3) (2025-12-23)
 
 
