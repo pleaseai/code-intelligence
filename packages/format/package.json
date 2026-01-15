@@ -25,7 +25,7 @@
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "echo 'No tests yet'"
+    "test": "bun test ./test"
   },
   "dependencies": {
     "@pleaseai/logger": "workspace:*",
