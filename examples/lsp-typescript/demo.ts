@@ -159,11 +159,11 @@ async function main(): Promise<void> {
 
     // Code completion
     printSection('6. Code Completion')
-    // Get completions after 'Math.' in math.ts
+    // Get completions after 'Math.' in math.ts (line 80 in 1-based = line 79 in 0-based)
     const completions = await manager.completion({
       file: MATH_FILE,
-      line: 76, // return Math.abs(value) line
-      character: 14, // after 'Math.'
+      line: 79, // return Math.abs(value) line (0-based)
+      character: 14, // after 'Math.' (2 indent + 7 'return ' + 5 'Math.')
     })
     console.log(`Completions at Math.: ${completions.length} items`)
     console.log('First 10 completions:')
