@@ -23,7 +23,7 @@ export interface FormatConfig {
 }
 
 interface State {
-  enabled: Record<string, boolean>
+  enabled: Record<string, boolean> // Cache key: `${dirPath}:${formatterName}`
   formatters: Record<string, Formatter.Info>
   projectDir: string
 }
@@ -105,24 +105,26 @@ function getState(): State {
   return cachedState
 }
 
-async function isEnabled(item: Formatter.Info): Promise<boolean> {
+async function isEnabled(item: Formatter.Info, filePath: string): Promise<boolean> {
   const s = getState()
-  let status = s.enabled[item.name]
+  const dirPath = path.dirname(filePath)
+  const cacheKey = `${dirPath}:${item.name}`
+  let status = s.enabled[cacheKey]
   if (status === undefined) {
-    status = await item.enabled(s.projectDir)
-    s.enabled[item.name] = status
+    status = await item.enabled(filePath, s.projectDir)
+    s.enabled[cacheKey] = status
   }
   return status
 }
 
-async function getFormatter(ext: string): Promise<Formatter.Info[]> {
+async function getFormatter(ext: string, filePath: string): Promise<Formatter.Info[]> {
   const s = getState()
   const result: Formatter.Info[] = []
   for (const item of Object.values(s.formatters)) {
     log.debug({ name: item.name, ext }, 'checking formatter')
     if (!item.extensions.includes(ext))
       continue
-    if (!(await isEnabled(item)))
+    if (!(await isEnabled(item, filePath)))
       continue
     log.debug({ name: item.name, ext }, 'formatter enabled')
     result.push(item)
@@ -130,11 +132,12 @@ async function getFormatter(ext: string): Promise<Formatter.Info[]> {
   return result
 }
 
-async function status(): Promise<FormatStatus[]> {
+async function status(filePath?: string): Promise<FormatStatus[]> {
   const s = getState()
+  const testPath = filePath ?? s.projectDir
   const result: FormatStatus[] = []
   for (const formatter of Object.values(s.formatters)) {
-    const enabled = await isEnabled(formatter)
+    const enabled = await isEnabled(formatter, testPath)
     result.push({
       name: formatter.name,
       extensions: formatter.extensions,
@@ -152,7 +155,7 @@ async function formatFile(file: string): Promise<boolean> {
   const ext = path.extname(file)
   log.debug({ file, ext }, 'formatting file')
 
-  const formatters = await getFormatter(ext)
+  const formatters = await getFormatter(ext, file)
   if (formatters.length === 0) {
     log.debug({ ext }, 'no formatter found')
     return false
