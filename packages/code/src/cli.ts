@@ -113,7 +113,9 @@ async function lspServerCommand(serverId: string, projectDir: string): Promise<v
   }
 
   // Run root detection - only start if config file exists
-  const root = await server.root(projectDir, projectDir)
+  // Use a dummy file path inside projectDir so dirname() returns projectDir itself
+  const dummyFile = `${projectDir}/dummy.ts`
+  const root = await server.root(dummyFile, projectDir)
   if (!root) {
     // No config file found - exit silently (don't start server)
     log.debug({ serverId, projectDir }, 'No root found, skipping LSP server')
