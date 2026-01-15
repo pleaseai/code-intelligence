@@ -1,0 +1,15 @@
+{
+  "name": "lsp-typescript-example",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Example TypeScript project for testing @pleaseai/code-lsp functionality",
+  "scripts": {
+    "demo": "bun run demo.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.0"
+  }
+}
