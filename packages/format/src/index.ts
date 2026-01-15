@@ -86,7 +86,7 @@ function init(config: FormatConfig): void {
         name,
         command: item.command,
         extensions: item.extensions ?? [],
-        enabled: async () => true,
+        enabled: async (_filePath: string, _projectDir: string) => true,
       }
       if (item.environment)
         newFormatter.environment = item.environment

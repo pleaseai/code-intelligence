@@ -21,11 +21,16 @@ async function findUp(
   let currentDir = startDir
   const root = stopDir ?? path.parse(startDir).root
 
-  while (currentDir !== root && currentDir !== path.dirname(currentDir)) {
+  while (true) {
     const filePath = path.join(currentDir, filename)
     const file = Bun.file(filePath)
     if (await file.exists()) {
       results.push(filePath)
+    }
+
+    // Stop if we've reached the stopDir or filesystem root
+    if (currentDir === root || currentDir === path.dirname(currentDir)) {
+      break
     }
     currentDir = path.dirname(currentDir)
   }
