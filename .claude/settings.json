@@ -21,28 +21,18 @@
     "deny": [],
     "ask": []
   },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bunx @pleaseai/code format --stdin",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "bunx @pleaseai/code lsp --stdin",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  },
   "enabledPlugins": {
     "asana@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": true
+    "plugin-dev@claude-plugins-official": true,
+    "code-please@code-please": true
+  },
+  "extraKnownMarketplaces": {
+    "code-please": {
+      "source": {
+        "source": "directory",
+        "path": "./"
+      }
+    }
   }
 }

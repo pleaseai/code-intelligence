@@ -1,12 +1,4 @@
 {
   "mcpServers": {
-    "grep": {
-      "type": "http",
-      "url": "https://mcp.grep.app"
-    },
-    "deepwiki": {
-      "type": "sse",
-      "url": "https://mcp.deepwiki.com/sse"
-    }
   }
 }
