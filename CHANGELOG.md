@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.18](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.17...code-please-v0.1.18) (2026-01-16)
+
+
+### Features
+
+* remove mcp ([#79](https://github.com/chatbot-pf/code-please/issues/79)) ([ef9504a](https://github.com/chatbot-pf/code-please/commit/ef9504a21b3c887cd5e5e6c3180d0ed206b868a4))
+
 ## [0.1.17](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.16...code-please-v0.1.17) (2026-01-15)
 
 
