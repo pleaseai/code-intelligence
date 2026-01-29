@@ -9,7 +9,7 @@
   "lspServers": {
     "eslint": {
       "command": "bunx",
-      "args": ["@pleaseai/code", "lsp-server", "eslint"],
+      "args": ["@pleaseai/code@0.1.17", "lsp-server", "eslint"],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",
