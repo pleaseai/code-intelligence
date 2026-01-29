@@ -1,16 +1,33 @@
 {
-  "name": "code-please",
+  "name": "language-server-please",
   "owner": {
     "name": "PassionFactory"
   },
   "plugins": [
     {
       "name": "code-please",
+      "description": "Core LSP servers (Biome, ESLint, Svelte, Deno, etc.)",
       "source": "./"
     },
     {
-      "name": "reflexion",
-      "source": "./plugins/reflexion"
+      "name": "typescript-lsp",
+      "description": "TypeScript/JavaScript Language Server",
+      "source": "./plugins/typescript-lsp"
+    },
+    {
+      "name": "vue-lsp",
+      "description": "Vue Language Server with TypeScript Support",
+      "source": "./plugins/vue-lsp"
+    },
+    {
+      "name": "graphql-lsp",
+      "description": "GraphQL Language Server",
+      "source": "./plugins/graphql-lsp"
+    },
+    {
+      "name": "eslint-lsp",
+      "description": "ESLint Language Server",
+      "source": "./plugins/eslint-lsp"
     }
   ]
 }

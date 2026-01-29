@@ -109,13 +109,13 @@ function createRootLogger(): pino.Logger {
         console.error('[logger] Falling back to JSON output')
       }
 
-      // Fallback to JSON output
-      return pino(options, pino.destination(2))
+      // Fallback to JSON output (sync mode for bundled binaries)
+      return pino(options, pino.destination({ fd: 2, sync: true }))
     }
   }
 
-  // Production: JSON to stderr
-  return pino(options, pino.destination(2))
+  // Production: JSON to stderr (sync mode for bundled binaries)
+  return pino(options, pino.destination({ fd: 2, sync: true }))
 }
 
 // Singleton root logger
