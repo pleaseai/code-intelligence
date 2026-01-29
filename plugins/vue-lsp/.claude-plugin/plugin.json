@@ -9,7 +9,7 @@
   "lspServers": {
     "vue": {
       "command": "bunx",
-      "args": ["@vue/language-server", "--stdio"],
+      "args": ["@vue/language-server@^3.2.0", "--stdio"],
       "extensionToLanguage": {
         ".vue": "vue"
       }

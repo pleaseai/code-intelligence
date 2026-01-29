@@ -9,7 +9,7 @@
   "lspServers": {
     "graphql": {
       "command": "bunx",
-      "args": ["graphql-language-service-cli", "server", "-m", "stream"],
+      "args": ["-p", "graphql-language-service-cli@^3.1.0", "graphql-lsp", "server", "-m", "stream"],
       "extensionToLanguage": {
         ".graphql": "graphql",
         ".graphqls": "graphql",

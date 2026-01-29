@@ -9,7 +9,7 @@
   "lspServers": {
     "typescript": {
       "command": "bunx",
-      "args": ["typescript-language-server", "--stdio"],
+      "args": ["typescript-language-server@^5.1.0", "--stdio"],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",
