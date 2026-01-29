@@ -39,9 +39,12 @@ const REDACT_PATHS = [
 /**
  * Determine if pretty printing should be enabled
  * Auto-detects based on NODE_ENV
+ * Bundled binaries default to production mode (no pretty printing)
  */
 function shouldUsePretty(): boolean {
-  const env = process.env.NODE_ENV ?? 'development'
+  // Check if running as bundled binary (Bun.embeddedFiles exists in compiled binaries)
+  const isBundled = typeof Bun !== 'undefined' && 'embeddedFiles' in Bun
+  const env = process.env.NODE_ENV ?? (isBundled ? 'production' : 'development')
   return env !== 'production'
 }
 
