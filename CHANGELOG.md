@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.19](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.18...code-please-v0.1.19) (2026-01-29)
+
+
+### Features
+
+* **plugins:** separate LSP servers into individual plugins ([#81](https://github.com/chatbot-pf/code-please/issues/81)) ([62fd9e9](https://github.com/chatbot-pf/code-please/commit/62fd9e94b5b61dea0db918d36cc80f626421b528))
+
 ## [0.1.18](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.17...code-please-v0.1.18) (2026-01-16)
 
 
