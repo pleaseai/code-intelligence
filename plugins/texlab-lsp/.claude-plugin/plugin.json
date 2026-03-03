@@ -9,7 +9,7 @@
   "lspServers": {
     "texlab": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "texlab"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "texlab"],
       "extensionToLanguage": {
         ".tex": "latex",
         ".bib": "bibtex"

@@ -9,7 +9,7 @@
   "lspServers": {
     "rust-analyzer": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "rust-analyzer"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "rust-analyzer"],
       "extensionToLanguage": {
         ".rs": "rust"
       }

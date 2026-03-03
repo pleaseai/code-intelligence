@@ -9,7 +9,7 @@
   "lspServers": {
     "elixir-ls": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "elixir-ls"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "elixir-ls"],
       "extensionToLanguage": {
         ".ex": "elixir",
         ".exs": "elixir"

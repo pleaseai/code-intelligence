@@ -9,7 +9,7 @@
   "lspServers": {
     "biome": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "biome"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "biome"],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",

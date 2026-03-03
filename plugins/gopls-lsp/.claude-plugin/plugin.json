@@ -9,7 +9,7 @@
   "lspServers": {
     "gopls": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "gopls"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "gopls"],
       "extensionToLanguage": {
         ".go": "go"
       }

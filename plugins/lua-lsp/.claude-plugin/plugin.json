@@ -9,7 +9,7 @@
   "lspServers": {
     "lua-ls": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "lua-ls"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "lua-ls"],
       "extensionToLanguage": {
         ".lua": "lua"
       }

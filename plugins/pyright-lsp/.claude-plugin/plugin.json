@@ -9,7 +9,7 @@
   "lspServers": {
     "pyright": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "pyright"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "pyright"],
       "extensionToLanguage": {
         ".py": "python",
         ".pyi": "python"

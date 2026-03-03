@@ -9,7 +9,7 @@
   "lspServers": {
     "ocaml": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "ocaml"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "ocaml"],
       "extensionToLanguage": {
         ".ml": "ocaml",
         ".mli": "ocaml"

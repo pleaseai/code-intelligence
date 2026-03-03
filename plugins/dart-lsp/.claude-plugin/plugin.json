@@ -9,7 +9,7 @@
   "lspServers": {
     "dart": {
       "command": "bunx",
-      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "dart"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "dart"],
       "extensionToLanguage": {
         ".dart": "dart"
       }
