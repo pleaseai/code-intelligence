@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.20](https://github.com/chatbot-pf/code-intelligence/compare/code-please-v0.1.19...code-please-v0.1.20) (2026-03-03)
+
+
+### Features
+
+* **.claude-plugin:** extract LSP servers into individual plugin packages ([#89](https://github.com/chatbot-pf/code-intelligence/issues/89)) ([a557833](https://github.com/chatbot-pf/code-intelligence/commit/a55783315bfeb81b5c79f0596b8a4ac36e9ef9a0))
+
+
+### Bug Fixes
+
+* **logger:** default to production mode for bundled binaries ([#86](https://github.com/chatbot-pf/code-intelligence/issues/86)) ([05a1089](https://github.com/chatbot-pf/code-intelligence/commit/05a10892659128de1f6b711cc73c1a50c79b750f))
+
 ## [0.1.19](https://github.com/chatbot-pf/code-please/compare/code-please-v0.1.18...code-please-v0.1.19) (2026-01-29)
 
 
