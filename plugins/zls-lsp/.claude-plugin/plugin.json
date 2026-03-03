@@ -1,0 +1,19 @@
+{
+  "name": "zls-lsp",
+  "version": "0.1.19",
+  "description": "Zig Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "zls": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "zls"],
+      "extensionToLanguage": {
+        ".zig": "zig",
+        ".zon": "zig"
+      }
+    }
+  }
+}

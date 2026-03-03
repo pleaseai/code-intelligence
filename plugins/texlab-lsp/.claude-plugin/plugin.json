@@ -1,0 +1,19 @@
+{
+  "name": "texlab-lsp",
+  "version": "0.1.19",
+  "description": "LaTeX (TexLab) Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "texlab": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "texlab"],
+      "extensionToLanguage": {
+        ".tex": "latex",
+        ".bib": "bibtex"
+      }
+    }
+  }
+}

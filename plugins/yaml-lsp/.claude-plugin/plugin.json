@@ -1,0 +1,19 @@
+{
+  "name": "yaml-lsp",
+  "version": "0.1.19",
+  "description": "YAML Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "yaml": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "yaml"],
+      "extensionToLanguage": {
+        ".yaml": "yaml",
+        ".yml": "yaml"
+      }
+    }
+  }
+}

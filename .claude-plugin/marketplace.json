@@ -5,9 +5,144 @@
   },
   "plugins": [
     {
+      "name": "astro-lsp",
+      "description": "Astro Language Server",
+      "source": "./plugins/astro-lsp"
+    },
+    {
+      "name": "bash-lsp",
+      "description": "Bash/Shell Language Server",
+      "source": "./plugins/bash-lsp"
+    },
+    {
+      "name": "biome-lsp",
+      "description": "Biome Linter/Formatter",
+      "source": "./plugins/biome-lsp"
+    },
+    {
+      "name": "clangd-lsp",
+      "description": "C/C++ (Clangd) Language Server",
+      "source": "./plugins/clangd-lsp"
+    },
+    {
       "name": "code-please",
-      "description": "Core LSP servers (Biome, ESLint, Svelte, Deno, etc.)",
+      "description": "MCP server and CLI tool for AI-assisted coding with auto-formatting and LSP diagnostics",
       "source": "./"
+    },
+    {
+      "name": "csharp-lsp",
+      "description": "C# Language Server",
+      "source": "./plugins/csharp-lsp"
+    },
+    {
+      "name": "dart-lsp",
+      "description": "Dart Language Server",
+      "source": "./plugins/dart-lsp"
+    },
+    {
+      "name": "deno-lsp",
+      "description": "Deno Language Server",
+      "source": "./plugins/deno-lsp"
+    },
+    {
+      "name": "dockerfile-lsp",
+      "description": "Dockerfile Language Server",
+      "source": "./plugins/dockerfile-lsp"
+    },
+    {
+      "name": "elixir-lsp",
+      "description": "Elixir Language Server",
+      "source": "./plugins/elixir-lsp"
+    },
+    {
+      "name": "eslint-lsp",
+      "description": "ESLint Language Server",
+      "source": "./plugins/eslint-lsp"
+    },
+    {
+      "name": "fsharp-lsp",
+      "description": "F# Language Server",
+      "source": "./plugins/fsharp-lsp"
+    },
+    {
+      "name": "gleam-lsp",
+      "description": "Gleam Language Server",
+      "source": "./plugins/gleam-lsp"
+    },
+    {
+      "name": "gopls-lsp",
+      "description": "Go Language Server",
+      "source": "./plugins/gopls-lsp"
+    },
+    {
+      "name": "jdtls-lsp",
+      "description": "Java (Eclipse JDTLS) Language Server",
+      "source": "./plugins/jdtls-lsp"
+    },
+    {
+      "name": "kotlin-lsp",
+      "description": "Kotlin Language Server",
+      "source": "./plugins/kotlin-lsp"
+    },
+    {
+      "name": "lua-lsp",
+      "description": "Lua Language Server",
+      "source": "./plugins/lua-lsp"
+    },
+    {
+      "name": "ocaml-lsp",
+      "description": "OCaml Language Server",
+      "source": "./plugins/ocaml-lsp"
+    },
+    {
+      "name": "oxlint-lsp",
+      "description": "Oxlint Linter",
+      "source": "./plugins/oxlint-lsp"
+    },
+    {
+      "name": "php-lsp",
+      "description": "PHP (Intelephense) Language Server",
+      "source": "./plugins/php-lsp"
+    },
+    {
+      "name": "prisma-lsp",
+      "description": "Prisma Language Server",
+      "source": "./plugins/prisma-lsp"
+    },
+    {
+      "name": "pyright-lsp",
+      "description": "Python (Pyright) Language Server",
+      "source": "./plugins/pyright-lsp"
+    },
+    {
+      "name": "rubocop-lsp",
+      "description": "RuboCop (Ruby) Linter",
+      "source": "./plugins/rubocop-lsp"
+    },
+    {
+      "name": "rust-analyzer-lsp",
+      "description": "Rust Language Server (rust-analyzer)",
+      "source": "./plugins/rust-analyzer-lsp"
+    },
+    {
+      "name": "svelte-lsp",
+      "description": "Svelte Language Server",
+      "source": "./plugins/svelte-lsp"
+    },
+    {
+      "name": "swift-lsp",
+      "description": "Swift (SourceKit) Language Server",
+      "source": "./plugins/swift-lsp"
+    },
+    {
+      "name": "terraform-lsp",
+      "description": "Terraform Language Server",
+      "source": "./plugins/terraform-lsp"
+    },
+    {
+      "name": "texlab-lsp",
+      "description": "LaTeX (TexLab) Language Server",
+      "source": "./plugins/texlab-lsp"
     },
     {
       "name": "typescript-lsp",
@@ -16,18 +151,18 @@
     },
     {
       "name": "vue-lsp",
-      "description": "Vue Language Server with TypeScript Support",
+      "description": "Vue Language Server",
       "source": "./plugins/vue-lsp"
     },
     {
-      "name": "graphql-lsp",
-      "description": "GraphQL Language Server",
-      "source": "./plugins/graphql-lsp"
+      "name": "yaml-lsp",
+      "description": "YAML Language Server",
+      "source": "./plugins/yaml-lsp"
     },
     {
-      "name": "eslint-lsp",
-      "description": "ESLint Language Server",
-      "source": "./plugins/eslint-lsp"
+      "name": "zls-lsp",
+      "description": "Zig Language Server",
+      "source": "./plugins/zls-lsp"
     }
   ]
 }

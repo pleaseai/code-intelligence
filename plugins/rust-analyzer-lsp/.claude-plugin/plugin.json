@@ -1,0 +1,18 @@
+{
+  "name": "rust-analyzer-lsp",
+  "version": "0.1.19",
+  "description": "Rust Analyzer for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "rust-analyzer": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "rust-analyzer"],
+      "extensionToLanguage": {
+        ".rs": "rust"
+      }
+    }
+  }
+}

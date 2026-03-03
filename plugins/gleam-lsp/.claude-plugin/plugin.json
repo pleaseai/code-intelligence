@@ -1,0 +1,18 @@
+{
+  "name": "gleam-lsp",
+  "version": "0.1.19",
+  "description": "Gleam Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "gleam": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "gleam"],
+      "extensionToLanguage": {
+        ".gleam": "gleam"
+      }
+    }
+  }
+}

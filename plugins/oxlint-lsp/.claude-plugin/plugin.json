@@ -1,15 +1,15 @@
 {
-  "name": "eslint-lsp",
-  "version": "0.1.17",
-  "description": "ESLint Language Server for Claude Code",
+  "name": "oxlint-lsp",
+  "version": "0.1.19",
+  "description": "Oxlint Linter for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
     "name": "PassionFactory"
   },
   "lspServers": {
-    "eslint": {
+    "oxlint": {
       "command": "bunx",
-"args": ["@pleaseai/code@0.1.19", "lsp-server", "eslint"],
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "oxlint"],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",
@@ -19,7 +19,9 @@
         ".cjs": "javascript",
         ".mts": "typescript",
         ".cts": "typescript",
-        ".vue": "vue"
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte"
       }
     }
   }

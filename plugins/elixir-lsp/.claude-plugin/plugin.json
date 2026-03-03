@@ -1,0 +1,19 @@
+{
+  "name": "elixir-lsp",
+  "version": "0.1.19",
+  "description": "Elixir Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "elixir-ls": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@0.1.19", "lsp-server", "elixir-ls"],
+      "extensionToLanguage": {
+        ".ex": "elixir",
+        ".exs": "elixir"
+      }
+    }
+  }
+}
