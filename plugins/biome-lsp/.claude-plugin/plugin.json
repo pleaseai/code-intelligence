@@ -1,0 +1,34 @@
+{
+  "name": "biome-lsp",
+  "version": "0.1.19",
+  "description": "Biome Linter/Formatter for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "biome": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "biome"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".json": "json",
+        ".jsonc": "jsonc",
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte",
+        ".css": "css",
+        ".graphql": "graphql",
+        ".gql": "graphql",
+        ".html": "html"
+      }
+    }
+  }
+}

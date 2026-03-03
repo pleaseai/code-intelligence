@@ -1,0 +1,18 @@
+{
+  "name": "prisma-lsp",
+  "version": "0.1.19",
+  "description": "Prisma Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "prisma": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "prisma"],
+      "extensionToLanguage": {
+        ".prisma": "prisma"
+      }
+    }
+  }
+}

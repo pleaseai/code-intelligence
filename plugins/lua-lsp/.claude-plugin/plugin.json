@@ -1,0 +1,18 @@
+{
+  "name": "lua-lsp",
+  "version": "0.1.19",
+  "description": "Lua Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "lua-ls": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "lua-ls"],
+      "extensionToLanguage": {
+        ".lua": "lua"
+      }
+    }
+  }
+}

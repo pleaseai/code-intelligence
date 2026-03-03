@@ -1,0 +1,19 @@
+{
+  "name": "terraform-lsp",
+  "version": "0.1.19",
+  "description": "Terraform Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "terraform": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "terraform"],
+      "extensionToLanguage": {
+        ".tf": "terraform",
+        ".tfvars": "terraform-vars"
+      }
+    }
+  }
+}

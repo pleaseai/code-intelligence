@@ -1,0 +1,28 @@
+{
+  "name": "oxlint-lsp",
+  "version": "0.1.19",
+  "description": "Oxlint Linter for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "oxlint": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "oxlint"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".vue": "vue",
+        ".astro": "astro",
+        ".svelte": "svelte"
+      }
+    }
+  }
+}

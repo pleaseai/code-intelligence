@@ -23,12 +23,11 @@
   },
   "enabledPlugins": {
     "asana@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": true,
-    "code-please@code-please": true
+    "typescript-lsp@claude-intelligence": true,
+    "plugin-dev@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "code-please": {
+    "code-intelligence": {
       "source": {
         "source": "directory",
         "path": "./"

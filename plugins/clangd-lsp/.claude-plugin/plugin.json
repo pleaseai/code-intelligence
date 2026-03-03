@@ -1,0 +1,27 @@
+{
+  "name": "clangd-lsp",
+  "version": "0.1.19",
+  "description": "C/C++ (Clangd) Language Server for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "clangd": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "clangd"],
+      "extensionToLanguage": {
+        ".c": "c",
+        ".cpp": "cpp",
+        ".cc": "cpp",
+        ".cxx": "cpp",
+        ".c++": "cpp",
+        ".h": "c",
+        ".hpp": "cpp",
+        ".hh": "cpp",
+        ".hxx": "cpp",
+        ".h++": "cpp"
+      }
+    }
+  }
+}

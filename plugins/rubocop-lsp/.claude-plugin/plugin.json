@@ -1,0 +1,21 @@
+{
+  "name": "rubocop-lsp",
+  "version": "0.1.19",
+  "description": "RuboCop (Ruby) Linter for Claude Code",
+  "repository": "https://github.com/chatbot-pf/code-please",
+  "author": {
+    "name": "PassionFactory"
+  },
+  "lspServers": {
+    "rubocop": {
+      "command": "bunx",
+      "args": ["@pleaseai/code@^0.1.0", "lsp-server", "rubocop"],
+      "extensionToLanguage": {
+        ".rb": "ruby",
+        ".rake": "ruby",
+        ".gemspec": "ruby",
+        ".ru": "ruby"
+      }
+    }
+  }
+}
