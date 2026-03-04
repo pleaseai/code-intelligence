@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.21](https://github.com/chatbot-pf/code-intelligence/compare/code-please-v0.1.20...code-please-v0.1.21) (2026-03-04)
+
+
+### Reverts
+
+* **plugins:** downgrade @pleaseai/code version from 0.1.19 to 0.1.13 ([#90](https://github.com/chatbot-pf/code-intelligence/issues/90)) ([b51b87c](https://github.com/chatbot-pf/code-intelligence/commit/b51b87ca152ea308ebfa421799f874897e4191b7))
+
 ## [0.1.20](https://github.com/chatbot-pf/code-intelligence/compare/code-please-v0.1.19...code-please-v0.1.20) (2026-03-03)
 
 
