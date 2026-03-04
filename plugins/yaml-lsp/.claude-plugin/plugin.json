@@ -9,7 +9,7 @@
   "lspServers": {
     "yaml": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "yaml"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "yaml"],
       "extensionToLanguage": {
         ".yaml": "yaml",
         ".yml": "yaml"

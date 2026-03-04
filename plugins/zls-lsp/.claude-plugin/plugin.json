@@ -9,7 +9,7 @@
   "lspServers": {
     "zls": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "zls"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "zls"],
       "extensionToLanguage": {
         ".zig": "zig",
         ".zon": "zig"

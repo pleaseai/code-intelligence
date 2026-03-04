@@ -9,7 +9,7 @@
   "lspServers": {
     "rubocop": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "rubocop"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "rubocop"],
       "extensionToLanguage": {
         ".rb": "ruby",
         ".rake": "ruby",

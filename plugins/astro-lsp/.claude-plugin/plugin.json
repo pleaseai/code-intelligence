@@ -9,7 +9,7 @@
   "lspServers": {
     "astro": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "astro"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "astro"],
       "extensionToLanguage": {
         ".astro": "astro"
       }

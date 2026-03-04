@@ -9,7 +9,7 @@
   "lspServers": {
     "csharp": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "csharp"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "csharp"],
       "extensionToLanguage": {
         ".cs": "csharp"
       }

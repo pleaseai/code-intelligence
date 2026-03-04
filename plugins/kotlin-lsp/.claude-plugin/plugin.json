@@ -9,7 +9,7 @@
   "lspServers": {
     "kotlin": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "kotlin"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "kotlin"],
       "extensionToLanguage": {
         ".kt": "kotlin",
         ".kts": "kotlin"

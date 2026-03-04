@@ -9,7 +9,7 @@
   "lspServers": {
     "clangd": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "clangd"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "clangd"],
       "extensionToLanguage": {
         ".c": "c",
         ".cpp": "cpp",

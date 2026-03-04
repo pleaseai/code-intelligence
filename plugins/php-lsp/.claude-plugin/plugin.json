@@ -9,7 +9,7 @@
   "lspServers": {
     "php": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "php"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "php"],
       "extensionToLanguage": {
         ".php": "php"
       }
