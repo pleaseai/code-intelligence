@@ -9,7 +9,7 @@
   "lspServers": {
     "prisma": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "prisma"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "prisma"],
       "extensionToLanguage": {
         ".prisma": "prisma"
       }

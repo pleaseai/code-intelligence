@@ -9,7 +9,7 @@
   "lspServers": {
     "bash": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "bash"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "bash"],
       "extensionToLanguage": {
         ".sh": "shellscript",
         ".bash": "shellscript",

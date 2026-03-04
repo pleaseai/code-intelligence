@@ -9,7 +9,7 @@
   "lspServers": {
     "terraform": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "terraform"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "terraform"],
       "extensionToLanguage": {
         ".tf": "terraform",
         ".tfvars": "terraform-vars"

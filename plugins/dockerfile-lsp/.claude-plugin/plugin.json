@@ -9,7 +9,7 @@
   "lspServers": {
     "dockerfile": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "dockerfile"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "dockerfile"],
       "extensionToLanguage": {
         ".dockerfile": "dockerfile"
       }

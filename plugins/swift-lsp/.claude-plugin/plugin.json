@@ -9,7 +9,7 @@
   "lspServers": {
     "sourcekit": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "sourcekit"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "sourcekit"],
       "extensionToLanguage": {
         ".swift": "swift"
       }

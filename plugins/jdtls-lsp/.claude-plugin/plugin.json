@@ -9,7 +9,7 @@
   "lspServers": {
     "jdtls": {
       "command": "bunx",
-      "args": ["@pleaseai/code@0.1.19", "lsp-server", "jdtls"],
+      "args": ["@pleaseai/code@0.1.13", "lsp-server", "jdtls"],
       "extensionToLanguage": {
         ".java": "java"
       }
