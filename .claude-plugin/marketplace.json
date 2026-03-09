@@ -75,6 +75,11 @@
       "source": "./plugins/gopls-lsp"
     },
     {
+      "name": "graphql-lsp",
+      "description": "GraphQL Language Server",
+      "source": "./plugins/graphql-lsp"
+    },
+    {
       "name": "jdtls-lsp",
       "description": "Java (Eclipse JDTLS) Language Server",
       "source": "./plugins/jdtls-lsp"
