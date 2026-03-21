@@ -33,6 +33,7 @@
     "testing@passionfactory": true,
     "tidy-first@passionfactory": true,
     "backend@passionfactory": true,
+    "github@passionfactory": true,
     "gatekeeper@pleaseai": true,
     "vitest@pleaseai": true,
     "mcp-dev@pleaseai": true
