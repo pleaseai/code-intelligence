@@ -1,0 +1,111 @@
+plugins/swift-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/php-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/oxlint-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/biome-lsp/scripts/lsp.sh
+  a9971b67bb4890d1 1-6
+plugins/elixir-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/texlab-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/dockerfile-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/kotlin-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/bash-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/deno-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/yaml-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/svelte-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/dockerfile-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/graphql-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/prisma-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/biome-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/oxlint-lsp/scripts/lsp.sh
+  a9971b67bb4890d1 1-8
+plugins/typescript-lsp/package.json
+  a9971b67bb4890d1 1-7
+plugins/ocaml-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/clangd-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/typescript-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/zls-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/fsharp-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/gopls-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/gleam-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/pyright-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/bash-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/php-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/prisma-lsp/package.json
+  a9971b67bb4890d1 1-6
+plugins/astro-lsp/package.json
+  a9971b67bb4890d1 1-7
+plugins/pyright-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/yaml-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/svelte-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/astro-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24,27-31
+plugins/vue-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24,27-34
+plugins/graphql-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/rust-analyzer-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 11-12
+plugins/dart-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/jdtls-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/lua-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/rubocop-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/terraform-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/eslint-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/csharp-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 9-20,23-24
+plugins/vue-lsp/package.json
+  a9971b67bb4890d1 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "8b8bf14674597068ea271d56ab5e139a973c34ef",
+  "prompts": {
+    "a9971b67bb4890d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3cf65dc9-3ecc-498e-89b5-297e9a24d669",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 452,
+      "total_deletions": 66,
+      "accepted_lines": 450,
+      "overriden_lines": 0
+    }
+  }
+}
