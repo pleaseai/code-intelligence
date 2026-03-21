@@ -1,0 +1,71 @@
+plugins/fsharp-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/clangd-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/jdtls-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/elixir-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/clangd-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/dart-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/bash-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/dockerfile-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/yaml-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/elixir-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/texlab-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/svelte-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/terraform-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/csharp-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/fsharp-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/pyright-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/vue-lsp/package.json
+  a9971b67bb4890d1 6
+plugins/kotlin-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/rubocop-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/dart-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/rubocop-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/jdtls-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/eslint-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/lua-lsp/package.json
+  a9971b67bb4890d1 4
+plugins/zls-lsp/package.json
+  a9971b67bb4890d1 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "a3ee76314f8cf2e7d1ef885fd52d3f8ef7a2588a",
+  "prompts": {
+    "a9971b67bb4890d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3cf65dc9-3ecc-498e-89b5-297e9a24d669",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 26,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    }
+  }
+}
