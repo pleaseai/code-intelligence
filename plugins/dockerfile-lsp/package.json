@@ -1,6 +1,6 @@
 {
   "private": true,
   "dependencies": {
-    "dockerfile-language-server-nodejs": "^0.13.0"
+    "dockerfile-language-server-nodejs": "0.13.0"
   }
 }
