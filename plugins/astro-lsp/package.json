@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "dependencies": {
+    "@astrojs/language-server": "^2.16.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -8,8 +8,8 @@
   },
   "lspServers": {
     "rust-analyzer": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "rust-analyzer"],
+      "command": "rust-analyzer",
+      "args": [],
       "extensionToLanguage": {
         ".rs": "rust"
       }

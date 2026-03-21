@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "dependencies": {
+    "@vue/language-server": "^2.2.0",
+    "@vue/typescript-plugin": "^2.2.0",
+    "typescript": "^5.7.0",
+    "typescript-language-server": "^4.3.0"
+  }
+}

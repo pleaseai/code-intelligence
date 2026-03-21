@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "graphql-language-service-cli": "^3.1.0"
+  }
+}

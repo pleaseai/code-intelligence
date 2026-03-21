@@ -8,8 +8,8 @@
   },
   "lspServers": {
     "oxlint": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "oxlint"],
+      "command": "bash",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/lsp.sh"],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",
