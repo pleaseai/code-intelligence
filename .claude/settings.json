@@ -30,13 +30,13 @@
     "context@passionfactory": true,
     "review@passionfactory": true,
     "please@passionfactory": true,
+    "backend@passionfactory": true,
+    "gatekeeper@pleaseai": true,
+    "github@passionfactory": true,
+    "mcp-dev@pleaseai": true,
     "testing@passionfactory": true,
     "tidy-first@passionfactory": true,
-    "backend@passionfactory": true,
-    "github@passionfactory": true,
-    "gatekeeper@pleaseai": true,
     "vitest@pleaseai": true,
-    "mcp-dev@pleaseai": true
   },
   "extraKnownMarketplaces": {
     "code-intelligence": {
