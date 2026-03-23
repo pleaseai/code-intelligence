@@ -1,6 +1,6 @@
 {
   "name": "rubocop-lsp",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "description": "RuboCop (Ruby) Linter for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
@@ -21,7 +21,10 @@
   "lspServers": {
     "rubocop": {
       "command": "${CLAUDE_PLUGIN_DATA}/node_modules/.bin/code",
-      "args": ["lsp-server", "rubocop"],
+      "args": [
+        "lsp-server",
+        "rubocop"
+      ],
       "extensionToLanguage": {
         ".rb": "ruby",
         ".rake": "ruby",
