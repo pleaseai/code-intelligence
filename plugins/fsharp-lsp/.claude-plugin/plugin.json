@@ -6,10 +6,22 @@
   "author": {
     "name": "PassionFactory"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "([ -x \"${CLAUDE_PLUGIN_DATA}/node_modules/.bin/code\" ] && diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1) || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install --loglevel=error) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\""
+          }
+        ]
+      }
+    ]
+  },
   "lspServers": {
     "fsharp": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "fsharp"],
+      "command": "${CLAUDE_PLUGIN_DATA}/node_modules/.bin/code",
+      "args": ["lsp-server", "fsharp"],
       "extensionToLanguage": {
         ".fs": "fsharp",
         ".fsi": "fsharp",

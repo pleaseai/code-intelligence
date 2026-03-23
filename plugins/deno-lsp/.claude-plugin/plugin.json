@@ -8,8 +8,8 @@
   },
   "lspServers": {
     "deno": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "deno"],
+      "command": "deno",
+      "args": ["lsp"],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",

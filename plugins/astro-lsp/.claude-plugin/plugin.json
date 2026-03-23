@@ -6,12 +6,29 @@
   "author": {
     "name": "PassionFactory"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1 || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install --loglevel=error) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\""
+          }
+        ]
+      }
+    ]
+  },
   "lspServers": {
     "astro": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "astro"],
+      "command": "${CLAUDE_PLUGIN_DATA}/node_modules/.bin/astro-ls",
+      "args": ["--stdio"],
       "extensionToLanguage": {
         ".astro": "astro"
+      },
+      "initializationOptions": {
+        "typescript": {
+          "tsdk": "${CLAUDE_PLUGIN_DATA}/node_modules/typescript/lib"
+        }
       }
     }
   }

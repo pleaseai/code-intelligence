@@ -6,12 +6,32 @@
   "author": {
     "name": "PassionFactory"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1 || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install --loglevel=error) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\""
+          }
+        ]
+      }
+    ]
+  },
   "lspServers": {
     "vue": {
-      "command": "bunx",
-      "args": ["@vue/language-server@^3.2.0", "--stdio"],
+      "command": "${CLAUDE_PLUGIN_DATA}/node_modules/.bin/vue-language-server",
+      "args": ["--stdio"],
       "extensionToLanguage": {
         ".vue": "vue"
+      },
+      "initializationOptions": {
+        "vue": {
+          "hybridMode": true
+        },
+        "typescript": {
+          "tsdk": "${CLAUDE_PLUGIN_DATA}/node_modules/typescript/lib"
+        }
       }
     }
   }

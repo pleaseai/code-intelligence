@@ -8,8 +8,8 @@
   },
   "lspServers": {
     "gleam": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "gleam"],
+      "command": "gleam",
+      "args": ["lsp"],
       "extensionToLanguage": {
         ".gleam": "gleam"
       }

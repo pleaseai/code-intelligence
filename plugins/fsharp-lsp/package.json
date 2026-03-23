@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "@pleaseai/code": "0.1.13"
+  }
+}

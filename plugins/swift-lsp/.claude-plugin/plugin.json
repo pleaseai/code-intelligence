@@ -8,8 +8,8 @@
   },
   "lspServers": {
     "sourcekit": {
-      "command": "bunx",
-      "args": ["@pleaseai/code@0.1.13", "lsp-server", "sourcekit"],
+      "command": "sourcekit-lsp",
+      "args": [],
       "extensionToLanguage": {
         ".swift": "swift"
       }
