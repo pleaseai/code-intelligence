@@ -1,0 +1,25 @@
+plugins/yaml-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+plugins/bash-lsp/.claude-plugin/plugin.json
+  a9971b67bb4890d1 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "7d8ddbcdcc0c0a75918c8ad50bf8cae78dc388e4",
+  "prompts": {
+    "a9971b67bb4890d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3cf65dc9-3ecc-498e-89b5-297e9a24d669",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
