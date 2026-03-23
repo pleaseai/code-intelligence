@@ -1,6 +1,6 @@
 {
   "name": "oxlint-lsp",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "description": "Oxlint Linter for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
@@ -9,7 +9,9 @@
   "lspServers": {
     "oxlint": {
       "command": "bash",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/lsp.sh"],
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/lsp.sh"
+      ],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",

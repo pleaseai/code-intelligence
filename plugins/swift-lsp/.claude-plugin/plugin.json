@@ -1,6 +1,6 @@
 {
   "name": "swift-lsp",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "description": "Swift (SourceKit) Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {

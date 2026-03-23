@@ -1,6 +1,6 @@
 {
   "name": "vue-lsp",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "description": "Vue Language Server with TypeScript Support for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
@@ -21,7 +21,9 @@
   "lspServers": {
     "vue": {
       "command": "${CLAUDE_PLUGIN_DATA}/node_modules/.bin/vue-language-server",
-      "args": ["--stdio"],
+      "args": [
+        "--stdio"
+      ],
       "extensionToLanguage": {
         ".vue": "vue"
       },

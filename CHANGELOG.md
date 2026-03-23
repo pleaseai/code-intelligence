@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.22](https://github.com/chatbot-pf/code-intelligence/compare/code-please-v0.1.21...code-please-v0.1.22) (2026-03-23)
+
+
+### Features
+
+* **.claude-plugin:** add graphql-lsp to marketplace ([#93](https://github.com/chatbot-pf/code-intelligence/issues/93)) ([0243d71](https://github.com/chatbot-pf/code-intelligence/commit/0243d7173efaa8beefadf77b6c142af1cc6131a2))
+* **plugins:** use CLAUDE_PLUGIN_DATA for persistent LSP server installation ([#96](https://github.com/chatbot-pf/code-intelligence/issues/96)) ([87101f7](https://github.com/chatbot-pf/code-intelligence/commit/87101f7ecc28f22bf6638597f5aae7df45858901))
+
 ## [0.1.21](https://github.com/chatbot-pf/code-intelligence/compare/code-please-v0.1.20...code-please-v0.1.21) (2026-03-04)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "ocaml-lsp",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "description": "OCaml Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {

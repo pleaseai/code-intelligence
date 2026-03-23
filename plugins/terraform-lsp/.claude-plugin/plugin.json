@@ -1,6 +1,6 @@
 {
   "name": "terraform-lsp",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "description": "Terraform Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
@@ -21,7 +21,10 @@
   "lspServers": {
     "terraform": {
       "command": "${CLAUDE_PLUGIN_DATA}/node_modules/.bin/code",
-      "args": ["lsp-server", "terraform"],
+      "args": [
+        "lsp-server",
+        "terraform"
+      ],
       "extensionToLanguage": {
         ".tf": "terraform",
         ".tfvars": "terraform-vars"

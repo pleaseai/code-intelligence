@@ -1,6 +1,6 @@
 {
   "name": "deno-lsp",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "description": "Deno Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
@@ -9,7 +9,9 @@
   "lspServers": {
     "deno": {
       "command": "deno",
-      "args": ["lsp"],
+      "args": [
+        "lsp"
+      ],
       "extensionToLanguage": {
         ".ts": "typescript",
         ".tsx": "typescriptreact",
