@@ -18,6 +18,18 @@ docs:
   references: .please/docs/references
   knowledge: .please/docs/knowledge
 
+formatter:
+  prettier:
+    command: [bun, x, prettier, --write, $FILE]
+    extensions: [.js, .jsx, .ts, .tsx, .json, .md]
+    environment:
+      BUN_BE_BUN: "1"
+  biome:
+    disabled: true
+  gofmt:
+    command: [gofmt, -w, $FILE]
+    extensions: [.go]
+
 review:
   cubic:
     enabled: true

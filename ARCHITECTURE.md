@@ -155,7 +155,8 @@ packages/dora/src/
 │   ├── provider.ts     # Provider interface definition
 │   ├── lsp/            # LSP tools (diagnostics, hover, definition, references)
 │   ├── file/           # File tools (read, search, directory structure)
-│   └── ast-grep/       # AST-aware search and transform tools
+│   ├── ast-grep/       # AST-aware search and transform tools
+│   └── jetbrains/      # JetBrains IDE integration (TBD — not yet active)
 └── errors/             # Typed error classes
 ```
 
@@ -192,9 +193,10 @@ under `~/.cache/dora/`.
 
 ### `plugins/` — LSP Server Plugins
 
-33 plugin directories, each containing a `package.json` that declares the
-language server binary as a dependency. These are installed at runtime by
-the `code setup` command or auto-downloaded by server spawn functions.
+32 LSP server plugin directories (plus `dora-jetbrains-plugin` for IDE
+integration), each containing a `package.json` that declares dependencies.
+LSP plugins are auto-installed via `npm install` into `$CLAUDE_PLUGIN_DATA`
+on first session start.
 
 Example (`plugins/typescript-lsp/package.json`):
 ```json
