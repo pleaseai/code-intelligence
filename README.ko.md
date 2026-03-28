@@ -13,10 +13,20 @@ Claude Code용 자동 포맷팅 및 LSP 진단 플러그인. AI 코딩 세션에
 
 ## 플러그인 설치 (Claude Code)
 
-### 플러그인 설치
+### Step 1: 마켓플레이스 추가
 
 ```bash
-claude plugin add --from https://github.com/pleaseai/code-intelligence
+/plugin marketplace add pleaseai/code-intelligence
+```
+
+### Step 2: 플러그인 설치
+
+```bash
+# 코어 플러그인 설치 (자동 포맷팅 훅 + LSP 진단)
+/plugin install code-please@code-intelligence
+
+# project 스코프로 설치 (팀과 공유, .claude/settings.json에 기록)
+/plugin install code-please@code-intelligence --scope project
 ```
 
 `code-please` 플러그인이 설치되며 다음을 제공합니다:
@@ -29,16 +39,38 @@ claude plugin add --from https://github.com/pleaseai/code-intelligence
 
 ```bash
 # TypeScript/JavaScript
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin typescript-lsp
+/plugin install typescript-lsp@code-intelligence
 
 # Python
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin pyright-lsp
+/plugin install pyright-lsp@code-intelligence
 
 # Go
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin gopls-lsp
+/plugin install gopls-lsp@code-intelligence
 
 # Rust
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin rust-analyzer-lsp
+/plugin install rust-analyzer-lsp@code-intelligence
+```
+
+> **참고:** LSP 플러그인은 언어 서버 바이너리가 시스템에 설치되어 있어야 합니다.
+> `/plugin` Errors 탭에서 `Executable not found in $PATH`가 표시되면 해당 바이너리를 설치하세요.
+
+### 플러그인 관리
+
+```bash
+# 마켓플레이스 및 플러그인 업데이트
+/plugin marketplace update code-intelligence
+
+# 제거하지 않고 비활성화
+/plugin disable code-please@code-intelligence
+
+# 다시 활성화
+/plugin enable code-please@code-intelligence
+
+# 제거
+/plugin uninstall code-please@code-intelligence
+
+# 변경 후 재로드 (재시작 불필요)
+/reload-plugins
 ```
 
 ### 사용 가능한 LSP 플러그인

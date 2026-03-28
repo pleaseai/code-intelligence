@@ -13,10 +13,20 @@ Auto-formatting and LSP diagnostics plugin for Claude Code. Get real-time type c
 
 ## Plugin Installation (Claude Code)
 
-### Install the plugin
+### Step 1: Add the marketplace
 
 ```bash
-claude plugin add --from https://github.com/pleaseai/code-intelligence
+/plugin marketplace add pleaseai/code-intelligence
+```
+
+### Step 2: Install the plugin
+
+```bash
+# Install core plugin (auto-formatting hooks + LSP diagnostics)
+/plugin install code-please@code-intelligence
+
+# Install to project scope (shared with team via .claude/settings.json)
+/plugin install code-please@code-intelligence --scope project
 ```
 
 This installs the `code-please` plugin which provides:
@@ -29,16 +39,38 @@ Install only the language servers you need:
 
 ```bash
 # TypeScript/JavaScript
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin typescript-lsp
+/plugin install typescript-lsp@code-intelligence
 
 # Python
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin pyright-lsp
+/plugin install pyright-lsp@code-intelligence
 
 # Go
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin gopls-lsp
+/plugin install gopls-lsp@code-intelligence
 
 # Rust
-claude plugin add --from https://github.com/pleaseai/code-intelligence --plugin rust-analyzer-lsp
+/plugin install rust-analyzer-lsp@code-intelligence
+```
+
+> **Note:** LSP plugins require the language server binary to be installed on your system.
+> If you see `Executable not found in $PATH` in the `/plugin` Errors tab, install the required binary.
+
+### Plugin management
+
+```bash
+# Update marketplace and plugins
+/plugin marketplace update code-intelligence
+
+# Disable without removing
+/plugin disable code-please@code-intelligence
+
+# Re-enable
+/plugin enable code-please@code-intelligence
+
+# Uninstall
+/plugin uninstall code-please@code-intelligence
+
+# Reload after changes (no restart needed)
+/reload-plugins
 ```
 
 ### Available LSP plugins
