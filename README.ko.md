@@ -51,8 +51,8 @@ Claude Code용 자동 포맷팅 및 LSP 진단 플러그인. AI 코딩 세션에
 /plugin install rust-analyzer-lsp@code-intelligence
 ```
 
-> **참고:** LSP 플러그인은 언어 서버 바이너리가 시스템에 설치되어 있어야 합니다.
-> `/plugin` Errors 탭에서 `Executable not found in $PATH`가 표시되면 해당 바이너리를 설치하세요.
+> **참고:** 언어 서버 바이너리는 첫 세션 시작 시 `npm install`로 자동 설치됩니다.
+> 별도의 수동 설치가 필요하지 않습니다.
 
 ### 플러그인 관리
 

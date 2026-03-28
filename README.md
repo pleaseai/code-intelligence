@@ -51,8 +51,8 @@ Install only the language servers you need:
 /plugin install rust-analyzer-lsp@code-intelligence
 ```
 
-> **Note:** LSP plugins require the language server binary to be installed on your system.
-> If you see `Executable not found in $PATH` in the `/plugin` Errors tab, install the required binary.
+> **Note:** Language server binaries are auto-installed via `npm install` on first session start.
+> No manual binary installation is required.
 
 ### Plugin management
 
