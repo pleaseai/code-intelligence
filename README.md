@@ -19,21 +19,7 @@ Auto-formatting and LSP diagnostics plugin for Claude Code. Get real-time type c
 /plugin marketplace add pleaseai/code-intelligence
 ```
 
-### Step 2: Install the plugin
-
-```bash
-# Install core plugin (auto-formatting hooks + LSP diagnostics)
-/plugin install code-please@code-intelligence
-
-# Install to project scope (shared with team via .claude/settings.json)
-/plugin install code-please@code-intelligence --scope project
-```
-
-This installs the `code-please` plugin which provides:
-- PostToolUse hooks for auto-formatting on Write/Edit
-- LSP diagnostics fed back as context to Claude
-
-### Install language-specific LSP plugins
+### Step 2: Install language-specific LSP plugins
 
 Install only the language servers you need:
 
