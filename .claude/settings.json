@@ -36,7 +36,7 @@
     "mcp-dev@pleaseai": true,
     "testing@passionfactory": true,
     "tidy-first@passionfactory": true,
-    "vitest@pleaseai": true,
+    "vitest@pleaseai": true
   },
   "extraKnownMarketplaces": {
     "code-intelligence": {

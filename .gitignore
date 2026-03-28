@@ -36,7 +36,8 @@ coverage/
 # Claude settings
 /.claude/settings.local.json
 
-# Please memory
+# Please runtime state
+.please/state/
 .please/memory/tasklist.json
 
 # Reference repositories (local checkout only)
