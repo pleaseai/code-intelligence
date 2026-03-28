@@ -35,6 +35,7 @@
     "github@passionfactory": true,
     "mcp-dev@pleaseai": true,
     "testing@passionfactory": true,
+    "standards@passionfactory": true,
     "tidy-first@passionfactory": true,
     "vitest@pleaseai": true
   },
