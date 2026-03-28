@@ -1,0 +1,25 @@
+README.ko.md
+  13f7df375f102e09 16,19-29,42,45,48,51-73
+README.md
+  13f7df375f102e09 16,19-29,42,45,48,51-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.22",
+  "base_commit_sha": "878df520bbecf5ed2dd46c4b7b56d00d0ae496f7",
+  "prompts": {
+    "13f7df375f102e09": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d137aa3-7666-43ce-8597-45d7cb0a912c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Minsu Lee <amond@amond.net>",
+      "messages": [],
+      "total_additions": 106,
+      "total_deletions": 42,
+      "accepted_lines": 76,
+      "overriden_lines": 0
+    }
+  }
+}
