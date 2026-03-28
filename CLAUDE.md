@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Key Documents
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Bird's-eye view of the codebase (module structure, data flow, invariants)
+- [`.please/INDEX.md`](.please/INDEX.md) — Workspace navigation (tracks, specs, decisions, knowledge)
+- [`.please/config.yml`](.please/config.yml) — Workspace and tool configuration
+
 ## Project Overview
 
 Monorepo with four packages:
