@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Key Documents
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Bird's-eye view of the codebase (module structure, data flow, invariants)
+- [`.please/INDEX.md`](.please/INDEX.md) — Workspace navigation (tracks, specs, decisions, knowledge)
+- [`.please/config.yml`](.please/config.yml) — Workspace and tool configuration
+
 ## Project Overview
 
 Monorepo with four packages:
@@ -18,9 +24,10 @@ Monorepo with four packages:
 - LSP client for AI coding tools
 - Support for multiple language servers
 
-**@pleaseai/dora** (`packages/dora`) - MCP server for JetBrains IDE integration:
-- Symbol finding and navigation via Serena plugin
-- LSP tools via language servers
+**@pleaseai/dora** (`packages/dora`) - MCP server for AI-assisted IDE integration:
+- LSP tools via language servers (diagnostics, navigation, symbols)
+- File tools (read, search, directory structure)
+- AST-grep tools (structural search and transform)
 
 ## Build & Development Commands
 
@@ -90,7 +97,8 @@ packages/format/
 packages/lsp/
 ├── index.ts         # Public API
 ├── client.ts        # LSP client implementation
-├── server.ts        # LSP server definitions
+├── server.ts        # Re-exports from server/ directory
+├── server/          # Per-language server definitions (one file per server)
 ├── config.ts        # LSP config from unified config file
 └── language.ts      # Language detection
 ```
@@ -102,7 +110,7 @@ packages/dora/
 ├── cli.ts           # MCP server CLI
 ├── server.ts        # MCP server setup
 ├── client/          # JetBrains HTTP client
-├── providers/       # JetBrains + LSP providers
+├── providers/       # LSP, File, and AstGrep providers
 ├── tools/           # MCP tool implementations
 └── errors/          # Error handling
 ```
@@ -111,8 +119,9 @@ packages/dora/
 
 ```
 Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
-                                                        ├── JetBrainsProvider <-> JetBrains IDE (Serena Plugin)
-                                                        └── LSPProvider <-> Language Servers
+                                                        ├── LSPProvider <-> Language Servers
+                                                        ├── FileProvider <-> File System
+                                                        └── AstGrepProvider <-> ast-grep CLI
 ```
 
 ### Supported Language Servers
