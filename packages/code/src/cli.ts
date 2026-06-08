@@ -6,6 +6,7 @@
  *   code format <file>       Format a file
  *   code lsp <file>          Get LSP diagnostics for a file
  *   code lsp-server <id>     Start an LSP server (for Claude Code plugin)
+ *   code lsp-multiplex [id...]  Start a multiplexing LSP server (merges multiple servers)
  *   code version             Show version
  *
  * Hook mode (--stdin):
@@ -16,7 +17,7 @@
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
 import { Format } from '@pleaseai/code-format'
-import { getServerById } from '@pleaseai/code-lsp'
+import { getServerById, isServerEnabled, loadLspConfig, LSP_SERVERS, LSPManager, runMultiplexer } from '@pleaseai/code-lsp'
 import { createLogger } from '@pleaseai/logger'
 import pkg from '../package.json'
 import { createSetupCommand } from './commands/setup'
@@ -189,6 +190,48 @@ async function lspServerCommand(serverId: string, projectDir: string): Promise<v
   })
 }
 
+/**
+ * Start a multiplexing LSP server for Claude Code plugin integration.
+ *
+ * Unlike `lsp-server` (a 1:1 byte pipe to one server), this runs a real LSP
+ * server that fans out to multiple downstream servers and merges their results,
+ * working around Claude Code's "one server per extension" limit.
+ *
+ * @param serverIds Explicit downstream ids; empty = all config-enabled servers.
+ */
+async function lspMultiplexCommand(serverIds: string[], projectDir: string): Promise<void> {
+  // Validate explicit ids.
+  const unknown = serverIds.filter(id => !getServerById(id))
+  if (unknown.length) {
+    console.error(`Unknown LSP server(s): ${unknown.join(', ')}`)
+    process.exit(1)
+  }
+
+  // Resolve the target set (explicit ids, or all config-enabled servers).
+  const lspConfig = await loadLspConfig(projectDir)
+  const targets = serverIds.length
+    ? serverIds.map(id => getServerById(id)!)
+    : LSP_SERVERS.filter(s => isServerEnabled(lspConfig, s.id))
+
+  // Root-detection short-circuit: only start if at least one target resolves a
+  // root in this project (mirrors lspServerCommand). Otherwise exit silently.
+  const dummyFile = `${projectDir}/dummy.ts`
+  const roots = await Promise.all(
+    targets.map(s => s.root(dummyFile, projectDir).catch(() => undefined)),
+  )
+  if (!roots.some(Boolean)) {
+    log.debug({ projectDir }, 'No root found for any target server, skipping multiplexer')
+    process.exit(0)
+  }
+
+  const manager = await LSPManager.fromProject(
+    projectDir,
+    serverIds.length ? { serverIds } : undefined,
+  )
+
+  await runMultiplexer({ manager })
+}
+
 function versionCommand(): void {
   console.log(`code ${VERSION}`)
 }
@@ -204,6 +247,7 @@ Commands:
   format <file>        Format a file using configured formatters
   lsp <file>           Get LSP diagnostics for a file
   lsp-server <id>      Start an LSP server (for Claude Code plugin)
+  lsp-multiplex [id...] Start a multiplexing LSP server (merges multiple servers per file)
   setup [tool]         Check and install required tools
   version              Show version
   help                 Show this help
@@ -300,6 +344,12 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       await lspServerCommand(serverId, projectDir)
+      break
+    }
+
+    case 'lsp-multiplex': {
+      // Zero args = multiplex all config-enabled servers (routed per file).
+      await lspMultiplexCommand(args, projectDir)
       break
     }
 

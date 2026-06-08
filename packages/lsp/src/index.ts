@@ -237,13 +237,35 @@ export class LSPManager {
   private enabled: boolean = true
   private lspConfig: LspConfig | undefined
 
-  constructor(projectPath: string, options?: { enabled?: boolean, lspConfig?: LspConfig }) {
+  /**
+   * Optional callback invoked whenever a downstream server publishes
+   * diagnostics for a file. Used by the multiplexer to relay merged
+   * diagnostics upstream. Settable after construction.
+   */
+  public onDiagnostics?: (filePath: string, serverID: string) => void
+
+  constructor(
+    projectPath: string,
+    options?: {
+      enabled?: boolean
+      lspConfig?: LspConfig
+      /** Restrict to this subset of server ids (preserves LSP_SERVERS order). */
+      serverIds?: string[]
+      onDiagnostics?: (filePath: string, serverID: string) => void
+    },
+  ) {
     this.projectPath = projectPath
     this.enabled = options?.enabled ?? true
     this.lspConfig = options?.lspConfig
+    if (options?.onDiagnostics) {
+      this.onDiagnostics = options.onDiagnostics
+    }
 
-    // Register servers
+    // Register servers (optionally restricted to a subset, order-preserving)
+    const allowed = options?.serverIds ? new Set(options.serverIds) : undefined
     for (const server of LSP_SERVERS) {
+      if (allowed && !allowed.has(server.id))
+        continue
       this.servers.set(server.id, server)
     }
   }
@@ -251,9 +273,21 @@ export class LSPManager {
   /**
    * Create LSPManager with config loaded from project
    */
-  static async fromProject(projectPath: string, options?: { enabled?: boolean }): Promise<LSPManager> {
+  static async fromProject(
+    projectPath: string,
+    options?: {
+      enabled?: boolean
+      serverIds?: string[]
+      onDiagnostics?: (filePath: string, serverID: string) => void
+    },
+  ): Promise<LSPManager> {
     const lspConfig = await loadLspConfig(projectPath)
-    const managerOptions: { enabled?: boolean, lspConfig?: LspConfig } = { ...options }
+    const managerOptions: {
+      enabled?: boolean
+      lspConfig?: LspConfig
+      serverIds?: string[]
+      onDiagnostics?: (filePath: string, serverID: string) => void
+    } = { ...options }
     if (lspConfig !== undefined) {
       managerOptions.lspConfig = lspConfig
     }
@@ -308,6 +342,8 @@ export class LSPManager {
           server: handle,
           root,
           projectPath: this.projectPath,
+          onDiagnostics: (filePath, serverID) =>
+            this.onDiagnostics?.(filePath, serverID),
         })
 
         // Check if another client was created in parallel
@@ -414,6 +450,32 @@ export class LSPManager {
   }
 
   /**
+   * Open a file in all matching LSP servers using explicit buffer text
+   * (e.g. unsaved editor contents forwarded by the multiplexer) instead of
+   * reading from disk.
+   */
+  async openWithText(file: string, text: string): Promise<void> {
+    const clients = await this.getClients(file)
+
+    await Promise.all(
+      clients.map(client => client.notify.open({ path: file, text })),
+    ).catch((err) => {
+      log.error({ err }, 'Failed to open file with text')
+    })
+  }
+
+  /**
+   * Close a file in all matching LSP servers.
+   */
+  async closeFile(file: string): Promise<void> {
+    await Promise.all(
+      this.clients.map(client => client.notify.close({ path: file })),
+    ).catch((err) => {
+      log.error({ err }, 'Failed to close file')
+    })
+  }
+
+  /**
    * Get diagnostics from all clients
    */
   async diagnostics(): Promise<Record<string, Diagnostic[]>> {
@@ -428,6 +490,22 @@ export class LSPManager {
     }
 
     return results
+  }
+
+  /**
+   * Get merged diagnostics for a single file across all clients.
+   * Path is normalized to match how clients key their diagnostics map
+   * (see client.ts: normalizePath(fileURLToPath(uri))).
+   */
+  diagnosticsForFile(file: string): Diagnostic[] {
+    const normalized = path.normalize(file)
+    const result: Diagnostic[] = []
+    for (const client of this.clients) {
+      const diags = client.diagnostics.get(normalized)
+      if (diags?.length)
+        result.push(...diags)
+    }
+    return result
   }
 
   /**
@@ -925,6 +1003,7 @@ export {
 } from './config'
 // Re-export specific items to avoid conflicts
 export { getLanguageId, LANGUAGE_EXTENSIONS } from './language'
+export { type MultiplexerOptions, runMultiplexer } from './multiplexer'
 export {
   DartServer,
   DenoServer,

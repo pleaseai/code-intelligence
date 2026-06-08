@@ -117,6 +117,16 @@ export const LANGUAGE_EXTENSIONS: Record<string, string> = {
   '.kt': 'kotlin',
   '.kts': 'kotlin',
   '.prisma': 'prisma',
+  // C/C++ headers (clangd handles both; .h defaults to c)
+  '.h': 'c',
+  '.hh': 'cpp',
+  '.hpp': 'cpp',
+  '.hxx': 'cpp',
+  '.h++': 'cpp',
+  '.pyi': 'python',
+  '.graphql': 'graphql',
+  '.gql': 'graphql',
+  '.jsonc': 'jsonc',
 } as const
 
 /**

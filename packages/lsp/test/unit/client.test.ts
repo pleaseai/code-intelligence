@@ -117,6 +117,45 @@ describe('LSPClient', () => {
     expect(client.diagnostics.size).toBeGreaterThan(0)
   })
 
+  test('opens file with explicit buffer text (no disk read)', async () => {
+    const handle = spawnFakeServer()
+
+    client = await createLSPClient({
+      serverID: 'fake',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    // A path that does not exist on disk: would throw if text were read from
+    // disk. With explicit text, didOpen succeeds and diagnostics arrive.
+    const virtualFile = path.join(process.cwd(), 'does-not-exist-on-disk.ts')
+    await client.notify.open({ path: virtualFile, text: 'const x: number = "oops"' })
+
+    await new Promise(r => setTimeout(r, 200))
+
+    expect(client.diagnostics.size).toBeGreaterThan(0)
+  })
+
+  test('closes an opened file', async () => {
+    const handle = spawnFakeServer()
+
+    client = await createLSPClient({
+      serverID: 'fake',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const virtualFile = path.join(process.cwd(), 'close-me.ts')
+    await client.notify.open({ path: virtualFile, text: 'const y = 1' })
+    await new Promise(r => setTimeout(r, 100))
+
+    // close clears the stored diagnostics for the file
+    await client.notify.close({ path: virtualFile })
+    expect(client.diagnostics.get(path.normalize(virtualFile))).toBeUndefined()
+  })
+
   test('sends hover request', async () => {
     const handle = spawnFakeServer()
 

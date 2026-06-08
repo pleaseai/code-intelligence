@@ -31,7 +31,8 @@ export interface LSPClientInfo {
   connection: MessageConnection
   diagnostics: Map<string, Diagnostic[]>
   notify: {
-    open: (input: { path: string }) => Promise<void>
+    open: (input: { path: string, text?: string }) => Promise<void>
+    close: (input: { path: string }) => Promise<void>
   }
   waitForDiagnostics: (input: { path: string }) => Promise<void>
   shutdown: () => Promise<void>
@@ -147,13 +148,14 @@ export async function createLSPClient(input: {
     diagnostics,
 
     notify: {
-      async open(fileInput: { path: string }) {
+      async open(fileInput: { path: string, text?: string }) {
         const filePath = path.isAbsolute(fileInput.path)
           ? fileInput.path
           : path.resolve(input.projectPath, fileInput.path)
 
-        const file = Bun.file(filePath)
-        const text = await file.text()
+        // Use explicit buffer text when provided (e.g. unsaved editor buffer
+        // forwarded by the multiplexer); otherwise read from disk.
+        const text = fileInput.text ?? (await Bun.file(filePath).text())
         const extension = path.extname(filePath)
         const languageId = getLanguageId(extension)
 
@@ -181,6 +183,23 @@ export async function createLSPClient(input: {
           },
         })
         files[filePath] = 0
+      },
+
+      async close(fileInput: { path: string }) {
+        const filePath = path.isAbsolute(fileInput.path)
+          ? fileInput.path
+          : path.resolve(input.projectPath, fileInput.path)
+
+        if (files[filePath] === undefined)
+          return
+
+        await connection.sendNotification('textDocument/didClose', {
+          textDocument: {
+            uri: pathToFileURL(filePath).href,
+          },
+        })
+        delete files[filePath]
+        diagnostics.delete(normalizePath(filePath))
       },
     },
 

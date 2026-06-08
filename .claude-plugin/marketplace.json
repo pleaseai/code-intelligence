@@ -25,6 +25,11 @@
       "source": "./plugins/clangd-lsp"
     },
     {
+      "name": "code-intelligence-lsp",
+      "description": "Unified multiplexing LSP — runs and merges multiple language servers per file (type-checker + linters), config-driven",
+      "source": "./plugins/code-intelligence-lsp"
+    },
+    {
       "name": "code-please",
       "description": "MCP server and CLI tool for AI-assisted coding with auto-formatting and LSP diagnostics",
       "source": "./"
