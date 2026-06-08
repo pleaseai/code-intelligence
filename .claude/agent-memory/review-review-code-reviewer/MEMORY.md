@@ -1,0 +1,2 @@
+- [LSP path normalization invariant](lsp-path-normalization.md) — how multiplexer/manager/client keep diagnostic map keys consistent
+- [Project engineering rules](project-rules.md) — file ≤500 LOC, YAGNI, DRY, don't weaken tests; index.ts pre-existing >500
