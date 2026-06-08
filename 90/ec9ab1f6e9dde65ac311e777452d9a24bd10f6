@@ -1,0 +1,63 @@
+packages/lsp/src/multiplexer.ts
+  s_a4ca2440c5a3b2::t_b930b6179ad421 11
+  s_a4ca2440c5a3b2::t_f2d390477f0e3d 52,54
+  s_a4ca2440c5a3b2::t_42db8f51704240 1-10,12-14,16-51,53,55-231,233-249
+  s_a4ca2440c5a3b2::t_836165f92e6f88 232
+  s_a4ca2440c5a3b2::t_43b81c4a92b05c 15
+plugins/code-intelligence-lsp/.lsp.json
+  s_a4ca2440c5a3b2::t_aaa71616c53b8b 1-30,37,39-41,43-54,56-77
+plugins/code-intelligence-lsp/package.json
+  s_a4ca2440c5a3b2::t_af6124c1e347d9 1-6
+packages/lsp/test/unit/multiplexer.test.ts
+  s_a4ca2440c5a3b2::t_321cb6937e78f5 216
+  s_a4ca2440c5a3b2::t_4c15a34c13d34f 2-30,32-33,36-37,39-215,217-223
+  s_a4ca2440c5a3b2::t_aeda33322d5421 31,34-35,38
+  s_a4ca2440c5a3b2::t_331175ed74fd75 1
+plugins/code-intelligence-lsp/.claude-plugin/plugin.json
+  s_a4ca2440c5a3b2::t_581f691beaeed7 1-22
+packages/lsp/src/index.ts
+  s_a4ca2440c5a3b2::t_3f46e04601ab3b 345-346
+  s_a4ca2440c5a3b2::t_d9e6777d449aba 240-256,264-265,267-268,276-283,285-290
+  s_a4ca2440c5a3b2::t_ba6a798427d4eb 453-477,495-508
+  s_a4ca2440c5a3b2::t_96f5b4bd60468f 260-262
+  s_a4ca2440c5a3b2::t_84e3b734a6c0f0 1006
+.claude-plugin/marketplace.json
+  s_a4ca2440c5a3b2::t_99503b3ec546f9 28-31
+packages/lsp/src/client.ts
+  s_a4ca2440c5a3b2::t_a85b7c16510e1d 34-35
+  s_a4ca2440c5a3b2::t_0cae477eba2654 187-203
+  s_a4ca2440c5a3b2::t_ac6a34ffe7bffb 151,156-158
+packages/code/test/integration/cli.test.ts
+  s_a4ca2440c5a3b2::t_90442cc406b976 468-500
+packages/lsp/src/language.ts
+  s_a4ca2440c5a3b2::t_20c65a1ea5e195 120-129
+packages/code/src/cli.ts
+  s_a4ca2440c5a3b2::t_f37602b1829814 350-355
+  s_a4ca2440c5a3b2::t_118ddd14d2110b 9
+  s_a4ca2440c5a3b2::t_8bc733a302e210 193-234
+  s_a4ca2440c5a3b2::t_d7f1c48eb69d6e 250
+  s_a4ca2440c5a3b2::t_c930f1da8a2c26 20
+scripts/gen-unified-lsp-json.ts
+  s_a4ca2440c5a3b2::t_c2eb3ef69bb5c5 1-48,50-66
+  s_a4ca2440c5a3b2::t_ffe6642db81a8c 49
+packages/lsp/test/unit/client.test.ts
+  s_a4ca2440c5a3b2::t_a05d66f3b6b36d 120-158
+plugins/code-intelligence-lsp/README.md
+  s_a4ca2440c5a3b2::t_502bf07c3f57f9 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "90ec9ab1f6e9dde65ac311e777452d9a24bd10f6",
+  "prompts": {},
+  "sessions": {
+    "s_a4ca2440c5a3b2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1975c690-d783-4a7e-a27a-be64b6aa63a8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@passionfactory.ai>"
+    }
+  }
+}
