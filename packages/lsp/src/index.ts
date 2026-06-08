@@ -593,7 +593,15 @@ export class LSPManager {
    * symbols from servers that don't handle this file type.
    */
   async documentSymbol(uri: string): Promise<(DocumentSymbol | Symbol)[]> {
-    const clients = await this.getClients(fileURLToPath(uri))
+    let filePath: string
+    try {
+      filePath = fileURLToPath(uri)
+    }
+    catch {
+      // Non-file or malformed uri — stay error-tolerant, return no symbols.
+      return []
+    }
+    const clients = await this.getClients(filePath)
     const results = await Promise.all(
       clients.map(client =>
         client.connection
