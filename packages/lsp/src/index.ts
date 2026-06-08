@@ -10,7 +10,7 @@ import type { Diagnostic as VSCodeDiagnostic } from 'vscode-languageserver-types
 import type { LSPClientInfo, LSPServerHandle } from './client'
 import type { LSPServerInfo } from './server'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createLogger } from '@pleaseai/logger'
 import { z } from 'zod'
 import {
@@ -587,11 +587,15 @@ export class LSPManager {
   }
 
   /**
-   * Get document symbols
+   * Get document symbols.
+   * Scoped to the clients that match the document's file (like hover/definition),
+   * not broadcast to every connected client — avoids latency and irrelevant
+   * symbols from servers that don't handle this file type.
    */
   async documentSymbol(uri: string): Promise<(DocumentSymbol | Symbol)[]> {
+    const clients = await this.getClients(fileURLToPath(uri))
     const results = await Promise.all(
-      this.clients.map(client =>
+      clients.map(client =>
         client.connection
           .sendRequest('textDocument/documentSymbol', {
             textDocument: { uri },
