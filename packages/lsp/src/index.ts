@@ -249,9 +249,11 @@ export class LSPManager {
     options?: {
       enabled?: boolean
       lspConfig?: LspConfig
-      /** Restrict to this subset of server ids (preserves LSP_SERVERS order). */
+      /** Restrict to this subset of server ids (preserves registration order). */
       serverIds?: string[]
       onDiagnostics?: (filePath: string, serverID: string) => void
+      /** Override the server definitions to register (defaults to LSP_SERVERS). For testing. */
+      servers?: LSPServerInfo[]
     },
   ) {
     this.projectPath = projectPath
@@ -264,12 +266,20 @@ export class LSPManager {
     // Register servers (optionally restricted to a subset, order-preserving).
     // An empty serverIds array is treated as "no restriction" rather than
     // "exclude everything" to avoid silently registering zero servers.
+    const baseServers = options?.servers ?? LSP_SERVERS
     const allowed = options?.serverIds?.length ? new Set(options.serverIds) : undefined
-    for (const server of LSP_SERVERS) {
+    for (const server of baseServers) {
       if (allowed && !allowed.has(server.id))
         continue
       this.servers.set(server.id, server)
     }
+  }
+
+  /**
+   * Ids of the servers registered on this manager (after subset filtering).
+   */
+  registeredServerIds(): string[] {
+    return [...this.servers.keys()]
   }
 
   /**
