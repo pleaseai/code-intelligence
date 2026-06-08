@@ -134,6 +134,12 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
     const previous = fileQueues.get(fp) ?? Promise.resolve()
     const next = previous.then(() => task(fp)).catch((err: unknown) => {
       log.error({ err, filePath: fp }, 'Document sync task failed')
+    }).finally(() => {
+      // Drop the entry once it settles, but only if no newer task was chained
+      // in the meantime — otherwise we'd evict a still-pending tail. Keeps the
+      // map bounded by the number of in-flight files, not files-ever-seen.
+      if (fileQueues.get(fp) === next)
+        fileQueues.delete(fp)
     })
     fileQueues.set(fp, next)
   }
