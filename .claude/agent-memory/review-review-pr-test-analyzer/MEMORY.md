@@ -1,0 +1,1 @@
+- [LSP test patterns](lsp-test-patterns.md) — test doubles, FakeManager scope limits, and recurring coverage gaps in packages/lsp

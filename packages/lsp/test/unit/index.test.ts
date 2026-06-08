@@ -1,4 +1,7 @@
 import type { Diagnostic } from 'vscode-languageserver-types'
+import type { LSPServerInfo } from '../../src/index'
+import { spawn } from 'node:child_process'
+import path from 'node:path'
 import { describe, expect, test } from 'bun:test'
 import {
   formatDiagnostic,
@@ -10,6 +13,20 @@ import {
   TextEditSchema,
   WorkspaceEditSchema,
 } from '../../src/index'
+
+const FAKE_SERVER_PATH = path.join(import.meta.dir, '../fixture/fake-lsp-server.js')
+
+/** A fake .ts LSP server backed by the test fixture (publishes 1 diagnostic on open). */
+function fakeServer(id: string): LSPServerInfo {
+  return {
+    id,
+    extensions: ['.ts'],
+    root: async () => process.cwd(),
+    spawn: async () => ({
+      process: spawn(process.execPath, [FAKE_SERVER_PATH], { stdio: 'pipe' }),
+    }),
+  }
+}
 
 describe('LSPManager', () => {
   test('creates manager with project path', () => {
@@ -60,6 +77,39 @@ describe('LSPManager', () => {
       newName: '   ',
     })
     expect(result).toBeNull()
+  })
+
+  test('serverIds restricts registered servers to the given subset', () => {
+    const manager = new LSPManager('/test/project', {
+      serverIds: ['typescript', 'eslint'],
+    })
+    expect(manager.registeredServerIds().sort()).toEqual(['eslint', 'typescript'])
+  })
+
+  test('empty serverIds registers all servers (treated as no restriction)', () => {
+    const all = new LSPManager('/test/project').registeredServerIds()
+    const empty = new LSPManager('/test/project', { serverIds: [] }).registeredServerIds()
+    expect(empty).toEqual(all)
+    expect(empty.length).toBeGreaterThan(1)
+  })
+
+  test('diagnosticsForFile merges diagnostics across multiple clients', async () => {
+    const manager = new LSPManager(process.cwd(), {
+      servers: [fakeServer('fakeA'), fakeServer('fakeB')],
+    })
+    try {
+      const file = path.join(process.cwd(), 'merge-test.ts')
+      await manager.openWithText(file, 'const x = 1')
+      // Fake servers publish diagnostics ~50ms after didOpen.
+      await new Promise(r => setTimeout(r, 300))
+
+      const diags = manager.diagnosticsForFile(file)
+      // Two servers, one diagnostic each, merged into a single list.
+      expect(diags.length).toBe(2)
+    }
+    finally {
+      await manager.shutdown()
+    }
   })
 })
 

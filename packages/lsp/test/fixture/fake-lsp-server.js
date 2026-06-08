@@ -5,6 +5,9 @@ import { Buffer } from 'node:buffer'
 import process from 'node:process'
 
 let nextId = 1
+// Tracks how many didOpen notifications were received per uri, so tests can
+// assert that concurrent opens do not emit a duplicate didOpen.
+const openCounts = {}
 
 function encode(message) {
   const json = JSON.stringify(message)
@@ -97,6 +100,7 @@ function handle(raw) {
   if (data.method === 'textDocument/didOpen') {
     const uri = data.params?.textDocument?.uri
     if (uri) {
+      openCounts[uri] = (openCounts[uri] || 0) + 1
       setTimeout(() => {
         sendNotification('textDocument/publishDiagnostics', {
           uri,
@@ -181,6 +185,16 @@ function handle(raw) {
           },
         },
       ],
+    })
+    return
+  }
+
+  // Test helper: report how many didOpen notifications a uri received
+  if (data.method === 'test/openCount') {
+    send({
+      jsonrpc: '2.0',
+      id: data.id,
+      result: { count: openCounts[data.params?.uri] || 0 },
     })
     return
   }

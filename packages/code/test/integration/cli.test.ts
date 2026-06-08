@@ -465,6 +465,39 @@ describe('CLI Integration', () => {
     })
   })
 
+  describe('lsp-multiplex command', () => {
+    test('exits with code 1 for unknown server', async () => {
+      const proc = Bun.spawn(['bun', 'run', CLI_PATH, 'lsp-multiplex', 'nonexistent-server'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      })
+
+      const exitCode = await proc.exited
+      const stderr = await new Response(proc.stderr).text()
+
+      expect(exitCode).toBe(1)
+      expect(stderr).toContain('Unknown LSP server')
+    })
+
+    test('exits silently when no root config found', async () => {
+      const proc = Bun.spawn(
+        ['bun', 'run', CLI_PATH, 'lsp-multiplex', 'typescript', '--project=/tmp'],
+        {
+          stdout: 'pipe',
+          stderr: 'pipe',
+        },
+      )
+
+      const exitCode = await proc.exited
+      expect(exitCode).toBe(0)
+    })
+
+    test('help includes lsp-multiplex command', async () => {
+      const result = await $`bun run ${CLI_PATH} help`.text()
+      expect(result).toContain('lsp-multiplex')
+    })
+  })
+
   describe('no command (default)', () => {
     test('shows help when no command provided', async () => {
       const result = await $`bun run ${CLI_PATH}`.text()

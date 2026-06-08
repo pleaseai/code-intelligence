@@ -171,7 +171,27 @@ await manager.shutdown()
 | `documentSymbol()` | `textDocument/documentSymbol` | Get document symbols |
 | `prepareRename()` | `textDocument/prepareRename` | Validate rename at position |
 | `rename()` | `textDocument/rename` | Rename symbol, returns WorkspaceEdit |
+| `openWithText()` | `textDocument/didOpen` | Open file using explicit buffer text (unsaved editor contents) instead of reading from disk |
+| `closeFile()` | `textDocument/didClose` | Close a file in all matching servers |
+| `diagnosticsForFile()` | — | Merged diagnostics for a single file across all clients |
 | `shutdown()` | `shutdown` | Close all clients |
+
+`onDiagnostics?: (filePath, serverID) => void` is an optional callback (settable
+after construction) invoked whenever a downstream server publishes diagnostics —
+used by the multiplexer to relay merged diagnostics upstream. The `serverIds`
+constructor/`fromProject` option restricts the manager to a subset of servers
+(preserving `LSP_SERVERS` order).
+
+### Multiplexing LSP Server
+
+`runMultiplexer(opts: MultiplexerOptions)` runs a single upstream LSP server
+(over stdio) that fans every request out to multiple downstream servers via an
+`LSPManager` and merges their results into one LSP stream. This works around
+Claude Code's "one server per extension" constraint, letting a type-checker and
+several linters run on the same file. Exposed via the `code lsp-multiplex
+[id...]` CLI command (empty `id` list = all config-enabled servers, routed per
+file). Downstreams spawn lazily on first `didOpen`; diagnostics are debounced
+and always re-merged across all clients before publishing upstream.
 
 ### Server Utilities
 

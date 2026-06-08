@@ -117,6 +117,71 @@ describe('LSPClient', () => {
     expect(client.diagnostics.size).toBeGreaterThan(0)
   })
 
+  test('opens file with explicit buffer text (no disk read)', async () => {
+    const handle = spawnFakeServer()
+
+    client = await createLSPClient({
+      serverID: 'fake',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    // A path that does not exist on disk: would throw if text were read from
+    // disk. With explicit text, didOpen succeeds and diagnostics arrive.
+    const virtualFile = path.join(process.cwd(), 'does-not-exist-on-disk.ts')
+    await client.notify.open({ path: virtualFile, text: 'const x: number = "oops"' })
+
+    await new Promise(r => setTimeout(r, 200))
+
+    expect(client.diagnostics.size).toBeGreaterThan(0)
+  })
+
+  test('concurrent opens of the same file emit a single didOpen', async () => {
+    const handle = spawnFakeServer()
+
+    client = await createLSPClient({
+      serverID: 'fake',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const virtualFile = path.join(process.cwd(), 'concurrent-open.ts')
+    const uri = `file://${virtualFile}`
+
+    // Fire two opens without awaiting the first. The second must take the
+    // didChange path, not emit a duplicate didOpen.
+    await Promise.all([
+      client.notify.open({ path: virtualFile, text: 'const a = 1' }),
+      client.notify.open({ path: virtualFile, text: 'const a = 2' }),
+    ])
+
+    const result = await client.connection.sendRequest('test/openCount', { uri }) as {
+      count: number
+    }
+    expect(result.count).toBe(1)
+  })
+
+  test('closes an opened file', async () => {
+    const handle = spawnFakeServer()
+
+    client = await createLSPClient({
+      serverID: 'fake',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const virtualFile = path.join(process.cwd(), 'close-me.ts')
+    await client.notify.open({ path: virtualFile, text: 'const y = 1' })
+    await new Promise(r => setTimeout(r, 100))
+
+    // close clears the stored diagnostics for the file
+    await client.notify.close({ path: virtualFile })
+    expect(client.diagnostics.get(path.normalize(virtualFile))).toBeUndefined()
+  })
+
   test('sends hover request', async () => {
     const handle = spawnFakeServer()
 
