@@ -61,8 +61,18 @@ interface PositionParams {
   position: { line: number, character: number }
 }
 
-function uriToPath(uri: string): string {
-  return fileURLToPath(uri)
+/**
+ * Convert an LSP uri to a filesystem path. Editors query non-file uris
+ * (git://, untitled://, output://, …); return undefined for those so callers
+ * can fall back to empty/null instead of throwing.
+ */
+function uriToPath(uri: string): string | undefined {
+  try {
+    return fileURLToPath(uri)
+  }
+  catch {
+    return undefined
+  }
 }
 
 /**
@@ -108,6 +118,26 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
 
   manager.onDiagnostics = (filePath: string) => schedulePublish(filePath)
 
+  // --- Document sync queue ---------------------------------------------------
+  // didOpen/didChange/didClose must apply in arrival order per file. They are
+  // fire-and-forget notifications, so without serialization an in-flight
+  // openWithText could interleave with a later didChange/didClose and corrupt
+  // downstream document state. Chain each file's tasks on a per-path promise.
+  const fileQueues = new Map<string, Promise<void>>()
+  const enqueue = (
+    filePath: string | undefined,
+    task: (file: string) => Promise<void>,
+  ): void => {
+    if (!filePath)
+      return
+    const fp = filePath
+    const previous = fileQueues.get(fp) ?? Promise.resolve()
+    const next = previous.then(() => task(fp)).catch((err: unknown) => {
+      log.error({ err, filePath: fp }, 'Document sync task failed')
+    })
+    fileQueues.set(fp, next)
+  }
+
   // --- Lifecycle -------------------------------------------------------------
   let shuttingDown = false
   const shutdown = async (): Promise<void> => {
@@ -131,8 +161,11 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   })
 
   connection.onRequest('textDocument/hover', async (params: PositionParams) => {
+    const file = uriToPath(params.textDocument.uri)
+    if (file === undefined)
+      return null
     const results = await manager.hover({
-      file: uriToPath(params.textDocument.uri),
+      file,
       line: params.position.line,
       character: params.position.character,
     })
@@ -141,8 +174,11 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   })
 
   connection.onRequest('textDocument/definition', async (params: PositionParams) => {
+    const file = uriToPath(params.textDocument.uri)
+    if (file === undefined)
+      return []
     return manager.definition({
-      file: uriToPath(params.textDocument.uri),
+      file,
       line: params.position.line,
       character: params.position.character,
     })
@@ -151,8 +187,11 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   connection.onRequest(
     'textDocument/references',
     async (params: PositionParams & { context?: { includeDeclaration?: boolean } }) => {
+      const file = uriToPath(params.textDocument.uri)
+      if (file === undefined)
+        return []
       return manager.references({
-        file: uriToPath(params.textDocument.uri),
+        file,
         line: params.position.line,
         character: params.position.character,
         includeDeclaration: params.context?.includeDeclaration ?? false,
@@ -168,8 +207,11 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   )
 
   connection.onRequest('textDocument/prepareRename', async (params: PositionParams) => {
+    const file = uriToPath(params.textDocument.uri)
+    if (file === undefined)
+      return null
     return manager.prepareRename({
-      file: uriToPath(params.textDocument.uri),
+      file,
       line: params.position.line,
       character: params.position.character,
     })
@@ -178,8 +220,11 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   connection.onRequest(
     'textDocument/rename',
     async (params: PositionParams & { newName: string }) => {
+      const file = uriToPath(params.textDocument.uri)
+      if (file === undefined)
+        return null
       return manager.rename({
-        file: uriToPath(params.textDocument.uri),
+        file,
         line: params.position.line,
         character: params.position.character,
         newName: params.newName,
@@ -198,7 +243,8 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   connection.onNotification(
     'textDocument/didOpen',
     (params: { textDocument: { uri: string, text: string } }) => {
-      void manager.openWithText(uriToPath(params.textDocument.uri), params.textDocument.text)
+      const { text } = params.textDocument
+      enqueue(uriToPath(params.textDocument.uri), file => manager.openWithText(file, text))
     },
   )
 
@@ -209,14 +255,14 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
       const text = params.contentChanges.at(-1)?.text
       if (text === undefined)
         return
-      void manager.openWithText(uriToPath(params.textDocument.uri), text)
+      enqueue(uriToPath(params.textDocument.uri), file => manager.openWithText(file, text))
     },
   )
 
   connection.onNotification(
     'textDocument/didClose',
     (params: { textDocument: { uri: string } }) => {
-      void manager.closeFile(uriToPath(params.textDocument.uri))
+      enqueue(uriToPath(params.textDocument.uri), file => manager.closeFile(file))
     },
   )
 
