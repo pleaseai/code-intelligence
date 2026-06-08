@@ -48,6 +48,7 @@ code format <file>      # Format a file using configured formatters
 code format --stdin     # Format via Claude Code hook (JSON input)
 code lsp <file>         # Get LSP diagnostics for a file
 code lsp --stdin        # LSP diagnostics via Claude Code hook
+code lsp-multiplex [id...] # Run a multiplexing LSP server (merges multiple servers per file)
 code version            # Show version
 code help               # Show help
 ```
