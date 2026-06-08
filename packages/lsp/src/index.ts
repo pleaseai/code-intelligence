@@ -261,8 +261,10 @@ export class LSPManager {
       this.onDiagnostics = options.onDiagnostics
     }
 
-    // Register servers (optionally restricted to a subset, order-preserving)
-    const allowed = options?.serverIds ? new Set(options.serverIds) : undefined
+    // Register servers (optionally restricted to a subset, order-preserving).
+    // An empty serverIds array is treated as "no restriction" rather than
+    // "exclude everything" to avoid silently registering zero servers.
+    const allowed = options?.serverIds?.length ? new Set(options.serverIds) : undefined
     for (const server of LSP_SERVERS) {
       if (allowed && !allowed.has(server.id))
         continue
@@ -313,7 +315,8 @@ export class LSPManager {
     if (!this.enabled)
       return []
 
-    const extension = path.extname(file) || file
+    const extension = path.extname(file)
+    const basename = path.basename(file)
     const result: LSPClientInfo[] = []
 
     const schedule = async (
@@ -372,11 +375,17 @@ export class LSPManager {
         continue
       }
 
-      if (
-        server.extensions.length
-        && !server.extensions.includes(extension)
-      ) {
-        continue
+      // Match by extension or by exact filename (e.g. Dockerfile, Containerfile).
+      // Servers with neither matcher act as catch-all (preserves prior behavior).
+      const hasExtensions = server.extensions.length > 0
+      const hasFilenames = (server.filenames?.length ?? 0) > 0
+      if (hasExtensions || hasFilenames) {
+        const matchesExt
+          = hasExtensions && extension !== '' && server.extensions.includes(extension)
+        const matchesName = hasFilenames && server.filenames!.includes(basename)
+        if (!matchesExt && !matchesName) {
+          continue
+        }
       }
 
       // Use custom root from config if specified, otherwise detect automatically

@@ -14,6 +14,7 @@
  *   code lsp --stdin       Read hook input from stdin
  */
 
+import type { LSPServerInfo } from '@pleaseai/code-lsp'
 import { Buffer } from 'node:buffer'
 import process from 'node:process'
 import { Format } from '@pleaseai/code-format'
@@ -103,6 +104,19 @@ async function lspCommand(filePath: string, projectDir: string, isHookMode: bool
 }
 
 /**
+ * Detect a server's project root. Uses a dummy file path inside projectDir so
+ * the server's dirname-based root detection resolves to projectDir itself.
+ * Returns undefined if no root is found (server should not start).
+ */
+async function resolveServerRoot(
+  server: LSPServerInfo,
+  projectDir: string,
+): Promise<string | undefined> {
+  const dummyFile = `${projectDir}/dummy.ts`
+  return server.root(dummyFile, projectDir).catch(() => undefined)
+}
+
+/**
  * Start an LSP server for Claude Code plugin integration.
  * Uses root detection to ensure server only starts when appropriate config exists.
  */
@@ -114,9 +128,7 @@ async function lspServerCommand(serverId: string, projectDir: string): Promise<v
   }
 
   // Run root detection - only start if config file exists
-  // Use a dummy file path inside projectDir so dirname() returns projectDir itself
-  const dummyFile = `${projectDir}/dummy.ts`
-  const root = await server.root(dummyFile, projectDir)
+  const root = await resolveServerRoot(server, projectDir)
   if (!root) {
     // No config file found - exit silently (don't start server)
     log.debug({ serverId, projectDir }, 'No root found, skipping LSP server')
@@ -215,9 +227,8 @@ async function lspMultiplexCommand(serverIds: string[], projectDir: string): Pro
 
   // Root-detection short-circuit: only start if at least one target resolves a
   // root in this project (mirrors lspServerCommand). Otherwise exit silently.
-  const dummyFile = `${projectDir}/dummy.ts`
   const roots = await Promise.all(
-    targets.map(s => s.root(dummyFile, projectDir).catch(() => undefined)),
+    targets.map(s => resolveServerRoot(s, projectDir)),
   )
   if (!roots.some(Boolean)) {
     log.debug({ projectDir }, 'No root found for any target server, skipping multiplexer')

@@ -173,7 +173,11 @@ export async function createLSPClient(input: {
           return
         }
 
-        diagnostics.delete(filePath)
+        // Mark open BEFORE awaiting so a concurrent open() for the same file
+        // (e.g. didOpen + didChange forwarded back-to-back by the multiplexer)
+        // takes the didChange branch instead of emitting a second didOpen.
+        files[filePath] = 0
+        diagnostics.delete(normalizePath(filePath))
         await connection.sendNotification('textDocument/didOpen', {
           textDocument: {
             uri: pathToFileURL(filePath).href,
@@ -182,7 +186,6 @@ export async function createLSPClient(input: {
             text,
           },
         })
-        files[filePath] = 0
       },
 
       async close(fileInput: { path: string }) {

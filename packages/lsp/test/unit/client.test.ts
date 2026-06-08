@@ -137,6 +137,32 @@ describe('LSPClient', () => {
     expect(client.diagnostics.size).toBeGreaterThan(0)
   })
 
+  test('concurrent opens of the same file emit a single didOpen', async () => {
+    const handle = spawnFakeServer()
+
+    client = await createLSPClient({
+      serverID: 'fake',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const virtualFile = path.join(process.cwd(), 'concurrent-open.ts')
+    const uri = `file://${virtualFile}`
+
+    // Fire two opens without awaiting the first. The second must take the
+    // didChange path, not emit a duplicate didOpen.
+    await Promise.all([
+      client.notify.open({ path: virtualFile, text: 'const a = 1' }),
+      client.notify.open({ path: virtualFile, text: 'const a = 2' }),
+    ])
+
+    const result = await client.connection.sendRequest('test/openCount', { uri }) as {
+      count: number
+    }
+    expect(result.count).toBe(1)
+  })
+
   test('closes an opened file', async () => {
     const handle = spawnFakeServer()
 
