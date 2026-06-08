@@ -61,6 +61,9 @@ interface PositionParams {
   position: { line: number, character: number }
 }
 
+/** Enqueues a document-sync task for a file path (no-op for non-file uris). */
+type Enqueue = (filePath: string | undefined, task: (file: string) => Promise<void>) => void
+
 /**
  * Convert an LSP uri to a filesystem path. Editors query non-file uris
  * (git://, untitled://, output://, …); return undefined for those so callers
@@ -76,27 +79,19 @@ function uriToPath(uri: string): string | undefined {
 }
 
 /**
- * Run the multiplexing LSP server until the upstream connection closes.
- * Resolves when the connection is disposed.
+ * Wire downstream publishDiagnostics back to the upstream client. Diagnostics
+ * are debounced per file and always re-merged across ALL clients (forwarding a
+ * single downstream's push would let the last writer erase the others).
+ * Returns the timer map so shutdown can clear pending timers.
  */
-export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
-  const { manager } = opts
-  const input = opts.input ?? process.stdin
-  const output = opts.output ?? process.stdout
-  const exit = opts.onExit ?? (() => process.exit(0))
-
-  const connection: MessageConnection = createMessageConnection(
-    new StreamMessageReader(input),
-    new StreamMessageWriter(output),
-  )
-
-  // --- Diagnostics relay (downstream publishDiagnostics -> upstream) ---------
+function setupDiagnosticsRelay(
+  connection: MessageConnection,
+  manager: LSPManager,
+): Map<string, ReturnType<typeof setTimeout>> {
   const publishTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
   const flushDiagnostics = (filePath: string): void => {
     publishTimers.delete(filePath)
-    // Always re-merge across ALL clients for this file. Forwarding a single
-    // downstream's push would let the last writer erase the others.
     const diagnostics: Diagnostic[] = manager.diagnosticsForFile(filePath)
     connection.sendNotification('textDocument/publishDiagnostics', {
       uri: pathToFileURL(filePath).href,
@@ -117,17 +112,20 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   }
 
   manager.onDiagnostics = (filePath: string) => schedulePublish(filePath)
+  return publishTimers
+}
 
-  // --- Document sync queue ---------------------------------------------------
-  // didOpen/didChange/didClose must apply in arrival order per file. They are
-  // fire-and-forget notifications, so without serialization an in-flight
-  // openWithText could interleave with a later didChange/didClose and corrupt
-  // downstream document state. Chain each file's tasks on a per-path promise.
+/**
+ * Per-file sequential task queue for document-sync notifications.
+ *
+ * didOpen/didChange/didClose must apply in arrival order per file. They are
+ * fire-and-forget notifications, so without serialization an in-flight
+ * openWithText could interleave with a later didChange/didClose and corrupt
+ * downstream document state. Chain each file's tasks on a per-path promise.
+ */
+function createSyncQueue(): Enqueue {
   const fileQueues = new Map<string, Promise<void>>()
-  const enqueue = (
-    filePath: string | undefined,
-    task: (file: string) => Promise<void>,
-  ): void => {
+  return (filePath, task) => {
     if (!filePath)
       return
     const fp = filePath
@@ -143,10 +141,18 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
     })
     fileQueues.set(fp, next)
   }
+}
 
-  // --- Lifecycle -------------------------------------------------------------
+/**
+ * Build the idempotent shutdown routine: clear pending publish timers and shut
+ * the manager (and all downstreams) down exactly once.
+ */
+function createShutdown(
+  manager: LSPManager,
+  publishTimers: Map<string, ReturnType<typeof setTimeout>>,
+): () => Promise<void> {
   let shuttingDown = false
-  const shutdown = async (): Promise<void> => {
+  return async () => {
     if (shuttingDown)
       return
     shuttingDown = true
@@ -155,8 +161,14 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
     publishTimers.clear()
     await manager.shutdown().catch(() => {})
   }
+}
 
-  // --- Requests --------------------------------------------------------------
+/** Register upstream request handlers (read-only queries + shutdown). */
+function registerRequestHandlers(
+  connection: MessageConnection,
+  manager: LSPManager,
+  shutdown: () => Promise<void>,
+): void {
   connection.onRequest('initialize', () => {
     // Do NOT eagerly spawn downstreams here — they spawn lazily on first
     // didOpen, off the initialize critical path (avoids init-timeout stalls).
@@ -242,8 +254,16 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
     await shutdown()
     return null
   })
+}
 
-  // --- Notifications ---------------------------------------------------------
+/** Register upstream notification handlers (document sync + exit). */
+function registerNotificationHandlers(
+  connection: MessageConnection,
+  manager: LSPManager,
+  enqueue: Enqueue,
+  shutdown: () => Promise<void>,
+  exit: () => void,
+): void {
   connection.onNotification('initialized', () => {})
 
   connection.onNotification(
@@ -276,8 +296,14 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
     await shutdown()
     exit()
   })
+}
 
-  // --- Connection teardown ---------------------------------------------------
+/** Wire connection teardown + process signals to the shutdown routine. */
+function registerLifecycle(
+  connection: MessageConnection,
+  shutdown: () => Promise<void>,
+  exit: () => void,
+): void {
   connection.onClose(() => {
     void shutdown()
   })
@@ -290,6 +316,30 @@ export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
   }
   process.on('SIGTERM', onSignal)
   process.on('SIGINT', onSignal)
+}
+
+/**
+ * Run the multiplexing LSP server until the upstream connection closes.
+ * Resolves when the connection is disposed.
+ */
+export async function runMultiplexer(opts: MultiplexerOptions): Promise<void> {
+  const { manager } = opts
+  const input = opts.input ?? process.stdin
+  const output = opts.output ?? process.stdout
+  const exit = opts.onExit ?? (() => process.exit(0))
+
+  const connection: MessageConnection = createMessageConnection(
+    new StreamMessageReader(input),
+    new StreamMessageWriter(output),
+  )
+
+  const publishTimers = setupDiagnosticsRelay(connection, manager)
+  const enqueue = createSyncQueue()
+  const shutdown = createShutdown(manager, publishTimers)
+
+  registerRequestHandlers(connection, manager, shutdown)
+  registerNotificationHandlers(connection, manager, enqueue, shutdown, exit)
+  registerLifecycle(connection, shutdown, exit)
 
   connection.listen()
   log.debug('Multiplexer LSP server started')
