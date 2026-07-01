@@ -80,8 +80,6 @@ jobs:
       - name: Publish to npm
         run: |
           for dir in npm/code-*; do
-            (cd "$dir" && npm publish --access public)
+            (cd "$dir" && npm publish --provenance --access public)
           done
-          cd npm/code && npm publish --access public
-        env:
-          NPM_CONFIG_PROVENANCE: false
+          cd npm/code && npm publish --provenance --access public
