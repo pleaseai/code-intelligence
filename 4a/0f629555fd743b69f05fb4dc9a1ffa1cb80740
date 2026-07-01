@@ -1,0 +1,29 @@
+.github/workflows/ci.yml
+  s_bd22592ed59e82::t_71586b6c12ea56 25,51,72
+  s_bd22592ed59e82::t_afbca7ef478329 21,49,70
+  s_ba7ef57c748041::t_0d345fdcc3f651 29,55,76,96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "4a0f629555fd743b69f05fb4dc9a1ffa1cb80740",
+  "prompts": {},
+  "sessions": {
+    "s_ba7ef57c748041": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef432c6f-82cc-47a4-92ca-1e91e8f1cf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    },
+    "s_bd22592ed59e82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a3efefb0-53ab-4ee2-9610-016c380a8cea",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
