@@ -1,0 +1,43 @@
+plugins/clangd-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/rubocop-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/csharp-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/dart-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/jdtls-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/eslint-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/fsharp-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/elixir-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/lua-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/terraform-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/texlab-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/kotlin-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+plugins/zls-lsp/package.json
+  s_f8a2efccac7c15::t_c31520d1ac7482 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "75d44ca81524131675e2dfa99c8ef0f975c3ab98",
+  "prompts": {},
+  "sessions": {
+    "s_f8a2efccac7c15": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a828686-65b3-4bd7-917e-14b0e6fd33ec",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
