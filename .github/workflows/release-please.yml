@@ -86,9 +86,22 @@ jobs:
       # No NODE_AUTH_TOKEN: npm detects the GitHub Actions OIDC environment (id-token: write)
       # and authenticates via the per-package Trusted Publisher configured on npmjs.com.
       # Provenance is generated automatically for trusted publishing.
+      # Idempotent: skip versions already on npm so a re-run (e.g. after a
+      # partial publish) only pushes the packages still missing, instead of
+      # aborting on the first "cannot publish over previous version".
       - name: Publish to npm
         run: |
-          for dir in npm/code-*; do
-            (cd "$dir" && npm publish --access public)
-          done
-          cd npm/code && npm publish --access public
+          set -euo pipefail
+          publish_if_new() {
+            local dir="$1" name ver
+            name=$(cd "$dir" && node -p "require('./package.json').name")
+            ver=$(cd "$dir" && node -p "require('./package.json').version")
+            if npm view "$name@$ver" version >/dev/null 2>&1; then
+              echo "== skip $name@$ver (already published)"
+            else
+              echo "== publish $name@$ver"
+              (cd "$dir" && npm publish --access public)
+            fi
+          }
+          for dir in npm/code-*; do publish_if_new "$dir"; done
+          publish_if_new npm/code
