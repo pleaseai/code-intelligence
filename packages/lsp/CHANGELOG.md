@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.9...@pleaseai/code-lsp-v0.1.10) (2026-07-01)
+
+
+### Features
+
+* **lsp:** multiplexing LSP server to run multiple servers per extension ([#100](https://github.com/pleaseai/code-intelligence/issues/100)) ([95a84ac](https://github.com/pleaseai/code-intelligence/commit/95a84acf204cd5beb5dbdd3b5a65337e972128e1))
+
 ## [0.1.9](https://github.com/chatbot-pf/code-please/compare/@pleaseai/code-lsp-v0.1.8...@pleaseai/code-lsp-v0.1.9) (2026-01-15)
 
 
