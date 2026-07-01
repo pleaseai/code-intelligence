@@ -1,0 +1,24 @@
+release-please-config.json
+  s_f8a2efccac7c15::t_eca9bdc1bb67f2 68-84
+plugins/code-intelligence-lsp/package.json
+  s_f8a2efccac7c15::t_4b5b6882e10c03 4
+.github/workflows/release-please.yml
+  s_f8a2efccac7c15::t_4fb7165f839246 36,39-40
+  s_f8a2efccac7c15::t_0c7396f70574a8 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "2183c5b37dd937818f235bc9995182337f7a9005",
+  "prompts": {},
+  "sessions": {
+    "s_f8a2efccac7c15": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a828686-65b3-4bd7-917e-14b0e6fd33ec",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@passionfactory.ai>"
+    }
+  }
+}
