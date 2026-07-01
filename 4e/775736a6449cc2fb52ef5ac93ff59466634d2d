@@ -1,0 +1,36 @@
+packages/lsp/package.json
+  s_bd22592ed59e82::t_6f64b180ff4e98 10
+package.json
+  s_bd22592ed59e82::t_ee8698ec7ed8e3 10
+  s_bd22592ed59e82::t_18c0cabe3faa48 29
+packages/dora/package.json
+  s_bd22592ed59e82::t_c0e1e5d040e9c6 10
+scripts/generate-packages.ts
+  s_bd22592ed59e82::t_f7c58839e3c892 155
+packages/binaries/package.json
+  s_bd22592ed59e82::t_66440d12450bd4 10
+packages/format/package.json
+  s_bd22592ed59e82::t_e09b9ac3567402 10
+.github/workflows/release-please.yml
+  s_bd22592ed59e82::t_b6dedf401e8810 83,85
+packages/logger/package.json
+  s_bd22592ed59e82::t_cafc8228d67e68 10
+packages/code/package.json
+  s_bd22592ed59e82::t_0737523576e1c6 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "4e775736a6449cc2fb52ef5ac93ff59466634d2d",
+  "prompts": {},
+  "sessions": {
+    "s_bd22592ed59e82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a3efefb0-53ab-4ee2-9610-016c380a8cea",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@passionfactory.ai>"
+    }
+  }
+}
