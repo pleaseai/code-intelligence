@@ -1,7 +1,7 @@
 {
   "name": "@pleaseai/dora",
   "type": "module",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "MCP server for AI-assisted coding with LSP and file tools",
   "author": "Minsu Lee",
   "license": "MIT",

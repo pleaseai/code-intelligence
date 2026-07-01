@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.23](https://github.com/pleaseai/code-intelligence/compare/code-please-v0.1.22...code-please-v0.1.23) (2026-07-01)
+
+
+### Features
+
+* **lsp:** multiplexing LSP server to run multiple servers per extension ([#100](https://github.com/pleaseai/code-intelligence/issues/100)) ([95a84ac](https://github.com/pleaseai/code-intelligence/commit/95a84acf204cd5beb5dbdd3b5a65337e972128e1))
+
+
+### Bug Fixes
+
+* **ci:** unblock release pipeline and auto-sync plugin code pins ([#101](https://github.com/pleaseai/code-intelligence/issues/101)) ([8af00cc](https://github.com/pleaseai/code-intelligence/commit/8af00cc27b324cdba39164750c19eab37cd25441))
+* **release:** drop non-functional plugin-pin extra-files, use caret pins ([#104](https://github.com/pleaseai/code-intelligence/issues/104)) ([559a54d](https://github.com/pleaseai/code-intelligence/commit/559a54dcc6e9c2ba4be0dae0d442aece628bbbb4))
+
 ## [0.1.22](https://github.com/chatbot-pf/code-intelligence/compare/code-please-v0.1.21...code-please-v0.1.22) (2026-03-23)
 
 

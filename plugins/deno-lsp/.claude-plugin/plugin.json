@@ -1,6 +1,6 @@
 {
   "name": "deno-lsp",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "Deno Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
