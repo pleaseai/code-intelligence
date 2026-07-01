@@ -33,7 +33,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           # client-id is the recommended input (supersedes the legacy app-id).
@@ -41,7 +41,7 @@ jobs:
           client-id: ${{ vars.RELEASE_GITHUB_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
 
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         id: release
         with:
           token: ${{ steps.app-token.outputs.token }}
@@ -56,18 +56,18 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: latest
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.bun/install/cache
@@ -82,8 +82,6 @@ jobs:
       - name: Publish to npm
         run: |
           for dir in npm/code-*; do
-            (cd "$dir" && npm publish --access public)
+            (cd "$dir" && npm publish --provenance --access public)
           done
-          cd npm/code && npm publish --access public
-        env:
-          NPM_CONFIG_PROVENANCE: false
+          cd npm/code && npm publish --provenance --access public

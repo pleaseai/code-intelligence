@@ -4,6 +4,11 @@
   "version": "0.1.22",
   "packageManager": "bun@1.3.5",
   "description": "Auto-format and type-check hooks for AI coding",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pleaseai/code-intelligence.git"
+  },
   "workspaces": [
     "packages/*",
     "apps/*",
@@ -21,7 +26,7 @@
     "test": "turbo test",
     "build": "turbo build",
     "build:npm": "bun run scripts/generate-packages.ts",
-    "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && bun publish --access public --tolerate-republish); done && cd npm/code && bun publish --access public --tolerate-republish",
+    "publish:npm": "bun run build:npm && for dir in npm/code-*; do (cd \"$dir\" && npm publish --access public); done && cd npm/code && npm publish --access public",
     "prepare": "husky",
     "build:docs": "turbo run build --filter=@pleaseai/code-please-docs-site...",
     "ref:clone": "git clone https://github.com/oraios/serena ref/serena && (cd ref/serena && git checkout 192510e1fa0bb171d5aaf094ab32496b2d7bae3f) && git clone https://github.com/JetBrains/mcp-server-plugin ref/mcp-server-plugin && (cd ref/mcp-server-plugin && git checkout b614766ebcfdd46d495a741799bc68df5d08644c) && git clone https://github.com/sst/opencode ref/opencode && (cd ref/opencode && git checkout be8116e2ea3aed66c9d63e0cac2af47bd3e91be5) && git clone https://github.com/microsoft/multilspy ref/multilspy && (cd ref/multilspy && git checkout ee0f6dcd1c0f4c5471d8078580343203b0c73fa7) && git clone https://github.com/code-yeongyu/oh-my-opencode ref/oh-my-opencode && (cd ref/oh-my-opencode && git checkout c37d41edb2f221dbda6a0a2254d782f1f6e3fbeb) && git clone https://github.com/pleaseai/docs ref/docs-please && (cd ref/docs-please && git checkout 119cf8284b493d1a07aeb09d8d559bfba8a19299) && git clone https://github.com/NeoLabHQ/context-engineering-kit ref/context-engineering-kit && (cd ref/context-engineering-kit && git checkout 49be11a06d5e2a8c31e924ef55a771d9229fbca2)"

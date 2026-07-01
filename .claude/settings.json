@@ -23,28 +23,10 @@
   },
   "enabledPlugins": {
     "asana@claude-plugins-official": true,
-    "typescript-lsp@code-intelligence": true,
     "plugin-dev@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
-    "dev-tools@passionfactory": true,
-    "context@passionfactory": true,
-    "review@passionfactory": true,
-    "please@passionfactory": true,
-    "backend@passionfactory": true,
     "gatekeeper@pleaseai": true,
-    "github@passionfactory": true,
     "mcp-dev@pleaseai": true,
-    "testing@passionfactory": true,
-    "standards@passionfactory": true,
-    "tidy-first@passionfactory": true,
     "vitest@pleaseai": true
-  },
-  "extraKnownMarketplaces": {
-    "code-intelligence": {
-      "source": {
-        "source": "directory",
-        "path": "./"
-      }
-    }
   }
 }

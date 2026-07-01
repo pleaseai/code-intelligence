@@ -152,7 +152,7 @@ async function generateNativePackage(target: Target, rootManifest: Record<string
   // Create README
   const readme = `# ${packageName}
 
-Platform-specific binary package for [${PACKAGE_NAME}](https://github.com/anthropics/${PACKAGE_NAME}).
+Platform-specific binary package for [${PACKAGE_NAME}](https://github.com/pleaseai/code-intelligence).
 
 This package is automatically installed as an optional dependency on ${target.platform} (${target.arch}).
 
