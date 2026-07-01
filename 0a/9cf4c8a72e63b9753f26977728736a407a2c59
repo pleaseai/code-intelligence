@@ -1,0 +1,19 @@
+.github/workflows/release-please.yml
+  s_f8a2efccac7c15::t_5a4564e168dc09 82-88,92,94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "0a9cf4c8a72e63b9753f26977728736a407a2c59",
+  "prompts": {},
+  "sessions": {
+    "s_f8a2efccac7c15": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a828686-65b3-4bd7-917e-14b0e6fd33ec",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": null
+    }
+  }
+}
