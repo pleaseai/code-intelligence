@@ -1,0 +1,33 @@
+.github/ISSUE_TEMPLATE/feature_request.md
+  s_bd22592ed59e82::t_5f6141e2cb7e4a 1-22
+.github/PULL_REQUEST_TEMPLATE.md
+  s_bd22592ed59e82::t_b3368cd023761a 1-17
+.github/ISSUE_TEMPLATE/bug_report.md
+  s_bd22592ed59e82::t_729978458d1386 1-31
+.github/ISSUE_TEMPLATE/config.yml
+  s_bd22592ed59e82::t_ea8950ce4b7a9e 1-8
+CONTRIBUTING.md
+  s_bd22592ed59e82::t_92c750649075bc 1-44
+SECURITY.md
+  s_bd22592ed59e82::t_06f700a0d3bc75 1-39
+package.json
+  s_bd22592ed59e82::t_8e82115851cdfd 7-11
+CODE_OF_CONDUCT.md
+  s_bd22592ed59e82::t_f6fd130c1e3084 1-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "f2e594027a55205cfd16ca55c5b07ca7f3f7abf7",
+  "prompts": {},
+  "sessions": {
+    "s_bd22592ed59e82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a3efefb0-53ab-4ee2-9610-016c380a8cea",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@passionfactory.ai>"
+    }
+  }
+}
