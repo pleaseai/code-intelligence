@@ -65,23 +65,7 @@
     },
     "packages/code": {
       "release-type": "node",
-      "component": "@pleaseai/code",
-      "extra-files": [
-        { "type": "json", "path": "plugins/clangd-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/code-intelligence-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/csharp-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/dart-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/elixir-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/eslint-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/fsharp-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/jdtls-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/kotlin-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/lua-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/rubocop-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/terraform-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/texlab-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" },
-        { "type": "json", "path": "plugins/zls-lsp/package.json", "jsonpath": "$.dependencies['@pleaseai/code']" }
-      ]
+      "component": "@pleaseai/code"
     },
     "packages/dora": {
       "release-type": "node",

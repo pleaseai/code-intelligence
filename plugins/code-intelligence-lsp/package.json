@@ -1,6 +1,6 @@
 {
   "private": true,
   "dependencies": {
-    "@pleaseai/code": "0.1.14"
+    "@pleaseai/code": "^0.1.14"
   }
 }
