@@ -79,9 +79,16 @@ jobs:
       - name: Build npm packages
         run: bun run build:npm
 
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; setup-node's bundled npm may be older.
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
+
+      # No NODE_AUTH_TOKEN: npm detects the GitHub Actions OIDC environment (id-token: write)
+      # and authenticates via the per-package Trusted Publisher configured on npmjs.com.
+      # Provenance is generated automatically for trusted publishing.
       - name: Publish to npm
         run: |
           for dir in npm/code-*; do
-            (cd "$dir" && npm publish --provenance --access public)
+            (cd "$dir" && npm publish --access public)
           done
-          cd npm/code && npm publish --provenance --access public
+          cd npm/code && npm publish --access public
