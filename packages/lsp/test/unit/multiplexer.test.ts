@@ -103,8 +103,7 @@ interface Harness {
 
 async function startHarness(fakeCount: number): Promise<Harness> {
   const manager = new FakeManager()
-  for (let i = 0; i < fakeCount; i++)
-    await manager.addFakeClient(`fake${i}`)
+  for (let i = 0; i < fakeCount; i++) { await manager.addFakeClient(`fake${i}`) }
 
   // Two pipes: client writes -> server reads; server writes -> client reads.
   const clientToServer = new PassThrough()
@@ -175,8 +174,7 @@ describe('runMultiplexer', () => {
       harness!.conn.onNotification(
         'textDocument/publishDiagnostics',
         (params: { uri: string, diagnostics: unknown[] }) => {
-          if (params.uri === uri && params.diagnostics.length >= 2)
-            resolve(params)
+          if (params.uri === uri && params.diagnostics.length >= 2) { resolve(params) }
         },
       )
     })

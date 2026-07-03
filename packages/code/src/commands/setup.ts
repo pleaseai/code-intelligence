@@ -127,8 +127,7 @@ async function setupAll(options: SetupOptions): Promise<void> {
 
   for (const status of missing) {
     const tool = getTool(status.id)
-    if (!tool)
-      continue
+    if (!tool) { continue }
 
     process.stdout.write(`  Installing ${status.name}... `)
 

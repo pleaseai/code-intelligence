@@ -31,16 +31,14 @@ export const DenoServer: LSPServerInfo = {
         }
       }
       const parent = path.dirname(current)
-      if (parent === current)
-        break
+      if (parent === current) { break }
       current = parent
     }
     return undefined
   },
   async spawn(root) {
     const deno = Bun.which('deno')
-    if (!deno)
-      return undefined
+    if (!deno) { return undefined }
 
     const proc = spawn(deno, ['lsp'], {
       cwd: root,

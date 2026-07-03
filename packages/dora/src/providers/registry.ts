@@ -58,8 +58,7 @@ export class ProviderRegistry {
 
     for (const type of preferredOrder) {
       const factory = this.factories.get(type)
-      if (!factory)
-        continue
+      if (!factory) { continue }
 
       const provider = factory(this.config)
       try {

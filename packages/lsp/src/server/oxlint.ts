@@ -58,8 +58,7 @@ export const OxlintServer: LSPServerInfo = {
 
       // Check global PATH
       const globalBin = Bun.which(binName)
-      if (globalBin)
-        return globalBin
+      if (globalBin) { return globalBin }
 
       return undefined
     }

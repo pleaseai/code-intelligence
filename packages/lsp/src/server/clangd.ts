@@ -37,8 +37,7 @@ export const ClangdServer: LSPServerInfo = {
     try {
       const entries = await fs.readdir(resourcesDir, { withFileTypes: true })
       for (const entry of entries) {
-        if (!entry.isDirectory() || !entry.name.startsWith('clangd_'))
-          continue
+        if (!entry.isDirectory() || !entry.name.startsWith('clangd_')) { continue }
         const candidate = path.join(resourcesDir, entry.name, 'bin', `clangd${ext}`)
         try {
           await fs.access(candidate)

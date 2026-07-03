@@ -27,8 +27,7 @@ export class JetBrainsMcpProvider implements Provider {
   }
 
   async connect(): Promise<void> {
-    if (this.connected)
-      return
+    if (this.connected) { return }
 
     // Discover JetBrains MCP endpoint
     const discovery = await discoverJetBrainsMcp(this.config.projectPath)

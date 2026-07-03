@@ -1,6 +1,6 @@
-schema_version: 2          # Config schema version (do not edit manually)
+schema_version: 2 # Config schema version (do not edit manually)
 
-language: en   # Output language (ko | en)
+language: en # Output language (ko | en)
 
 # GitHub integration (optional)
 # github:
@@ -23,7 +23,7 @@ formatter:
     command: [bun, x, prettier, --write, $FILE]
     extensions: [.js, .jsx, .ts, .tsx, .json, .md]
     environment:
-      BUN_BE_BUN: "1"
+      BUN_BE_BUN: '1'
   biome:
     disabled: true
   gofmt:
@@ -33,7 +33,7 @@ formatter:
 review:
   cubic:
     enabled: true
-    default-flags: "--json -b"
+    default-flags: --json -b
   gemini:
     enabled: true
-    default-flags: "--sandbox"
+    default-flags: --sandbox

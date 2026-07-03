@@ -45,11 +45,11 @@ lsp:
   eslint:
     enabled: true
   biome:
-    enabled: false      # turn a linter off
+    enabled: false # turn a linter off
   deno:
-    enabled: false      # avoid double-matching .ts with typescript
+    enabled: false # avoid double-matching .ts with typescript
   pyright:
-    root: ./backend     # custom project root
+    root: ./backend # custom project root
 ```
 
 - `enabled: true|false` — toggle a server (default: enabled)

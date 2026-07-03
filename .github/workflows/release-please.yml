@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_only:
-        description: 'Skip release-please and publish directly'
+        description: Skip release-please and publish directly
         required: false
         default: false
         type: boolean

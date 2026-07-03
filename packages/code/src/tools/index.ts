@@ -44,10 +44,8 @@ export async function checkAllTools(): Promise<ToolStatus[]> {
     if (installed) {
       const version = await tool.getVersion?.()
       const binaryPath = await tool.getBinaryPath()
-      if (version)
-        status.version = version
-      if (binaryPath)
-        status.path = binaryPath
+      if (version) { status.version = version }
+      if (binaryPath) { status.path = binaryPath }
     }
 
     results.push(status)
@@ -73,10 +71,8 @@ export async function checkTool(id: string): Promise<ToolStatus | null> {
   if (installed) {
     const version = await tool.getVersion?.()
     const binaryPath = await tool.getBinaryPath()
-    if (version)
-      status.version = version
-    if (binaryPath)
-      status.path = binaryPath
+    if (version) { status.version = version }
+    if (binaryPath) { status.path = binaryPath }
   }
 
   return status

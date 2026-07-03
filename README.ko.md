@@ -137,7 +137,7 @@ formatter:
     command: [biome, format, --write, $FILE]
     extensions: [.ts, .tsx, .js, .jsx]
   prettier:
-    disabled: true    # 내장 포매터 비활성화
+    disabled: true # 내장 포매터 비활성화
   custom:
     command: [my-formatter, $FILE]
     extensions: [.xyz]
@@ -147,9 +147,9 @@ lsp:
   typescript:
     enabled: true
   pyright:
-    root: ./backend   # 커스텀 루트 경로
+    root: ./backend # 커스텀 루트 경로
   vue:
-    enabled: false     # 특정 서버 비활성화
+    enabled: false # 특정 서버 비활성화
 ```
 
 `formatter: false` 또는 `lsp: false`로 전체 비활성화할 수 있습니다.

@@ -100,9 +100,9 @@ packages/format/src/
 
 **Core API**:
 ```typescript
-await Format.initFromProject(projectDir)  // Load config, register formatters
-await Format.formatFile(filePath)          // Find matching formatter, execute
-await Format.status()                      // List all formatters and their state
+await Format.initFromProject(projectDir) // Load config, register formatters
+await Format.formatFile(filePath) // Find matching formatter, execute
+await Format.status() // List all formatters and their state
 ```
 
 **Formatter lifecycle**: Extension match → enabled check (does config file exist
@@ -131,6 +131,9 @@ first file touch, caches clients by `(root, serverId)`, and fans out requests
 to all relevant servers for a given file extension.
 
 **Server definition pattern** — each server declares:
+
+<!-- eslint-skip -->
+
 ```typescript
 {
   id: string           // e.g. 'typescript'
@@ -164,11 +167,11 @@ packages/dora/src/
 ```typescript
 interface Provider {
   readonly name: string
-  connect(): Promise<void>
-  disconnect(): Promise<void>
-  isConnected(): boolean
-  listTools(): ToolDefinition[]
-  callTool(name: string, args: unknown): Promise<ToolResult>
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  isConnected: () => boolean
+  listTools: () => ToolDefinition[]
+  callTool: (name: string, args: unknown) => Promise<ToolResult>
 }
 ```
 

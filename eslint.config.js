@@ -1,11 +1,12 @@
-import antfu from '@antfu/eslint-config'
+import pleaseai from '@pleaseai/eslint-config'
 
-export default antfu({
+export default pleaseai({
   typescript: true,
   jsx: false,
   type: 'lib',
   ignores: [
     'dist',
+    '.impeccable/**',
     'npm',
     'node_modules',
     '.please/memory/**',
@@ -20,5 +21,20 @@ export default antfu({
 }, {
   rules: {
     'no-console': 'off',
+    'style/max-statements-per-line': 'off',
+  },
+}, {
+  files: ['**/*.md', '**/*.md/**'],
+  rules: {
+    'markdown/no-multiple-h1': 'off',
+  },
+}, {
+  // Nuxt Content (MDC) files use `#slot` / `::component` syntax where `#title`,
+  // `#description`, etc. are slot references — NOT ATX headings. The heading-space
+  // autofix would insert a space and silently break the component slots, so the
+  // ATX-heading rules must stay off for the content directory.
+  files: ['apps/docs/content/**/*.md'],
+  rules: {
+    'markdown/no-missing-atx-heading-space': 'off',
   },
 })
