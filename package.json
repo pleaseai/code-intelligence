@@ -32,10 +32,10 @@
     "ref:clone": "git clone https://github.com/oraios/serena ref/serena && (cd ref/serena && git checkout 192510e1fa0bb171d5aaf094ab32496b2d7bae3f) && git clone https://github.com/JetBrains/mcp-server-plugin ref/mcp-server-plugin && (cd ref/mcp-server-plugin && git checkout b614766ebcfdd46d495a741799bc68df5d08644c) && git clone https://github.com/sst/opencode ref/opencode && (cd ref/opencode && git checkout be8116e2ea3aed66c9d63e0cac2af47bd3e91be5) && git clone https://github.com/microsoft/multilspy ref/multilspy && (cd ref/multilspy && git checkout ee0f6dcd1c0f4c5471d8078580343203b0c73fa7) && git clone https://github.com/code-yeongyu/oh-my-opencode ref/oh-my-opencode && (cd ref/oh-my-opencode && git checkout c37d41edb2f221dbda6a0a2254d782f1f6e3fbeb) && git clone https://github.com/pleaseai/docs ref/docs-please && (cd ref/docs-please && git checkout 119cf8284b493d1a07aeb09d8d559bfba8a19299) && git clone https://github.com/NeoLabHQ/context-engineering-kit ref/context-engineering-kit && (cd ref/context-engineering-kit && git checkout 49be11a06d5e2a8c31e924ef55a771d9229fbca2)"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "vscode-jsonrpc": "^8.2.1",
-    "vscode-languageserver-types": "^3.17.5",
-    "yaml": "^2.8.2"
+    "vscode-languageserver-types": "^3.18.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.0",
@@ -45,7 +45,7 @@
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "turbo": "^2.6.3",
+    "turbo": "^2.10.3",
     "typescript": "^5.7.0"
   },
   "lint-staged": {
