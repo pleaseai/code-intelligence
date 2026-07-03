@@ -1,0 +1,19 @@
+.claude/settings.json
+  s_1dfdff5e997de2::t_d81d2fc2e0ca25 2,33-35,43-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3e39ee792141241ed3f1e19c55b565b6d7f76d03",
+  "prompts": {},
+  "sessions": {
+    "s_1dfdff5e997de2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82785666-46bf-4955-9ff5-83a398fa44eb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}

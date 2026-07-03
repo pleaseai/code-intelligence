@@ -1,0 +1,21 @@
+eslint.config.js
+  s_1dfdff5e997de2::t_0902d6b7ef0628 1,3
+  s_1dfdff5e997de2::t_924eb889fe8f4e 9
+  s_1dfdff5e997de2::t_f58072530bd0e9 24-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e912948953fd9ed498f3c61a3e42f9544c126346",
+  "prompts": {},
+  "sessions": {
+    "s_1dfdff5e997de2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82785666-46bf-4955-9ff5-83a398fa44eb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
