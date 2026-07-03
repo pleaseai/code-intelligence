@@ -1,0 +1,86 @@
+packages/lsp/test/unit/multiplexer.test.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 106,177
+packages/lsp/src/server/deno.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 34,41
+packages/lsp/src/server/rust-analyzer.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 15
+packages/dora/src/providers/jetbrains/index.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 30
+packages/dora/src/providers/registry.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 61
+packages/lsp/src/client.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 81,195
+packages/format/src/index.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 79,90,123-124
+packages/dora/src/client/port-discovery.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 47
+README.ko.md
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 140,150,152
+packages/lsp/src/server/oxlint.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 61
+apps/docs/content/index.md
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 7,10,13,24,27,64,67
+packages/code/src/hooks/lsp.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 59-60,69,73-74
+ARCHITECTURE.md
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 103-105,170-174
+  s_1dfdff5e997de2::t_4062e192b63cba 134-136
+packages/lsp/src/index.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 272,324,404,407,422,437,518,673,720,754,827,863
+packages/lsp/src/server/utils.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 85,109
+packages/code/src/providers/lsp/index.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 87
+packages/dora/src/providers/ast-grep/napi.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 26-27
+packages/code/src/commands/setup.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 130
+packages/code/src/tools/index.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 47-48,74-75
+.please/config.yml
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 1,3,26,36,39
+plugins/typescript-lsp/package.json
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 4-5
+examples/lsp-typescript/README.md
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 64,83-84
+packages/dora/src/client/jetbrains-client.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 65
+packages/lsp/src/server/gopls.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 15,20
+packages/dora/src/tools/utils.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 12
+packages/dora/src/providers/lsp/index.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 96
+packages/format/src/formatter.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 102-103,190,199,212,225,252,303
+.github/workflows/release-please.yml
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 10
+packages/lsp/src/multiplexer.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 106,109,128,137,153,155,178,190,202,221,233,272
+packages/lsp/src/server/clangd.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 40
+plugins/code-intelligence-lsp/README.md
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 48,50,52
+README.md
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 126,136,138
+scripts/gen-unified-lsp-json.ts
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 32
+examples/lsp-typescript/tsconfig.json
+  s_1dfdff5e997de2::t_e4e44054f4d1fe 8,11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e7613852778563c6065bd8e72a192fb8e6412c55",
+  "prompts": {},
+  "sessions": {
+    "s_1dfdff5e997de2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82785666-46bf-4955-9ff5-83a398fa44eb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
