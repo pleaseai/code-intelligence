@@ -1,0 +1,21 @@
+apps/docs/content/index.md
+  s_e8370aaae8475b::t_94ef141c6ae823 7,10,13,24,27,64,67
+eslint.config.js
+  s_e8370aaae8475b::t_29e1ff643f26a6 31-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6b153928d4b283e672f301d8979958eb9a32b1c6",
+  "prompts": {},
+  "sessions": {
+    "s_e8370aaae8475b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa57fcc7-e048-4789-916a-8cd7bab864a4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
