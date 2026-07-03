@@ -1,11 +1,12 @@
-import antfu from '@antfu/eslint-config'
+import pleaseai from '@pleaseai/eslint-config'
 
-export default antfu({
+export default pleaseai({
   typescript: true,
   jsx: false,
   type: 'lib',
   ignores: [
     'dist',
+    '.impeccable/**',
     'npm',
     'node_modules',
     '.please/memory/**',
@@ -20,5 +21,11 @@ export default antfu({
 }, {
   rules: {
     'no-console': 'off',
+    'style/max-statements-per-line': 'off',
+  },
+}, {
+  files: ['**/*.md', '**/*.md/**'],
+  rules: {
+    'markdown/no-multiple-h1': 'off',
   },
 })
