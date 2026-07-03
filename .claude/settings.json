@@ -27,6 +27,21 @@
     "claude-md-management@claude-plugins-official": true,
     "gatekeeper@pleaseai": true,
     "mcp-dev@pleaseai": true,
-    "vitest@pleaseai": true
+    "testing@passionfactory": true,
+    "standards@passionfactory": true,
+    "tidy-first@passionfactory": true,
+    "vitest@pleaseai": true,
+    "research@passionfactory": true,
+    "frontend@passionfactory": true,
+    "modern-web-guidance@pleaseai": true,
+    "plannotator@passionfactory": true
+  },
+  "extraKnownMarketplaces": {
+    "code-intelligence": {
+      "source": {
+        "source": "directory",
+        "path": "./"
+      }
+    }
   }
 }
