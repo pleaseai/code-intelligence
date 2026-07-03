@@ -1,0 +1,17 @@
+# orca.yaml — setup script run when Orca creates a worktree.
+#
+# Orca (a worktree-native IDE for parallel agents) runs scripts.setup whenever it
+# creates a new worktree. This file is committed, so the whole team shares it.
+#
+# Injected environment variables:
+#   $ORCA_ROOT_PATH     — main checkout (root repo) path; the source for copying gitignored local files
+#   $ORCA_WORKTREE_PATH — the newly created worktree path; the copy target and the setup working directory
+
+scripts:
+  setup: |
+    set -e
+    # 1. Copy gitignored local files (.env*, .claude/settings.local.json, ...) from the main checkout,
+    #    as listed in .worktreeinclude.
+    bunx @pleaseai/worktreeinclude "$ORCA_ROOT_PATH" "$ORCA_WORKTREE_PATH"
+    # 2. Install dependencies inside the worktree.
+    bun install
