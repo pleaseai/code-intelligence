@@ -4,13 +4,13 @@ description: Auto-format and type-check hooks for AI coding
 ---
 
 ::u-page-hero
-# title
+#title
 Code Please
 
-# description
+#description
 CLI and Claude Code plugin for AI-assisted coding with auto-formatting and LSP diagnostics.
 
-# links
+#links
   :::u-button{to="/docs/getting-started/introduction" size="lg"}
   Get Started →
   :::
@@ -21,10 +21,10 @@ CLI and Claude Code plugin for AI-assisted coding with auto-formatting and LSP d
 ::
 
 ::u-page-section
-# title
+#title
 Features
 
-# content
+#content
   ::u-page-grid
     :::u-page-card
     ---
@@ -61,10 +61,10 @@ Features
 ::
 
 ::u-page-section
-# title
+#title
 Quick Start
 
-# content
+#content
 Install globally and add hooks to your Claude Code settings:
 
 ```bash

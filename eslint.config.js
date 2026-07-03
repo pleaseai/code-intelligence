@@ -28,4 +28,13 @@ export default pleaseai({
   rules: {
     'markdown/no-multiple-h1': 'off',
   },
+}, {
+  // Nuxt Content (MDC) files use `#slot` / `::component` syntax where `#title`,
+  // `#description`, etc. are slot references — NOT ATX headings. The heading-space
+  // autofix would insert a space and silently break the component slots, so the
+  // ATX-heading rules must stay off for the content directory.
+  files: ['apps/docs/content/**/*.md'],
+  rules: {
+    'markdown/no-missing-atx-heading-space': 'off',
+  },
 })
