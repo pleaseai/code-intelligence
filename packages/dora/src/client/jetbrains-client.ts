@@ -62,8 +62,7 @@ export class JetBrainsClient {
       return transformResponse<T>(json)
     }
     catch (error) {
-      if (error instanceof ApiError)
-        throw error
+      if (error instanceof ApiError) { throw error }
 
       if (error instanceof DOMException && error.name === 'AbortError') {
         throw new TimeoutError(url, this.timeout)

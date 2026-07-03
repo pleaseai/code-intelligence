@@ -76,8 +76,7 @@ function init(config: FormatConfig): void {
         command: item.command ?? existing.command,
         extensions: item.extensions ?? existing.extensions,
       }
-      if (env)
-        merged.environment = env
+      if (env) { merged.environment = env }
       formatters[name] = merged
     }
     else if (item.command && item.command.length > 0) {
@@ -88,8 +87,7 @@ function init(config: FormatConfig): void {
         extensions: item.extensions ?? [],
         enabled: async (_filePath: string, _projectDir: string) => true,
       }
-      if (item.environment)
-        newFormatter.environment = item.environment
+      if (item.environment) { newFormatter.environment = item.environment }
       formatters[name] = newFormatter
     }
   }
@@ -122,10 +120,8 @@ async function getFormatter(ext: string, filePath: string): Promise<Formatter.In
   const result: Formatter.Info[] = []
   for (const item of Object.values(s.formatters)) {
     log.debug({ name: item.name, ext }, 'checking formatter')
-    if (!item.extensions.includes(ext))
-      continue
-    if (!(await isEnabled(item, filePath)))
-      continue
+    if (!item.extensions.includes(ext)) { continue }
+    if (!(await isEnabled(item, filePath))) { continue }
     log.debug({ name: item.name, ext }, 'formatter enabled')
     result.push(item)
   }

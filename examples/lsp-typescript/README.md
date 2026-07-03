@@ -61,7 +61,7 @@ The demo will show:
 ## Using LSPManager in Your Code
 
 ```typescript
-import { LSPManager, formatDiagnostic } from '@pleaseai/code-lsp'
+import { formatDiagnostic, LSPManager } from '@pleaseai/code-lsp'
 
 // Initialize manager with project path
 const manager = new LSPManager('/path/to/project')
@@ -80,8 +80,8 @@ for (const [file, diags] of Object.entries(diagnostics)) {
 // Get hover info
 const hovers = await manager.hover({
   file: 'src/index.ts',
-  line: 10,      // 0-indexed
-  character: 5,  // 0-indexed
+  line: 10, // 0-indexed
+  character: 5, // 0-indexed
 })
 
 // Go to definition

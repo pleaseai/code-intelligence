@@ -103,11 +103,10 @@ function setupDiagnosticsRelay(
 
   const schedulePublish = (filePath: string): void => {
     const existing = publishTimers.get(filePath)
-    if (existing)
-      clearTimeout(existing)
+    if (existing) { clearTimeout(existing) }
     publishTimers.set(
       filePath,
-      setTimeout(() => flushDiagnostics(filePath), DIAGNOSTICS_PUBLISH_DEBOUNCE_MS),
+      setTimeout(flushDiagnostics, DIAGNOSTICS_PUBLISH_DEBOUNCE_MS, filePath),
     )
   }
 
@@ -126,8 +125,7 @@ function setupDiagnosticsRelay(
 function createSyncQueue(): Enqueue {
   const fileQueues = new Map<string, Promise<void>>()
   return (filePath, task) => {
-    if (!filePath)
-      return
+    if (!filePath) { return }
     const fp = filePath
     const previous = fileQueues.get(fp) ?? Promise.resolve()
     const next = previous.then(() => task(fp)).catch((err: unknown) => {
@@ -136,8 +134,7 @@ function createSyncQueue(): Enqueue {
       // Drop the entry once it settles, but only if no newer task was chained
       // in the meantime — otherwise we'd evict a still-pending tail. Keeps the
       // map bounded by the number of in-flight files, not files-ever-seen.
-      if (fileQueues.get(fp) === next)
-        fileQueues.delete(fp)
+      if (fileQueues.get(fp) === next) { fileQueues.delete(fp) }
     })
     fileQueues.set(fp, next)
   }
@@ -153,11 +150,9 @@ function createShutdown(
 ): () => Promise<void> {
   let shuttingDown = false
   return async () => {
-    if (shuttingDown)
-      return
+    if (shuttingDown) { return }
     shuttingDown = true
-    for (const timer of publishTimers.values())
-      clearTimeout(timer)
+    for (const timer of publishTimers.values()) { clearTimeout(timer) }
     publishTimers.clear()
     await manager.shutdown().catch(() => {})
   }
@@ -180,8 +175,7 @@ function registerRequestHandlers(
 
   connection.onRequest('textDocument/hover', async (params: PositionParams) => {
     const file = uriToPath(params.textDocument.uri)
-    if (file === undefined)
-      return null
+    if (file === undefined) { return null }
     const results = await manager.hover({
       file,
       line: params.position.line,
@@ -193,8 +187,7 @@ function registerRequestHandlers(
 
   connection.onRequest('textDocument/definition', async (params: PositionParams) => {
     const file = uriToPath(params.textDocument.uri)
-    if (file === undefined)
-      return []
+    if (file === undefined) { return [] }
     return manager.definition({
       file,
       line: params.position.line,
@@ -206,8 +199,7 @@ function registerRequestHandlers(
     'textDocument/references',
     async (params: PositionParams & { context?: { includeDeclaration?: boolean } }) => {
       const file = uriToPath(params.textDocument.uri)
-      if (file === undefined)
-        return []
+      if (file === undefined) { return [] }
       return manager.references({
         file,
         line: params.position.line,
@@ -226,8 +218,7 @@ function registerRequestHandlers(
 
   connection.onRequest('textDocument/prepareRename', async (params: PositionParams) => {
     const file = uriToPath(params.textDocument.uri)
-    if (file === undefined)
-      return null
+    if (file === undefined) { return null }
     return manager.prepareRename({
       file,
       line: params.position.line,
@@ -239,8 +230,7 @@ function registerRequestHandlers(
     'textDocument/rename',
     async (params: PositionParams & { newName: string }) => {
       const file = uriToPath(params.textDocument.uri)
-      if (file === undefined)
-        return null
+      if (file === undefined) { return null }
       return manager.rename({
         file,
         line: params.position.line,
@@ -279,8 +269,7 @@ function registerNotificationHandlers(
     (params: { textDocument: { uri: string }, contentChanges: Array<{ text: string }> }) => {
       // Full sync: the last change entry is the complete document.
       const text = params.contentChanges.at(-1)?.text
-      if (text === undefined)
-        return
+      if (text === undefined) { return }
       enqueue(uriToPath(params.textDocument.uri), file => manager.openWithText(file, text))
     },
   )

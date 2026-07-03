@@ -78,8 +78,7 @@ export async function createLSPClient(input: {
       // Notify listeners with debounce
       const listener = diagnosticsListeners.find(l => l.path === filePath)
       if (listener) {
-        if (listener.timer)
-          clearTimeout(listener.timer)
+        if (listener.timer) { clearTimeout(listener.timer) }
         listener.timer = setTimeout(() => {
           diagnosticsListeners = diagnosticsListeners.filter(
             l => l !== listener,
@@ -193,8 +192,7 @@ export async function createLSPClient(input: {
           ? fileInput.path
           : path.resolve(input.projectPath, fileInput.path)
 
-        if (files[filePath] === undefined)
-          return
+        if (files[filePath] === undefined) { return }
 
         await connection.sendNotification('textDocument/didClose', {
           textDocument: {

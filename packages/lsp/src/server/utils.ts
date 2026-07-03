@@ -82,8 +82,7 @@ export function nearestRoot(
           }
         }
         const parent = path.dirname(checkDir)
-        if (parent === checkDir)
-          break
+        if (parent === checkDir) { break }
         checkDir = parent
       }
     }
@@ -107,8 +106,7 @@ export function nearestRoot(
         }
       }
       const parent = path.dirname(current)
-      if (parent === current)
-        break
+      if (parent === current) { break }
       current = parent
     }
 

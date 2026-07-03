@@ -56,10 +56,8 @@ export function formatDiagnosticsReport(
   for (const [filePath, diags] of Object.entries(diagnostics)) {
     for (const diag of diags) {
       const severity = diag.severity ?? 1
-      if (severity === 1)
-        errorCount++
-      if (severity === 2)
-        warningCount++
+      if (severity === 1) { errorCount++ }
+      if (severity === 2) { warningCount++ }
 
       if (lines.length < DIAGNOSTICS_MAX_DISPLAY) {
         lines.push(formatDiagnostic(diag, filePath, projectDir))
@@ -68,15 +66,12 @@ export function formatDiagnosticsReport(
   }
 
   const total = errorCount + warningCount
-  if (total === 0)
-    return null
+  if (total === 0) { return null }
 
   // Build summary line
   const parts: string[] = []
-  if (errorCount > 0)
-    parts.push(`${errorCount} error${errorCount > 1 ? 's' : ''}`)
-  if (warningCount > 0)
-    parts.push(`${warningCount} warning${warningCount > 1 ? 's' : ''}`)
+  if (errorCount > 0) { parts.push(`${errorCount} error${errorCount > 1 ? 's' : ''}`) }
+  if (warningCount > 0) { parts.push(`${warningCount} warning${warningCount > 1 ? 's' : ''}`) }
   const summary = `✗ ${parts.join(', ')} found`
 
   // Add overflow indicator

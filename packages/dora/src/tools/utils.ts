@@ -9,8 +9,7 @@
  * @returns The original string or a truncation message
  */
 export function limitLength(result: string, maxChars: number): string {
-  if (maxChars === -1)
-    return result
+  if (maxChars === -1) { return result }
 
   if (maxChars <= 0) {
     throw new Error(`max_answer_chars must be positive or -1, got: ${maxChars}`)

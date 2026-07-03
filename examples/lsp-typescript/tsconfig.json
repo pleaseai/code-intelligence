@@ -5,11 +5,11 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noEmit": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "demo.ts"]
 }

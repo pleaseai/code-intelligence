@@ -23,10 +23,8 @@ let napiLoadError: Error | null = null
  * Check if NAPI is available
  */
 export function isNapiAvailable(): boolean {
-  if (napiModule !== null)
-    return true
-  if (napiLoadError !== null)
-    return false
+  if (napiModule !== null) { return true }
+  if (napiLoadError !== null) { return false }
 
   try {
     // eslint-disable-next-line ts/no-require-imports

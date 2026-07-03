@@ -84,8 +84,7 @@ export class LSPProvider implements Provider {
   }
 
   async connect(): Promise<void> {
-    if (this.connected)
-      return
+    if (this.connected) { return }
 
     this.manager = new LSPManager(this.config.projectPath)
     this.connected = true

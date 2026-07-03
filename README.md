@@ -123,7 +123,7 @@ formatter:
     command: [biome, format, --write, $FILE]
     extensions: [.ts, .tsx, .js, .jsx]
   prettier:
-    disabled: true    # Disable a built-in formatter
+    disabled: true # Disable a built-in formatter
   custom:
     command: [my-formatter, $FILE]
     extensions: [.xyz]
@@ -133,9 +133,9 @@ lsp:
   typescript:
     enabled: true
   pyright:
-    root: ./backend   # Custom root path
+    root: ./backend # Custom root path
   vue:
-    enabled: false     # Disable a specific server
+    enabled: false # Disable a specific server
 ```
 
 Set `formatter: false` or `lsp: false` to globally disable either subsystem.

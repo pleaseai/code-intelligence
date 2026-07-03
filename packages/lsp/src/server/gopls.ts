@@ -12,14 +12,12 @@ export const GoplsServer: LSPServerInfo = {
   root: async (file, projectPath) => {
     // Check for go.work first
     const workRoot = await nearestRoot(['go.work'])(file, projectPath)
-    if (workRoot)
-      return workRoot
+    if (workRoot) { return workRoot }
     return nearestRoot(['go.mod', 'go.sum'])(file, projectPath)
   },
   async spawn(root) {
     const gopls = Bun.which('gopls')
-    if (!gopls)
-      return undefined
+    if (!gopls) { return undefined }
 
     const proc = spawn(gopls, ['serve'], {
       cwd: root,

@@ -99,10 +99,8 @@ export const prettier: Info = {
     const items = await findUp('package.json', startDir, projectDir)
     for (const item of items) {
       const json = await Bun.file(item).json()
-      if (json.dependencies?.prettier)
-        return true
-      if (json.devDependencies?.prettier)
-        return true
+      if (json.dependencies?.prettier) { return true }
+      if (json.devDependencies?.prettier) { return true }
     }
     return false
   },
@@ -189,8 +187,7 @@ export const ruff: Info = {
   command: ['ruff', 'format', '$FILE'],
   extensions: ['.py', '.pyi'],
   async enabled(filePath: string, projectDir: string) {
-    if (!Bun.which('ruff'))
-      return false
+    if (!Bun.which('ruff')) { return false }
     const startDir = path.dirname(filePath)
     const configs = ['pyproject.toml', 'ruff.toml', '.ruff.toml']
     for (const config of configs) {
@@ -199,8 +196,7 @@ export const ruff: Info = {
       if (firstFound) {
         if (config === 'pyproject.toml') {
           const content = await Bun.file(firstFound).text()
-          if (content.includes('[tool.ruff]'))
-            return true
+          if (content.includes('[tool.ruff]')) { return true }
         }
         else {
           return true
@@ -213,8 +209,7 @@ export const ruff: Info = {
       const firstFound = found[0]
       if (firstFound) {
         const content = await Bun.file(firstFound).text()
-        if (content.includes('ruff'))
-          return true
+        if (content.includes('ruff')) { return true }
       }
     }
     return false
@@ -227,8 +222,7 @@ export const rlang: Info = {
   extensions: ['.R'],
   async enabled(_filePath, _projectDir) {
     const airPath = Bun.which('air')
-    if (airPath == null)
-      return false
+    if (airPath == null) { return false }
 
     try {
       const proc = Bun.spawn(['air', '--help'], {
@@ -255,8 +249,7 @@ export const uvformat: Info = {
   command: ['uv', 'format', '--', '$FILE'],
   extensions: ['.py', '.pyi'],
   async enabled(filePath: string, projectDir: string) {
-    if (await ruff.enabled(filePath, projectDir))
-      return false
+    if (await ruff.enabled(filePath, projectDir)) { return false }
     if (Bun.which('uv') !== null) {
       const proc = Bun.spawn(['uv', 'format', '--help'], { stderr: 'pipe', stdout: 'pipe' })
       const code = await proc.exited
@@ -307,8 +300,7 @@ export const ocamlformat: Info = {
   command: ['ocamlformat', '-i', '$FILE'],
   extensions: ['.ml', '.mli'],
   async enabled(filePath: string, projectDir: string) {
-    if (!Bun.which('ocamlformat'))
-      return false
+    if (!Bun.which('ocamlformat')) { return false }
     const startDir = path.dirname(filePath)
     const items = await findUp('.ocamlformat', startDir, projectDir)
     return items.length > 0

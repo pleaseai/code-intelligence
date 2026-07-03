@@ -44,8 +44,7 @@ async function checkPort(
 
     clearTimeout(timeoutId)
 
-    if (!response.ok)
-      return false
+    if (!response.ok) { return false }
 
     const data = await response.json()
     const transformed = transformResponse<StatusResponse>(data)

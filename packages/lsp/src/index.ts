@@ -269,8 +269,7 @@ export class LSPManager {
     const baseServers = options?.servers ?? LSP_SERVERS
     const allowed = options?.serverIds?.length ? new Set(options.serverIds) : undefined
     for (const server of baseServers) {
-      if (allowed && !allowed.has(server.id))
-        continue
+      if (allowed && !allowed.has(server.id)) { continue }
       this.servers.set(server.id, server)
     }
   }
@@ -322,8 +321,7 @@ export class LSPManager {
    * Get clients for a file
    */
   private async getClients(file: string): Promise<LSPClientInfo[]> {
-    if (!this.enabled)
-      return []
+    if (!this.enabled) { return [] }
 
     const extension = path.extname(file)
     const basename = path.basename(file)
@@ -403,12 +401,10 @@ export class LSPManager {
       const root = customRoot
         ? path.resolve(this.projectPath, customRoot)
         : await server.root(file, this.projectPath)
-      if (!root)
-        continue
+      if (!root) { continue }
 
       const key = root + server.id
-      if (this.broken.has(key))
-        continue
+      if (this.broken.has(key)) { continue }
 
       // Check for existing client
       const match = this.clients.find(
@@ -423,8 +419,7 @@ export class LSPManager {
       const inflight = this.spawning.get(key)
       if (inflight) {
         const client = await inflight
-        if (client)
-          result.push(client)
+        if (client) { result.push(client) }
         continue
       }
 
@@ -439,8 +434,7 @@ export class LSPManager {
       })
 
       const client = await task
-      if (client)
-        result.push(client)
+      if (client) { result.push(client) }
     }
 
     return result
@@ -521,8 +515,7 @@ export class LSPManager {
     const result: Diagnostic[] = []
     for (const client of this.clients) {
       const diags = client.diagnostics.get(normalized)
-      if (diags?.length)
-        result.push(...diags)
+      if (diags?.length) { result.push(...diags) }
     }
     return result
   }
@@ -677,8 +670,7 @@ export class LSPManager {
             },
           })
           .then((result: unknown) => {
-            if (!result || !Array.isArray(result))
-              return []
+            if (!result || !Array.isArray(result)) { return [] }
             return result as Location[]
           })
           .catch(() => []),
@@ -725,8 +717,7 @@ export class LSPManager {
    * Handles CompletionList and CompletionItem[] responses
    */
   private normalizeCompletions(result: unknown): CompletionItem[] {
-    if (!result)
-      return []
+    if (!result) { return [] }
 
     // CompletionList format
     if (this.isCompletionList(result)) {
@@ -760,8 +751,7 @@ export class LSPManager {
    * Handles Location, Location[], and LocationLink[] responses
    */
   private normalizeLocations(result: unknown): Location[] {
-    if (!result)
-      return []
+    if (!result) { return [] }
 
     // Single Location
     if (this.isLocation(result)) {
@@ -834,8 +824,7 @@ export class LSPManager {
    * Based on Serena: ls_types.py:extract_text_edits
    */
   private normalizeWorkspaceEdit(result: unknown): WorkspaceEdit | null {
-    if (!result || typeof result !== 'object')
-      return null
+    if (!result || typeof result !== 'object') { return null }
 
     const edit = result as Record<string, unknown>
 
@@ -871,8 +860,7 @@ export class LSPManager {
    * Handles: Range, { range, placeholder }, or { defaultBehavior }
    */
   private normalizePrepareRename(result: unknown): PrepareRenameResult | null {
-    if (!result)
-      return null
+    if (!result) { return null }
 
     // Format 1: Just a Range
     if (this.isRange(result)) {

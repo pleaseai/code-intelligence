@@ -29,8 +29,7 @@ function buildExtensionToLanguage(): Record<string, string> {
   // (sorted) order for deterministic output.
   const extensions = new Set<string>()
   for (const server of LSP_SERVERS) {
-    for (const ext of server.extensions)
-      extensions.add(ext)
+    for (const ext of server.extensions) { extensions.add(ext) }
   }
 
   const map: Record<string, string> = {}

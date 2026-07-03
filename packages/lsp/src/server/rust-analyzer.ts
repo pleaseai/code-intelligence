@@ -12,8 +12,7 @@ export const RustAnalyzerServer: LSPServerInfo = {
   root: nearestRoot(['Cargo.toml', 'Cargo.lock']),
   async spawn(root) {
     const rustAnalyzer = Bun.which('rust-analyzer')
-    if (!rustAnalyzer)
-      return undefined
+    if (!rustAnalyzer) { return undefined }
 
     const proc = spawn(rustAnalyzer, [], {
       cwd: root,
