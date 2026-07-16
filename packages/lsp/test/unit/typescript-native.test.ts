@@ -7,7 +7,8 @@ import { resolveNativeTypeScriptServer } from '../../src/server/typescript'
 async function makeBin(dir: string, name: string): Promise<string> {
   const binDir = path.join(dir, 'node_modules', '.bin')
   await fs.mkdir(binDir, { recursive: true })
-  const bin = path.join(binDir, name)
+  const ext = process.platform === 'win32' ? '.cmd' : ''
+  const bin = path.join(binDir, `${name}${ext}`)
   await fs.writeFile(bin, '#!/bin/sh\n')
   return bin
 }

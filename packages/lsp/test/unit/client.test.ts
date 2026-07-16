@@ -138,8 +138,10 @@ describe('LSPClient', () => {
 
     const testFile = path.join(process.cwd(), 'package.json')
     // The pull server never pushes publishDiagnostics; diagnostics must be
-    // fetched via textDocument/diagnostic during open().
+    // fetched asynchronously via textDocument/diagnostic during open().
+    const wait = client.waitForDiagnostics({ path: testFile })
     await client.notify.open({ path: testFile })
+    await wait
 
     const diags = client.diagnostics.get(path.normalize(testFile)) ?? []
     expect(diags.length).toBeGreaterThan(0)

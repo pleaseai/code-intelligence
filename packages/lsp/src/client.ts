@@ -218,7 +218,7 @@ export async function createLSPClient(input: {
             },
             contentChanges: [{ text }],
           })
-          await pullDiagnostics(filePath)
+          void pullDiagnostics(filePath)
           return
         }
 
@@ -235,7 +235,7 @@ export async function createLSPClient(input: {
             text,
           },
         })
-        await pullDiagnostics(filePath)
+        void pullDiagnostics(filePath)
       },
 
       async close(fileInput: { path: string }) {
