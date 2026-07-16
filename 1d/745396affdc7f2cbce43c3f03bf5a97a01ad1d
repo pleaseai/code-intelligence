@@ -1,0 +1,21 @@
+packages/lsp/test/unit/client.test.ts
+  s_c2caf662a331a1::t_688a399e3729c6 170-191
+packages/lsp/src/client.ts
+  s_c2caf662a331a1::t_95b16a01ba9eee 83-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1d745396affdc7f2cbce43c3f03bf5a97a01ad1d",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
