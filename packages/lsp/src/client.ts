@@ -102,21 +102,22 @@ export async function createLSPClient(input: {
   // out-of-order reply can't overwrite fresher diagnostics with stale ones.
   const pullDiagnostics = async (filePath: string): Promise<void> => {
     if (!supportsPullDiagnostics) { return }
-    const pullID = (diagnosticPulls[filePath] ?? 0) + 1
-    diagnosticPulls[filePath] = pullID
+    const normalizedPath = normalizePath(filePath)
+    const pullID = (diagnosticPulls[normalizedPath] ?? 0) + 1
+    diagnosticPulls[normalizedPath] = pullID
     try {
       const report = (await withTimeout(
         connection.sendRequest('textDocument/diagnostic', {
-          textDocument: { uri: pathToFileURL(filePath).href },
+          textDocument: { uri: pathToFileURL(normalizedPath).href },
         }),
         DIAGNOSTICS_WAIT_TIMEOUT_MS,
       )) as { kind?: string, items?: Diagnostic[] } | null
       // Drop a response superseded by a newer pull or close.
-      if (diagnosticPulls[filePath] !== pullID) { return }
+      if (diagnosticPulls[normalizedPath] !== pullID) { return }
       // A "full" report carries items; an "unchanged" report means keep the
       // previously reported set, so leave the map as-is.
       if (report?.kind === 'full' && Array.isArray(report.items)) {
-        applyDiagnostics(normalizePath(filePath), report.items)
+        applyDiagnostics(normalizedPath, report.items)
       }
     }
     catch {
@@ -250,8 +251,9 @@ export async function createLSPClient(input: {
           },
         })
         delete files[filePath]
-        diagnosticPulls[filePath] = (diagnosticPulls[filePath] ?? 0) + 1
-        diagnostics.delete(normalizePath(filePath))
+        const normalizedPath = normalizePath(filePath)
+        diagnosticPulls[normalizedPath] = (diagnosticPulls[normalizedPath] ?? 0) + 1
+        diagnostics.delete(normalizedPath)
       },
     },
 
