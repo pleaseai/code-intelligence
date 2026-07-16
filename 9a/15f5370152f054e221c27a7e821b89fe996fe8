@@ -1,0 +1,37 @@
+packages/lsp/src/server/typescript.ts
+  s_c2caf662a331a1::t_5460bdf8e832e2 80-81,83-84
+  s_c2caf662a331a1::t_5215dfa5143d10 97-98,104-106
+  s_c2caf662a331a1::t_6292a6faa0cfb7 36-47,52-65
+  s_c2caf662a331a1::t_2a1d5276aa39b3 48-51
+packages/lsp/src/client.ts
+  s_c2caf662a331a1::t_fc0b4e984c230c 12
+  s_c2caf662a331a1::t_eb17f81c566af2 110-114,120
+  s_c2caf662a331a1::t_8092eabb72c407 68
+  s_c2caf662a331a1::t_07467466905d1f 131
+  s_c2caf662a331a1::t_83b6c523bf0acf 80,91,93-97
+  s_c2caf662a331a1::t_9ff5cf33cd6f31 276-279
+  s_c2caf662a331a1::t_93f98106b79ccf 67
+  s_c2caf662a331a1::t_b32b44b7998548 138-144
+apps/docs/content/docs/4.reference/2.supported-languages.md
+  s_c2caf662a331a1::t_80105e8c5a5c8c 14-15
+packages/lsp/test/unit/client.test.ts
+  s_c2caf662a331a1::t_1165e152621ddb 209
+packages/lsp/test/unit/typescript-native.test.ts
+  s_c2caf662a331a1::t_a7783db55573cd 7-24,29-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9a15f5370152f054e221c27a7e821b89fe996fe8",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
