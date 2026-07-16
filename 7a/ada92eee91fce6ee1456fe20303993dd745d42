@@ -1,0 +1,19 @@
+.claude/agent-memory/review-review-pr-test-analyzer/lsp-test-patterns.md
+  s_40ec59f7bdd6e8::t_e4efde1c623d3d 16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7aada92eee91fce6ee1456fe20303993dd745d42",
+  "prompts": {},
+  "sessions": {
+    "s_40ec59f7bdd6e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d47842f-bcfc-4a2d-951e-f58332f54c26",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
