@@ -119,9 +119,16 @@ export async function createLSPClient(input: {
       if (report?.kind === 'full' && Array.isArray(report.items)) {
         applyDiagnostics(normalizedPath, report.items)
       }
+      else {
+        applyDiagnostics(normalizedPath, diagnostics.get(normalizedPath) ?? [])
+      }
     }
     catch {
-      // Server may not be ready or may not support pull diagnostics; ignore.
+      // Settle waiters with the latest known diagnostics when the server is not
+      // ready or the request fails, unless a newer pull/close superseded it.
+      if (diagnosticPulls[normalizedPath] === pullID) {
+        applyDiagnostics(normalizedPath, diagnostics.get(normalizedPath) ?? [])
+      }
     }
   }
 

@@ -189,6 +189,26 @@ describe('LSPClient', () => {
     expect(performance.now() - startedAt).toBeLessThan(1_000)
   })
 
+  test.each(['unchanged', 'failed'])('settles waiters for %s pull diagnostics', async (result) => {
+    const handle = spawnFakePullServer()
+
+    client = await createLSPClient({
+      serverID: 'fake-pull',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const testFile = path.join(process.cwd(), `${result}-pull.ts`)
+    const wait = client.waitForDiagnostics({ path: testFile })
+    await client.notify.open({ path: testFile, text: 'const value = 1' })
+
+    const startedAt = performance.now()
+    await wait
+    expect(performance.now() - startedAt).toBeLessThan(1_000)
+    expect(client.diagnostics.get(path.normalize(testFile))).toEqual([])
+  })
+
   test('opens file with explicit buffer text (no disk read)', async () => {
     const handle = spawnFakeServer()
 

@@ -40,6 +40,19 @@ start((data) => {
 
   // Pull diagnostics request - return a full report with one error.
   if (data.method === 'textDocument/diagnostic') {
+    const uri = data.params?.textDocument?.uri ?? ''
+    if (uri.includes('failed-pull')) {
+      send({
+        jsonrpc: '2.0',
+        id: data.id,
+        error: { code: -32603, message: 'Simulated pull failure' },
+      })
+      return
+    }
+    if (uri.includes('unchanged-pull')) {
+      send({ jsonrpc: '2.0', id: data.id, result: { kind: 'unchanged' } })
+      return
+    }
     send({
       jsonrpc: '2.0',
       id: data.id,
