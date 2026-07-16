@@ -1,0 +1,25 @@
+packages/lsp/src/server/typescript.ts
+  s_c2caf662a331a1::t_2ba9114c22873f 103
+packages/lsp/src/client.ts
+  s_c2caf662a331a1::t_fcb2b89dffe70c 253
+  s_c2caf662a331a1::t_5929f44f7dfed0 114-115
+  s_c2caf662a331a1::t_268da080fe2910 100-102,105-106
+  s_c2caf662a331a1::t_5978b38c2cd94c 108-113
+  s_c2caf662a331a1::t_57ac97a01c24fc 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6f9526e9930bdb810f38c819e889185c6aa029a9",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
