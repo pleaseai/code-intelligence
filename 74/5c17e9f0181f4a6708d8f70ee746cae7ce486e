@@ -1,0 +1,19 @@
+packages/lsp/test/unit/typescript-native.test.ts
+  s_c2caf662a331a1::t_e6ed1366c35e43 159-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "745c17e9f0181f4a6708d8f70ee746cae7ce486e",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
