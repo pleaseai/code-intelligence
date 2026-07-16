@@ -62,6 +62,7 @@ export async function createLSPClient(input: {
 
   const diagnostics = new Map<string, Diagnostic[]>()
   const files: Record<string, number> = {}
+  const diagnosticPulls: Record<string, number> = {}
   let diagnosticsListeners: Array<{
     path: string
     resolve: () => void
@@ -96,13 +97,22 @@ export async function createLSPClient(input: {
   // Pull diagnostics for a single file (LSP textDocument/diagnostic). Used for
   // servers that advertise a diagnostic provider instead of pushing them
   // (e.g. typescript-go / tsgo). Failures are swallowed — absent diagnostics
-  // must never break opening a file.
+  // must never break opening a file. `pullID` uniquely identifies this request;
+  // the response is discarded if a newer open/change/close superseded it, so an
+  // out-of-order reply can't overwrite fresher diagnostics with stale ones.
   const pullDiagnostics = async (filePath: string): Promise<void> => {
     if (!supportsPullDiagnostics) { return }
+    const pullID = (diagnosticPulls[filePath] ?? 0) + 1
+    diagnosticPulls[filePath] = pullID
     try {
-      const report = (await connection.sendRequest('textDocument/diagnostic', {
-        textDocument: { uri: pathToFileURL(filePath).href },
-      })) as { kind?: string, items?: Diagnostic[] } | null
+      const report = (await withTimeout(
+        connection.sendRequest('textDocument/diagnostic', {
+          textDocument: { uri: pathToFileURL(filePath).href },
+        }),
+        DIAGNOSTICS_WAIT_TIMEOUT_MS,
+      )) as { kind?: string, items?: Diagnostic[] } | null
+      // Drop a response superseded by a newer pull or close.
+      if (diagnosticPulls[filePath] !== pullID) { return }
       // A "full" report carries items; an "unchanged" report means keep the
       // previously reported set, so leave the map as-is.
       if (report?.kind === 'full' && Array.isArray(report.items)) {
@@ -240,6 +250,7 @@ export async function createLSPClient(input: {
           },
         })
         delete files[filePath]
+        diagnosticPulls[filePath] = (diagnosticPulls[filePath] ?? 0) + 1
         diagnostics.delete(normalizePath(filePath))
       },
     },

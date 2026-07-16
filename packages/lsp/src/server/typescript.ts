@@ -100,6 +100,7 @@ export const TypescriptServer: LSPServerInfo = {
       const proc = spawn(native.command, ['--lsp', '--stdio'], {
         cwd: root,
         env: { ...process.env, BUN_BE_BUN: '1' },
+        shell: process.platform === 'win32',
       })
       attachLSPProcessHandlers(proc, 'typescript')
       return { process: proc }
