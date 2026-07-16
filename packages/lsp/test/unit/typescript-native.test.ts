@@ -156,7 +156,12 @@ describe('resolveNativeTypeScriptServer', () => {
       await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
       const tsc = await makeBin(dir, 'tsc')
       await fs.unlink(tsc)
-      await fs.writeFile(tsc, '#!/bin/sh\nexec node /unrelated/tsc.js "$@"\n')
+      await fs.writeFile(
+        tsc,
+        process.platform === 'win32'
+          ? '@node "%~dp0\\..\\unrelated\\tsc.js" %*\n'
+          : '#!/bin/sh\nexec node /unrelated/tsc.js "$@"\n',
+      )
       expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
     }
     finally {
