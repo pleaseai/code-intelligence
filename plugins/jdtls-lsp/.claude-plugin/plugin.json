@@ -1,6 +1,6 @@
 {
   "name": "jdtls-lsp",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Java (Eclipse JDTLS) Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.10...@pleaseai/code-lsp-v0.1.11) (2026-07-16)
+
+
+### Features
+
+* **lsp:** add native TypeScript 7 (typescript-go) LSP support ([#120](https://github.com/pleaseai/code-intelligence/issues/120)) ([4989812](https://github.com/pleaseai/code-intelligence/commit/498981205a91f08b4dc25e40402b0ef6485b7167))
+
 ## [0.1.10](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.9...@pleaseai/code-lsp-v0.1.10) (2026-07-01)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "vue-lsp",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Vue Language Server with TypeScript Support for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {

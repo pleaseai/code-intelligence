@@ -1,6 +1,6 @@
 {
   "name": "rust-analyzer-lsp",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Rust Analyzer for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {
