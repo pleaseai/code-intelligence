@@ -33,7 +33,7 @@ function findTypeScriptPackageRoot(start: string): string | undefined {
   }
 }
 
-/** Resolve a package-owned bin only when the shared shim targets that package. */
+/** Resolve a package-owned bin declared by the package and exposed by its shared shim. */
 function resolvePackageBin(packageRoot: string, name: string): string | undefined {
   try {
     const pkg = JSON.parse(
@@ -45,18 +45,27 @@ function resolvePackageBin(packageRoot: string, name: string): string | undefine
     const target = path.resolve(packageRoot, relativeTarget)
     if (!fs.existsSync(target)) { return undefined }
     const ext = process.platform === 'win32' ? '.cmd' : ''
-    const nodeModules = packageRoot.includes(`${path.sep}@`)
-      ? path.dirname(path.dirname(packageRoot))
-      : path.dirname(packageRoot)
+    const packageDir = path.dirname(packageRoot)
+    const nodeModules = path.basename(packageDir).startsWith('@')
+      ? path.dirname(packageDir)
+      : packageDir
     const shim = path.join(nodeModules, '.bin', `${name}${ext}`)
     if (!fs.existsSync(shim)) { return undefined }
 
-    if (process.platform === 'win32') {
-      return fs.readFileSync(shim, 'utf8').includes(relativeTarget.replaceAll('/', '\\'))
+    // npm-style symlinks and package-manager-generated wrapper scripts are both
+    // valid shims. For wrappers, require a reference to the package's declared
+    // target so a stale or unrelated shared shim is never selected.
+    const stat = fs.lstatSync(shim)
+    if (stat.isSymbolicLink()) {
+      return path.resolve(path.dirname(shim), fs.readlinkSync(shim)) === target
         ? shim
         : undefined
     }
-    return fs.realpathSync(shim) === fs.realpathSync(target) ? shim : undefined
+    const wrapper = fs.readFileSync(shim, 'utf8').replaceAll('\\', '/')
+    const relativeFromBin = path.relative(path.dirname(shim), target).replaceAll('\\', '/')
+    return wrapper.includes(relativeFromBin) || wrapper.includes(target.replaceAll('\\', '/'))
+      ? shim
+      : undefined
   }
   catch {
     return undefined

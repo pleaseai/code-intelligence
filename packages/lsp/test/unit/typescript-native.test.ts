@@ -120,6 +120,50 @@ describe('resolveNativeTypeScriptServer', () => {
     }
   })
 
+  test('selects native tsc when the project path contains an @-prefixed directory', async () => {
+    const base = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-at-path-'))
+    const dir = path.join(base, '@workspace', 'app')
+    try {
+      await fs.mkdir(dir, { recursive: true })
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(base, { recursive: true, force: true })
+    }
+  })
+
+  test('selects native tsc through a package-manager wrapper shim', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-wrapper-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      if (process.platform !== 'win32') {
+        await fs.unlink(tsc)
+        await fs.writeFile(tsc, '#!/bin/sh\nexec node "$(dirname "$0")/../typescript/bin/tsc.js" "$@"\n')
+      }
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('rejects a shared shim that does not reference the package bin', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-unrelated-shim-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      await fs.unlink(tsc)
+      await fs.writeFile(tsc, '#!/bin/sh\nexec node /unrelated/tsc.js "$@"\n')
+      expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   test('returns undefined when native package exists but no .bin/tsc', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-no-bin-'))
     try {

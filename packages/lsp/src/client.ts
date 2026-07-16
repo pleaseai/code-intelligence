@@ -141,6 +141,7 @@ export async function createLSPClient(input: {
     finally {
       if (diagnosticPulls[normalizedPath] === pullID) {
         delete diagnosticPullTokens[normalizedPath]
+        cancellation.cancel()
         cancellation.dispose()
       }
     }
