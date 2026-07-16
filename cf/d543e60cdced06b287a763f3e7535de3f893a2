@@ -1,0 +1,42 @@
+apps/docs/content/docs/3.configuration/1.overview.md
+  s_3831c1fc8266c1::t_987e10d9b8cbe0 106-107
+  s_3831c1fc8266c1::t_022a857d4684e5 83-105
+ARCHITECTURE.md
+  s_3831c1fc8266c1::t_ed7450e50cba63 124
+packages/lsp/test/unit/client.test.ts
+  s_3831c1fc8266c1::t_8d9885602708eb 16-24
+  s_3831c1fc8266c1::t_c6959c8c81d10d 129-167
+packages/lsp/test/unit/typescript-native.test.ts
+  s_3831c1fc8266c1::t_bd83aa2d5c4e4e 1-127
+packages/lsp/src/server/typescript.ts
+  s_3831c1fc8266c1::t_3a8b8d22cb137c 3-12,17-18,22-81,84,96-108
+packages/lsp/CLAUDE.md
+  s_3831c1fc8266c1::t_1ae8144bcd8b5a 234-242
+  s_3831c1fc8266c1::t_ab9404a1dc221a 243
+apps/docs/content/docs/4.reference/2.supported-languages.md
+  s_3831c1fc8266c1::t_f1357aa67949db 37
+CLAUDE.md
+  s_3831c1fc8266c1::t_aeb9f8681b64ed 132
+packages/lsp/src/client.ts
+  s_3831c1fc8266c1::t_41bed14b75392e 210,227
+  s_3831c1fc8266c1::t_8b6e755ae0ba9b 71-116,121
+  s_3831c1fc8266c1::t_5852639dfa22d7 142,159-161,167-171
+packages/lsp/test/fixture/fake-pull-lsp-server.js
+  s_3831c1fc8266c1::t_9b05c4dd8fbaab 1-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "cfd543e60cdced06b287a763f3e7535de3f893a2",
+  "prompts": {},
+  "sessions": {
+    "s_3831c1fc8266c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86556984-03fc-4d31-89ca-f6b80bcaeccd",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
