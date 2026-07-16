@@ -129,7 +129,7 @@ Claude/MCP Client <-> StdioTransport <-> McpServer <-> Providers
 
 | Language | Server | Root Detection |
 |----------|--------|----------------|
-| TypeScript/JavaScript | typescript-language-server | package-lock.json, bun.lock, etc. |
+| TypeScript/JavaScript | typescript-language-server (auto-upgrades to native TypeScript 7 `tsc --lsp` when the project ships it) | package-lock.json, bun.lock, etc. |
 | TypeScript/JavaScript | oxlint | .oxlintrc.json, package.json |
 | Deno | deno lsp | deno.json, deno.jsonc |
 | Python | pyright-langserver | pyproject.toml, setup.py, requirements.txt |

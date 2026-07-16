@@ -1,54 +1,12 @@
 // Simple JSON-RPC 2.0 LSP-like fake server over stdio
 // Implements a minimal LSP handshake and publishes diagnostics
 
-import { Buffer } from 'node:buffer'
-import process from 'node:process'
+import { send, start } from './fake-lsp-transport.js'
 
 let nextId = 1
 // Tracks how many didOpen notifications were received per uri, so tests can
 // assert that concurrent opens do not emit a duplicate didOpen.
 const openCounts = {}
-
-function encode(message) {
-  const json = JSON.stringify(message)
-  const header = `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n`
-  return Buffer.concat([
-    Buffer.from(header, 'utf8'),
-    Buffer.from(json, 'utf8'),
-  ])
-}
-
-function decodeFrames(buffer) {
-  const results = []
-  let idx = buffer.indexOf('\r\n\r\n')
-  while (idx !== -1) {
-    const header = buffer.slice(0, idx).toString('utf8')
-    const m = /Content-Length:\s*(\d+)/i.exec(header)
-    const len = m ? Number.parseInt(m[1], 10) : 0
-    const bodyStart = idx + 4
-    const bodyEnd = bodyStart + len
-    if (buffer.length < bodyEnd)
-      break
-    const body = buffer.slice(bodyStart, bodyEnd).toString('utf8')
-    results.push(body)
-    buffer = buffer.slice(bodyEnd)
-    idx = buffer.indexOf('\r\n\r\n')
-  }
-  return { messages: results, rest: buffer }
-}
-
-let readBuffer = Buffer.alloc(0)
-
-process.stdin.on('data', (chunk) => {
-  readBuffer = Buffer.concat([readBuffer, chunk])
-  const { messages, rest } = decodeFrames(readBuffer)
-  readBuffer = rest
-  for (const m of messages) handle(m)
-})
-
-function send(msg) {
-  process.stdout.write(encode(msg))
-}
 
 function sendNotification(method, params) {
   send({ jsonrpc: '2.0', method, params })
@@ -60,14 +18,7 @@ function sendRequest(method, params) {
   return id
 }
 
-function handle(raw) {
-  let data
-  try {
-    data = JSON.parse(raw)
-  }
-  catch {
-    return
-  }
+start((data) => {
 
   // Initialize request
   if (data.method === 'initialize') {
@@ -211,4 +162,4 @@ function handle(raw) {
   if (typeof data.id !== 'undefined') {
     send({ jsonrpc: '2.0', id: data.id, result: null })
   }
-}
+})

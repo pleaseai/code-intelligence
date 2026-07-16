@@ -9,6 +9,7 @@ import type { Diagnostic } from 'vscode-languageserver-types'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
+  CancellationTokenSource,
   createMessageConnection,
 
   StreamMessageReader,
@@ -62,32 +63,95 @@ export async function createLSPClient(input: {
 
   const diagnostics = new Map<string, Diagnostic[]>()
   const files: Record<string, number> = {}
+  const diagnosticPulls: Record<string, number> = {}
+  const diagnosticPullTokens: Record<string, CancellationTokenSource> = {}
+  let nextDiagnosticPullID = 0
   let diagnosticsListeners: Array<{
     path: string
     resolve: () => void
     timer?: ReturnType<typeof setTimeout>
   }> = []
 
+  // Whether the server reports diagnostics via the pull model
+  // (textDocument/diagnostic) rather than pushing publishDiagnostics.
+  // Populated from the initialize result below.
+  let supportsPullDiagnostics = false
+
+  const notifyDiagnosticsListeners = (filePath: string): void => {
+    const listeners = diagnosticsListeners.filter(l => l.path === filePath)
+    for (const listener of listeners) {
+      if (listener.timer) { clearTimeout(listener.timer) }
+      listener.timer = setTimeout(() => {
+        diagnosticsListeners = diagnosticsListeners.filter(
+          l => l !== listener,
+        )
+        listener.resolve()
+      }, DIAGNOSTICS_DEBOUNCE_MS)
+    }
+  }
+
+  // Store diagnostics for a file and notify any waiters. Shared by the push
+  // (publishDiagnostics) handler and the pull (textDocument/diagnostic) path.
+  const applyDiagnostics = (filePath: string, diags: Diagnostic[]): void => {
+    diagnostics.set(filePath, diags)
+    notifyDiagnosticsListeners(filePath)
+    input.onDiagnostics?.(filePath, input.serverID)
+  }
+
+  // Pull diagnostics for a single file (LSP textDocument/diagnostic). Used for
+  // servers that advertise a diagnostic provider instead of pushing them
+  // (e.g. typescript-go / tsgo). Failures are swallowed — absent diagnostics
+  // must never break opening a file. `pullID` uniquely identifies this request;
+  // the response is discarded if a newer open/change/close superseded it, so an
+  // out-of-order reply can't overwrite fresher diagnostics with stale ones.
+  const pullDiagnostics = async (filePath: string): Promise<void> => {
+    if (!supportsPullDiagnostics) { return }
+    const normalizedPath = normalizePath(filePath)
+    diagnosticPullTokens[normalizedPath]?.cancel()
+    diagnosticPullTokens[normalizedPath]?.dispose()
+    const cancellation = new CancellationTokenSource()
+    diagnosticPullTokens[normalizedPath] = cancellation
+    const pullID = ++nextDiagnosticPullID
+    diagnosticPulls[normalizedPath] = pullID
+    try {
+      const report = (await withTimeout(
+        connection.sendRequest('textDocument/diagnostic', {
+          textDocument: { uri: pathToFileURL(normalizedPath).href },
+        }, cancellation.token),
+        DIAGNOSTICS_WAIT_TIMEOUT_MS,
+      )) as { kind?: string, items?: Diagnostic[] } | null
+      // Drop a response superseded by a newer pull or close.
+      if (diagnosticPulls[normalizedPath] !== pullID) { return }
+      // A "full" report carries items; an "unchanged" report means keep the
+      // previously reported set, so leave the map as-is.
+      if (report?.kind === 'full' && Array.isArray(report.items)) {
+        applyDiagnostics(normalizedPath, report.items)
+      }
+      else {
+        notifyDiagnosticsListeners(normalizedPath)
+      }
+    }
+    catch {
+      // Settle waiters with the latest known diagnostics when the server is not
+      // ready or the request fails, unless a newer pull/close superseded it.
+      if (diagnosticPulls[normalizedPath] === pullID) {
+        notifyDiagnosticsListeners(normalizedPath)
+      }
+    }
+    finally {
+      if (diagnosticPulls[normalizedPath] === pullID) {
+        delete diagnosticPullTokens[normalizedPath]
+        cancellation.cancel()
+        cancellation.dispose()
+      }
+    }
+  }
+
   // Handle diagnostics notifications
   connection.onNotification(
     'textDocument/publishDiagnostics',
     (params: { uri: string, diagnostics: Diagnostic[] }) => {
-      const filePath = normalizePath(fileURLToPath(params.uri))
-      diagnostics.set(filePath, params.diagnostics)
-
-      // Notify listeners with debounce
-      const listener = diagnosticsListeners.find(l => l.path === filePath)
-      if (listener) {
-        if (listener.timer) { clearTimeout(listener.timer) }
-        listener.timer = setTimeout(() => {
-          diagnosticsListeners = diagnosticsListeners.filter(
-            l => l !== listener,
-          )
-          listener.resolve()
-        }, DIAGNOSTICS_DEBOUNCE_MS)
-      }
-
-      input.onDiagnostics?.(filePath, input.serverID)
+      applyDiagnostics(normalizePath(fileURLToPath(params.uri)), params.diagnostics)
     },
   )
 
@@ -108,7 +172,7 @@ export async function createLSPClient(input: {
   connection.listen()
 
   // Initialize LSP connection
-  await withTimeout(
+  const initializeResult = (await withTimeout(
     connection.sendRequest('initialize', {
       rootUri: pathToFileURL(input.root).href,
       processId: input.server.process.pid,
@@ -125,12 +189,19 @@ export async function createLSPClient(input: {
         textDocument: {
           synchronization: { didOpen: true, didChange: true },
           publishDiagnostics: { versionSupport: true },
+          // Advertise pull-diagnostics support so servers that report via the
+          // pull model (e.g. typescript-go / tsgo) enable their provider.
+          diagnostic: { dynamicRegistration: false },
           rename: { prepareSupport: true },
         },
       },
     }),
     INITIALIZE_TIMEOUT_MS,
-  )
+  )) as { capabilities?: { diagnosticProvider?: unknown } } | undefined
+
+  // A server that advertises a diagnostic provider reports diagnostics via the
+  // pull model (textDocument/diagnostic) instead of pushing publishDiagnostics.
+  supportsPullDiagnostics = Boolean(initializeResult?.capabilities?.diagnosticProvider)
 
   await connection.sendNotification('initialized', {})
 
@@ -169,6 +240,7 @@ export async function createLSPClient(input: {
             },
             contentChanges: [{ text }],
           })
+          void pullDiagnostics(filePath)
           return
         }
 
@@ -185,6 +257,7 @@ export async function createLSPClient(input: {
             text,
           },
         })
+        void pullDiagnostics(filePath)
       },
 
       async close(fileInput: { path: string }) {
@@ -200,7 +273,12 @@ export async function createLSPClient(input: {
           },
         })
         delete files[filePath]
-        diagnostics.delete(normalizePath(filePath))
+        const normalizedPath = normalizePath(filePath)
+        diagnosticPullTokens[normalizedPath]?.cancel()
+        diagnosticPullTokens[normalizedPath]?.dispose()
+        delete diagnosticPullTokens[normalizedPath]
+        delete diagnosticPulls[normalizedPath]
+        diagnostics.delete(normalizedPath)
       },
     },
 
