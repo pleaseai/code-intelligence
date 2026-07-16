@@ -1,0 +1,23 @@
+packages/lsp/test/fixture/fake-pull-lsp-server.js
+  s_c2caf662a331a1::t_72a0bf8897eae3 43-55
+packages/lsp/src/client.ts
+  s_c2caf662a331a1::t_a2da52034f8721 122-124,127-131
+packages/lsp/test/unit/client.test.ts
+  s_c2caf662a331a1::t_0e40bf40726ce6 192-211
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6a613f6d8d1739153b16234130d8ddac8c35655d",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
