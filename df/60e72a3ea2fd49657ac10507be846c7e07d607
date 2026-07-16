@@ -1,0 +1,36 @@
+packages/lsp/src/client.ts
+  s_c2caf662a331a1::t_23e8d5c85f3c13 144
+packages/lsp/test/unit/typescript-native.test.ts
+  s_c2caf662a331a1::t_5c9eaf27e6f35f 123-136
+  s_c2caf662a331a1::t_0071932587f961 121,137-152
+  s_c2caf662a331a1::t_39bb216475b599 120,153-163
+  s_f2996866717b61::t_f9324d2eb10d2d 122
+packages/lsp/src/server/typescript.ts
+  s_c2caf662a331a1::t_2e1f8b8410802e 55-60,64-68
+  s_c2caf662a331a1::t_b4d65b91cb6c89 36
+  s_c2caf662a331a1::t_1c2e3a75310985 48-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "df60e72a3ea2fd49657ac10507be846c7e07d607",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    },
+    "s_f2996866717b61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "48ae688e-0b2d-4b60-9aa8-675db6947f83",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
