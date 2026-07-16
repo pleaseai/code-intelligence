@@ -1,0 +1,21 @@
+orca.yaml
+  s_b99c14145bcb67::t_b8fc784a47f495 1-17
+.worktreeinclude
+  s_b99c14145bcb67::t_ff3fdbdfcc9a5d 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "1adcd6c734015317d12ecc06ce423faca61e4aab",
+  "prompts": {},
+  "sessions": {
+    "s_b99c14145bcb67": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "83a9aec9-7f46-412d-82e6-2ab818b2281e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
