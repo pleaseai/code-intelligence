@@ -61,9 +61,14 @@ function resolvePackageBin(packageRoot: string, name: string): string | undefine
         ? shim
         : undefined
     }
-    const wrapper = fs.readFileSync(shim, 'utf8').replaceAll('\\', '/')
-    const relativeFromBin = path.relative(path.dirname(shim), target).replaceAll('\\', '/')
-    return wrapper.includes(relativeFromBin) || wrapper.includes(target.replaceAll('\\', '/'))
+    const normalizeShimPath = (value: string): string => {
+      const normalized = value.replaceAll('\\', '/')
+      return process.platform === 'win32' ? normalized.toLowerCase() : normalized
+    }
+    const wrapper = normalizeShimPath(fs.readFileSync(shim, 'utf8'))
+    const relativeFromBin = normalizeShimPath(path.relative(path.dirname(shim), target))
+    const normalizedTarget = normalizeShimPath(target)
+    return wrapper.includes(relativeFromBin) || wrapper.includes(normalizedTarget)
       ? shim
       : undefined
   }
