@@ -1,0 +1,29 @@
+packages/lsp/test/fixture/fake-lsp-transport.js
+  s_c2caf662a331a1::t_f8303b11a7ba10 1-49
+packages/lsp/test/fixture/fake-pull-lsp-server.js
+  s_c2caf662a331a1::t_b4b7fc05a0c31d 6,8
+  s_c2caf662a331a1::t_9d7d9ef17c66cd 69
+packages/lsp/src/client.ts
+  s_c2caf662a331a1::t_5989e9df32b36b 254-256
+  s_c2caf662a331a1::t_d517fb95125603 105-107,111,116,120
+packages/lsp/test/fixture/fake-lsp-server.js
+  s_c2caf662a331a1::t_a6d0ae85f557b8 4
+  s_c2caf662a331a1::t_5067f32096c0d0 21
+  s_c2caf662a331a1::t_0a9d89b982c653 165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ecd4ec6afc3681c72066d3eec17115f5db653af8",
+  "prompts": {},
+  "sessions": {
+    "s_c2caf662a331a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6fcadcc2-5fd9-417c-b291-937300238add",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Minsu Lee <minsu.lee@pleaseai.dev>"
+    }
+  }
+}
