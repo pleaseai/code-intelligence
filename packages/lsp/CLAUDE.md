@@ -231,6 +231,16 @@ lsp:
 - `root: string` - Custom project root path (must be non-empty)
 - `command: string[]` - Custom spawn command (must have at least one element)
 
+**Native TypeScript 7 (typescript-go):** The single `typescript` server auto-selects
+its binary per project root at spawn time. When the workspace ships a native
+TypeScript 7 build — `node_modules/typescript` at major version ≥ 7 (or missing
+`lib/tsserver.js` / carrying `lib/getExePath.js`), or a `@typescript/native-preview`
+`tsgo` bin — it spawns `tsc --lsp --stdio` (or `tsgo --lsp --stdio`); otherwise it
+falls back to the classic `typescript-language-server --stdio`. There is no separate
+server id or config toggle, so there are never duplicate diagnostics. The native
+servers report diagnostics via the LSP pull model (`textDocument/diagnostic`), which
+the client handles transparently alongside push (`publishDiagnostics`).
+
 **Config Utilities:**
 ```typescript
 import { getServerRoot, isServerEnabled, loadLspConfig } from '@pleaseai/code-lsp'

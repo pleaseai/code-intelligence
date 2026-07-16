@@ -121,7 +121,7 @@ packages/lsp/src/
 ├── language.ts         # File extension → language ID mapping
 └── server/             # Server definitions (30+ files)
     ├── index.ts        # LSP_SERVERS registry array
-    ├── typescript.ts   # TypeScript/JavaScript server
+    ├── typescript.ts   # TypeScript/JavaScript server (auto-selects native TS 7)
     ├── pyright.ts      # Python server
     └── ...             # One file per language server
 ```

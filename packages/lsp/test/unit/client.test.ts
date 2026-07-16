@@ -13,6 +13,15 @@ function spawnFakeServer() {
   }
 }
 
+function spawnFakePullServer() {
+  const serverPath = path.join(import.meta.dir, '../fixture/fake-pull-lsp-server.js')
+  return {
+    process: spawn(process.execPath, [serverPath], {
+      stdio: 'pipe',
+    }),
+  }
+}
+
 describe('LSPClient', () => {
   let client: LSPClientInfo | null = null
 
@@ -115,6 +124,45 @@ describe('LSPClient', () => {
     await new Promise(r => setTimeout(r, 200))
 
     expect(client.diagnostics.size).toBeGreaterThan(0)
+  })
+
+  test('pulls diagnostics for servers that advertise a diagnostic provider', async () => {
+    const handle = spawnFakePullServer()
+
+    client = await createLSPClient({
+      serverID: 'fake-pull',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const testFile = path.join(process.cwd(), 'package.json')
+    // The pull server never pushes publishDiagnostics; diagnostics must be
+    // fetched via textDocument/diagnostic during open().
+    await client.notify.open({ path: testFile })
+
+    const diags = client.diagnostics.get(path.normalize(testFile)) ?? []
+    expect(diags.length).toBeGreaterThan(0)
+    expect(diags[0]?.severity).toBe(1)
+    expect(diags[0]?.message).toContain('Pull diagnostic')
+  })
+
+  test('waitForDiagnostics resolves for pull-model servers', async () => {
+    const handle = spawnFakePullServer()
+
+    client = await createLSPClient({
+      serverID: 'fake-pull',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const testFile = path.join(process.cwd(), 'package.json')
+    const wait = client.waitForDiagnostics({ path: testFile })
+    await client.notify.open({ path: testFile })
+    await wait
+
+    expect(client.diagnostics.get(path.normalize(testFile))?.length).toBeGreaterThan(0)
   })
 
   test('opens file with explicit buffer text (no disk read)', async () => {
