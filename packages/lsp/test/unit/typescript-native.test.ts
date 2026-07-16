@@ -169,6 +169,49 @@ describe('resolveNativeTypeScriptServer', () => {
     }
   })
 
+  test('selects native tsc through a pnpm-style symlinked package', async () => {
+    const base = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-pnpm-'))
+    try {
+      const packageStore = path.join(
+        base,
+        'node_modules',
+        '.pnpm',
+        'typescript@7.0.0',
+        'node_modules',
+        'typescript',
+      )
+      await fs.mkdir(path.join(packageStore, 'lib'), { recursive: true })
+      await fs.writeFile(
+        path.join(packageStore, 'package.json'),
+        JSON.stringify({ name: 'typescript', version: '7.0.0', bin: { tsc: 'bin/tsc.js' } }),
+      )
+      const target = path.join(packageStore, 'bin', 'tsc.js')
+      await fs.mkdir(path.dirname(target), { recursive: true })
+      await fs.writeFile(target, '#!/usr/bin/env node\n')
+
+      const linkedPackage = path.join(base, 'node_modules', 'typescript')
+      await fs.symlink(path.relative(path.dirname(linkedPackage), packageStore), linkedPackage)
+      const binDir = path.join(base, 'node_modules', '.bin')
+      await fs.mkdir(binDir, { recursive: true })
+      const ext = process.platform === 'win32' ? '.cmd' : ''
+      const shim = path.join(binDir, `tsc${ext}`)
+      if (process.platform === 'win32') {
+        await fs.writeFile(
+          shim,
+          '@node "%~dp0\\..\\.pnpm\\typescript@7.0.0\\node_modules\\typescript\\bin\\tsc.js" %*\n',
+        )
+      }
+      else {
+        await fs.symlink(path.relative(binDir, target), shim)
+      }
+
+      expect(resolveNativeTypeScriptServer(base)?.command).toBe(shim)
+    }
+    finally {
+      await fs.rm(base, { recursive: true, force: true })
+    }
+  })
+
   test('returns undefined when native package exists but no .bin/tsc', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-no-bin-'))
     try {

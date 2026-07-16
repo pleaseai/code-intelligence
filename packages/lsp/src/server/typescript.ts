@@ -57,7 +57,9 @@ function resolvePackageBin(packageRoot: string, name: string): string | undefine
     // target so a stale or unrelated shared shim is never selected.
     const stat = fs.lstatSync(shim)
     if (stat.isSymbolicLink()) {
-      return path.resolve(path.dirname(shim), fs.readlinkSync(shim)) === target
+      const resolvedShim = path.resolve(path.dirname(shim), fs.readlinkSync(shim))
+      return fs.existsSync(resolvedShim)
+        && fs.realpathSync(resolvedShim) === fs.realpathSync(target)
         ? shim
         : undefined
     }
