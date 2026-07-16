@@ -33,6 +33,36 @@ function findTypeScriptPackageRoot(start: string): string | undefined {
   }
 }
 
+/** Resolve a package-owned bin only when the shared shim targets that package. */
+function resolvePackageBin(packageRoot: string, name: string): string | undefined {
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
+    ) as { bin?: string | Record<string, string> }
+    const relativeTarget = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin?.[name]
+    if (!relativeTarget) { return undefined }
+
+    const target = path.resolve(packageRoot, relativeTarget)
+    if (!fs.existsSync(target)) { return undefined }
+    const ext = process.platform === 'win32' ? '.cmd' : ''
+    const nodeModules = packageRoot.includes(`${path.sep}@`)
+      ? path.dirname(path.dirname(packageRoot))
+      : path.dirname(packageRoot)
+    const shim = path.join(nodeModules, '.bin', `${name}${ext}`)
+    if (!fs.existsSync(shim)) { return undefined }
+
+    if (process.platform === 'win32') {
+      return fs.readFileSync(shim, 'utf8').includes(relativeTarget.replaceAll('/', '\\'))
+        ? shim
+        : undefined
+    }
+    return fs.realpathSync(shim) === fs.realpathSync(target) ? shim : undefined
+  }
+  catch {
+    return undefined
+  }
+}
+
 /** Whether the installed `typescript` package is the native (TS 7+) build. */
 function isNativeTypeScriptPackage(packageRoot: string): boolean {
   try {
@@ -47,9 +77,11 @@ function isNativeTypeScriptPackage(packageRoot: string): boolean {
   catch {
     // Fall through to file-based markers.
   }
+  const libRoot = path.join(packageRoot, 'lib')
+  if (!fs.existsSync(libRoot)) { return false }
   // The native build ships getExePath.js and drops the classic tsserver.js entry.
-  if (fs.existsSync(path.join(packageRoot, 'lib', 'getExePath.js'))) { return true }
-  return !fs.existsSync(path.join(packageRoot, 'lib', 'tsserver.js'))
+  if (fs.existsSync(path.join(libRoot, 'getExePath.js'))) { return true }
+  return !fs.existsSync(path.join(libRoot, 'tsserver.js'))
 }
 
 /**
@@ -59,20 +91,19 @@ function isNativeTypeScriptPackage(packageRoot: string): boolean {
 export function resolveNativeTypeScriptServer(
   root: string,
 ): { command: string, label: string } | undefined {
-  const ext = process.platform === 'win32' ? '.cmd' : ''
-
   // Native `typescript` package (TS 7+) → its node_modules/.bin/tsc.
   const packageRoot = findTypeScriptPackageRoot(root)
   if (packageRoot && isNativeTypeScriptPackage(packageRoot)) {
-    const tsc = path.join(path.dirname(packageRoot), '.bin', `tsc${ext}`)
-    if (fs.existsSync(tsc)) { return { command: tsc, label: 'native tsc' } }
+    const tsc = resolvePackageBin(packageRoot, 'tsc')
+    if (tsc) { return { command: tsc, label: 'native tsc' } }
   }
 
   // `@typescript/native-preview` installs a `tsgo` bin (can coexist with TS <= 6).
   let dir = path.resolve(root)
   while (true) {
-    const tsgo = path.join(dir, 'node_modules', '.bin', `tsgo${ext}`)
-    if (fs.existsSync(tsgo)) { return { command: tsgo, label: 'native tsgo' } }
+    const nativePreviewRoot = path.join(dir, 'node_modules', '@typescript', 'native-preview')
+    const tsgo = resolvePackageBin(nativePreviewRoot, 'tsgo')
+    if (tsgo) { return { command: tsgo, label: 'native tsgo' } }
     const parent = path.dirname(dir)
     if (parent === dir) { return undefined }
     dir = parent

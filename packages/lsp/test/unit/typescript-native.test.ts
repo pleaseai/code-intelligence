@@ -4,12 +4,34 @@ import path from 'node:path'
 import { describe, expect, test } from 'bun:test'
 import { resolveNativeTypeScriptServer } from '../../src/server/typescript'
 
-async function makeBin(dir: string, name: string): Promise<string> {
+async function makeBin(
+  dir: string,
+  name: string,
+  packageName = name === 'tsgo' ? '@typescript/native-preview' : 'typescript',
+): Promise<string> {
+  const packageDir = path.join(dir, 'node_modules', ...packageName.split('/'))
+  const relativeTarget = `bin/${name}.js`
+  const target = path.join(packageDir, relativeTarget)
+  await fs.mkdir(path.dirname(target), { recursive: true })
+  await fs.writeFile(target, '#!/usr/bin/env node\n')
+
+  const packageJson = path.join(packageDir, 'package.json')
+  const pkg = await fs.readFile(packageJson, 'utf8')
+    .then(text => JSON.parse(text) as Record<string, unknown>)
+    .catch(() => ({ name: packageName, version: '1.0.0' }))
+  pkg.bin = { ...(typeof pkg.bin === 'object' ? pkg.bin : {}), [name]: relativeTarget }
+  await fs.writeFile(packageJson, JSON.stringify(pkg))
+
   const binDir = path.join(dir, 'node_modules', '.bin')
   await fs.mkdir(binDir, { recursive: true })
   const ext = process.platform === 'win32' ? '.cmd' : ''
   const bin = path.join(binDir, `${name}${ext}`)
-  await fs.writeFile(bin, '#!/bin/sh\n')
+  if (process.platform === 'win32') {
+    await fs.writeFile(bin, `@node "%~dp0\\..\\${packageName}\\${relativeTarget.replaceAll('/', '\\')}" %*\n`)
+  }
+  else {
+    await fs.symlink(path.relative(binDir, target), bin)
+  }
   return bin
 }
 

@@ -9,6 +9,7 @@ import type { Diagnostic } from 'vscode-languageserver-types'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
+  CancellationTokenSource,
   createMessageConnection,
 
   StreamMessageReader,
@@ -63,6 +64,8 @@ export async function createLSPClient(input: {
   const diagnostics = new Map<string, Diagnostic[]>()
   const files: Record<string, number> = {}
   const diagnosticPulls: Record<string, number> = {}
+  const diagnosticPullTokens: Record<string, CancellationTokenSource> = {}
+  let nextDiagnosticPullID = 0
   let diagnosticsListeners: Array<{
     path: string
     resolve: () => void
@@ -74,12 +77,7 @@ export async function createLSPClient(input: {
   // Populated from the initialize result below.
   let supportsPullDiagnostics = false
 
-  // Store diagnostics for a file and notify any waiters. Shared by the push
-  // (publishDiagnostics) handler and the pull (textDocument/diagnostic) path.
-  const applyDiagnostics = (filePath: string, diags: Diagnostic[]): void => {
-    diagnostics.set(filePath, diags)
-
-    // Notify listeners with debounce
+  const notifyDiagnosticsListeners = (filePath: string): void => {
     const listeners = diagnosticsListeners.filter(l => l.path === filePath)
     for (const listener of listeners) {
       if (listener.timer) { clearTimeout(listener.timer) }
@@ -90,7 +88,13 @@ export async function createLSPClient(input: {
         listener.resolve()
       }, DIAGNOSTICS_DEBOUNCE_MS)
     }
+  }
 
+  // Store diagnostics for a file and notify any waiters. Shared by the push
+  // (publishDiagnostics) handler and the pull (textDocument/diagnostic) path.
+  const applyDiagnostics = (filePath: string, diags: Diagnostic[]): void => {
+    diagnostics.set(filePath, diags)
+    notifyDiagnosticsListeners(filePath)
     input.onDiagnostics?.(filePath, input.serverID)
   }
 
@@ -103,13 +107,17 @@ export async function createLSPClient(input: {
   const pullDiagnostics = async (filePath: string): Promise<void> => {
     if (!supportsPullDiagnostics) { return }
     const normalizedPath = normalizePath(filePath)
-    const pullID = (diagnosticPulls[normalizedPath] ?? 0) + 1
+    diagnosticPullTokens[normalizedPath]?.cancel()
+    diagnosticPullTokens[normalizedPath]?.dispose()
+    const cancellation = new CancellationTokenSource()
+    diagnosticPullTokens[normalizedPath] = cancellation
+    const pullID = ++nextDiagnosticPullID
     diagnosticPulls[normalizedPath] = pullID
     try {
       const report = (await withTimeout(
         connection.sendRequest('textDocument/diagnostic', {
           textDocument: { uri: pathToFileURL(normalizedPath).href },
-        }),
+        }, cancellation.token),
         DIAGNOSTICS_WAIT_TIMEOUT_MS,
       )) as { kind?: string, items?: Diagnostic[] } | null
       // Drop a response superseded by a newer pull or close.
@@ -120,14 +128,20 @@ export async function createLSPClient(input: {
         applyDiagnostics(normalizedPath, report.items)
       }
       else {
-        applyDiagnostics(normalizedPath, diagnostics.get(normalizedPath) ?? [])
+        notifyDiagnosticsListeners(normalizedPath)
       }
     }
     catch {
       // Settle waiters with the latest known diagnostics when the server is not
       // ready or the request fails, unless a newer pull/close superseded it.
       if (diagnosticPulls[normalizedPath] === pullID) {
-        applyDiagnostics(normalizedPath, diagnostics.get(normalizedPath) ?? [])
+        notifyDiagnosticsListeners(normalizedPath)
+      }
+    }
+    finally {
+      if (diagnosticPulls[normalizedPath] === pullID) {
+        delete diagnosticPullTokens[normalizedPath]
+        cancellation.dispose()
       }
     }
   }
@@ -259,7 +273,10 @@ export async function createLSPClient(input: {
         })
         delete files[filePath]
         const normalizedPath = normalizePath(filePath)
-        diagnosticPulls[normalizedPath] = (diagnosticPulls[normalizedPath] ?? 0) + 1
+        diagnosticPullTokens[normalizedPath]?.cancel()
+        diagnosticPullTokens[normalizedPath]?.dispose()
+        delete diagnosticPullTokens[normalizedPath]
+        delete diagnosticPulls[normalizedPath]
         diagnostics.delete(normalizedPath)
       },
     },

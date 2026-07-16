@@ -206,7 +206,7 @@ describe('LSPClient', () => {
     const startedAt = performance.now()
     await wait
     expect(performance.now() - startedAt).toBeLessThan(1_000)
-    expect(client.diagnostics.get(path.normalize(testFile))).toEqual([])
+    expect(client.diagnostics.get(path.normalize(testFile))).toBeUndefined()
   })
 
   test('opens file with explicit buffer text (no disk read)', async () => {
