@@ -167,6 +167,28 @@ describe('LSPClient', () => {
     expect(client.diagnostics.get(path.normalize(testFile))?.length).toBeGreaterThan(0)
   })
 
+  test('resolves all diagnostics waiters for the same file', async () => {
+    const handle = spawnFakePullServer()
+
+    client = await createLSPClient({
+      serverID: 'fake-pull',
+      server: handle,
+      root: process.cwd(),
+      projectPath: process.cwd(),
+    })
+
+    const testFile = path.join(process.cwd(), 'package.json')
+    const waits = [
+      client.waitForDiagnostics({ path: testFile }),
+      client.waitForDiagnostics({ path: testFile }),
+    ]
+    await client.notify.open({ path: testFile })
+
+    const startedAt = performance.now()
+    await Promise.all(waits)
+    expect(performance.now() - startedAt).toBeLessThan(1_000)
+  })
+
   test('opens file with explicit buffer text (no disk read)', async () => {
     const handle = spawnFakeServer()
 

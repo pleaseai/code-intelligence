@@ -80,8 +80,8 @@ export async function createLSPClient(input: {
     diagnostics.set(filePath, diags)
 
     // Notify listeners with debounce
-    const listener = diagnosticsListeners.find(l => l.path === filePath)
-    if (listener) {
+    const listeners = diagnosticsListeners.filter(l => l.path === filePath)
+    for (const listener of listeners) {
       if (listener.timer) { clearTimeout(listener.timer) }
       listener.timer = setTimeout(() => {
         diagnosticsListeners = diagnosticsListeners.filter(
