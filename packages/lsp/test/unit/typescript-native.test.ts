@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { resolveNativeTypeScriptServer } from '../../src/server/typescript'
 
 async function makeBin(
@@ -74,6 +74,62 @@ async function makeTsrs(dir: string, opts: { platformBinary: boolean }): Promise
 }
 
 describe('resolveNativeTypeScriptServer', () => {
+  const originalPath = process.env.PATH
+  let emptyPathDir: string
+  beforeEach(async () => {
+    emptyPathDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-empty-path-'))
+    process.env.PATH = emptyPathDir
+  })
+  afterEach(async () => {
+    process.env.PATH = originalPath
+    await fs.rm(emptyPathDir, { recursive: true, force: true })
+  })
+
+  test('falls back to a native tsrs binary on PATH when no project-local server exists', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '5.7.0', tsserver: true })
+      const globalTsrs = path.join(emptyPathDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs')
+      await fs.writeFile(globalTsrs, '')
+      await fs.chmod(globalTsrs, 0o755)
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(globalTsrs)
+      expect(result?.label).toBe('global tsrs')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips a global npm tsrs launcher without a platform binary', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-npm-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-prefix-'))
+    try {
+      const launcher = await makeTsrs(prefix, { platformBinary: false })
+      process.env.PATH = path.dirname(launcher)
+      expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+    }
+  })
+
+  test('prefers project-local native tsc over a global tsrs', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-local-over-global-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      const globalTsrs = path.join(emptyPathDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs')
+      await fs.writeFile(globalTsrs, '')
+      await fs.chmod(globalTsrs, 0o755)
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   test('returns undefined for a classic TypeScript 5 project', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-classic-'))
     try {

@@ -243,7 +243,9 @@ the client handles transparently alongside push (`publishDiagnostics`).
 A project-local `tsrs` (the Rust port of TypeScript 7, same `--lsp --stdio` protocol)
 takes priority over `tsc`/`tsgo`, but only when its native binary is available —
 `TSRS_BINARY`, or an installed `@tsrs/*` platform package matching this os/cpu;
-otherwise (e.g. darwin-x64, unsupported) resolution falls through.
+otherwise (e.g. darwin-x64, unsupported) resolution falls through. When no
+project-local tsrs/tsc/tsgo exists, a `tsrs` on `PATH` is used before the classic
+server (an npm launcher on `PATH` gets the same platform-binary check).
 
 **Config Utilities:**
 ```typescript

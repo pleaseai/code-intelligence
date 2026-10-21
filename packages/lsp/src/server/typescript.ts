@@ -164,7 +164,34 @@ export function resolveNativeTypeScriptServer(
   // `@typescript/native-preview` installs a `tsgo` bin (can coexist with TS <= 6).
   const tsgo = findPackageBin(root, '@typescript/native-preview', 'tsgo')
   if (tsgo) { return { command: tsgo, label: 'native tsgo' } }
+
+  const globalTsrs = resolveGlobalTsrs()
+  if (globalTsrs) { return { command: globalTsrs, label: 'global tsrs' } }
   return undefined
+}
+
+function resolveGlobalTsrs(): string | undefined {
+  const bin = Bun.which('tsrs', { PATH: process.env.PATH ?? '' })
+  if (!bin) { return undefined }
+  // An npm-installed launcher (symlinked `<prefix>/bin/tsrs` or Windows `<prefix>/tsrs.cmd`)
+  // only works with its platform binary; anything else on PATH is the binary itself.
+  const realBin = fs.realpathSync(bin)
+  const candidates = [
+    path.dirname(path.dirname(realBin)),
+    path.join(path.dirname(bin), 'node_modules', 'tsrs'),
+  ]
+  for (const packageRoot of candidates) {
+    try {
+      const pkg = JSON.parse(
+        fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
+      ) as { name?: unknown }
+      if (pkg.name === 'tsrs') { return hasTsrsBinary(packageRoot) ? bin : undefined }
+    }
+    catch {
+      // Not an npm package root.
+    }
+  }
+  return bin
 }
 
 export const TypescriptServer: LSPServerInfo = {
