@@ -8,6 +8,7 @@
  */
 
 import type { LSPServerInfo } from './types'
+import { Buffer } from 'node:buffer'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
@@ -96,35 +97,80 @@ function isNativeTypeScriptPackage(packageRoot: string): boolean {
   return !fs.existsSync(path.join(libRoot, 'tsserver.js'))
 }
 
+function isMuslLinux(): boolean {
+  try {
+    return fs.readFileSync('/usr/bin/ldd', 'utf8').includes('musl')
+  }
+  catch {
+    // Fall through to the process report.
+  }
+  try {
+    const report = process.report?.getReport() as unknown as {
+      header?: { glibcVersionRuntime?: string }
+      sharedObjects?: string[]
+    } | undefined
+    if (report?.header?.glibcVersionRuntime) { return false }
+    if (report?.sharedObjects?.some(o => o.includes('libc.musl-') || o.includes('ld-musl-'))) { return true }
+  }
+  catch {
+    // Unknown host: the launcher defaults to GNU.
+  }
+  return false
+}
+
+/** The single platform package the tsrs launcher resolves for this host. Exported for testing. */
+export function getTsrsPlatformPackageName(): string {
+  const suffix = process.platform === 'linux' ? (isMuslLinux() ? '-musl' : '-gnu') : ''
+  return `@tsrs/${process.platform}-${process.arch}${suffix}`
+}
+
 function hasTsrsBinary(packageRoot: string): boolean {
   const override = process.env.TSRS_BINARY
   if (override) { return fs.existsSync(override) }
   try {
     const realRoot = fs.realpathSync(packageRoot)
-    const pkg = JSON.parse(
-      fs.readFileSync(path.join(realRoot, 'package.json'), 'utf8'),
-    ) as { optionalDependencies?: Record<string, string> }
     const require = createRequire(path.join(realRoot, 'package.json'))
     const exeName = process.platform === 'win32' ? 'tsrs.exe' : 'tsrs'
-    return Object.keys(pkg.optionalDependencies ?? {}).some((name) => {
-      try {
-        const platformPkgJson = require.resolve(`${name}/package.json`)
-        const platformPkg = JSON.parse(fs.readFileSync(platformPkgJson, 'utf8')) as {
-          os?: string[]
-          cpu?: string[]
-        }
-        return (platformPkg.os?.includes(process.platform) ?? true)
-          && (platformPkg.cpu?.includes(process.arch) ?? true)
-          && fs.existsSync(path.join(path.dirname(platformPkgJson), exeName))
-      }
-      catch {
-        return false
-      }
-    })
+    const platformPkgJson = require.resolve(`${getTsrsPlatformPackageName()}/package.json`)
+    return fs.existsSync(path.join(path.dirname(platformPkgJson), exeName))
   }
   catch {
     return false
   }
+}
+
+function isNativeExecutable(file: string): boolean {
+  const header = Buffer.alloc(4)
+  const fd = fs.openSync(file, 'r')
+  try {
+    if (fs.readSync(fd, header, 0, 4, 0) < 4) { return false }
+  }
+  finally {
+    fs.closeSync(fd)
+  }
+  const hex = header.toString('hex')
+  return hex === '7f454c46' // ELF
+    || ['feedface', 'feedfacf', 'cefaedfe', 'cffaedfe', 'cafebabe'].includes(hex) // Mach-O
+    || hex.startsWith('4d5a') // PE
+}
+
+/** Locate the tsrs package a wrapper script launches, from `node_modules/tsrs` paths in its text. */
+function findWrapperPackageRoot(wrapper: string, bin: string): string | undefined {
+  const dir = path.dirname(bin)
+  const text = wrapper.replace(/\$\{?basedir\}?|%~dp0|%dp0%/g, dir)
+  for (const match of text.matchAll(/([^\s"'`=:;]*node_modules[\\/]tsrs)[\\/]/g)) {
+    const packageRoot = path.resolve(dir, match[1]!)
+    try {
+      const pkg = JSON.parse(
+        fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
+      ) as { name?: unknown }
+      if (pkg.name === 'tsrs') { return packageRoot }
+    }
+    catch {
+      // Not a package root.
+    }
+  }
+  return undefined
 }
 
 function findPackageBin(
@@ -174,7 +220,7 @@ function resolveGlobalTsrs(): string | undefined {
   const bin = Bun.which('tsrs', { PATH: process.env.PATH ?? '' })
   if (!bin) { return undefined }
   // An npm-installed launcher (symlinked `<prefix>/bin/tsrs` or Windows `<prefix>/tsrs.cmd`)
-  // only works with its platform binary; anything else on PATH is the binary itself.
+  // only works with its platform binary; a native executable is used as-is and a wrapper script is verified.
   const realBin = fs.realpathSync(bin)
   const candidates = [
     path.dirname(path.dirname(realBin)),
@@ -191,7 +237,15 @@ function resolveGlobalTsrs(): string | undefined {
       // Not an npm package root.
     }
   }
-  return bin
+  try {
+    if (isNativeExecutable(realBin)) { return bin }
+    // A wrapper script (e.g. pnpm) is only usable when the tsrs package it launches has its binary.
+    const packageRoot = findWrapperPackageRoot(fs.readFileSync(realBin, 'utf8'), bin)
+    return packageRoot && hasTsrsBinary(packageRoot) ? bin : undefined
+  }
+  catch {
+    return undefined
+  }
 }
 
 export const TypescriptServer: LSPServerInfo = {

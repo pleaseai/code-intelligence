@@ -1,8 +1,9 @@
+import { Buffer } from 'node:buffer'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
-import { resolveNativeTypeScriptServer } from '../../src/server/typescript'
+import { getTsrsPlatformPackageName, resolveNativeTypeScriptServer } from '../../src/server/typescript'
 
 async function makeBin(
   dir: string,
@@ -54,12 +55,14 @@ async function writeTypeScriptPackage(
   }
 }
 
-async function makeTsrs(dir: string, opts: { platformBinary: boolean }): Promise<string> {
+async function makeTsrs(
+  dir: string,
+  opts: { platformBinary: boolean, platformName?: string },
+): Promise<string> {
   const bin = await makeBin(dir, 'tsrs', 'tsrs')
-  const platformName = '@tsrs/test-platform'
+  const platformName = opts.platformName ?? getTsrsPlatformPackageName()
   const pkgJson = path.join(dir, 'node_modules', 'tsrs', 'package.json')
   const pkg = JSON.parse(await fs.readFile(pkgJson, 'utf8')) as Record<string, unknown>
-  pkg.optionalDependencies = { [platformName]: '1.0.0' }
   await fs.writeFile(pkgJson, JSON.stringify(pkg))
   if (opts.platformBinary) {
     const platformDir = path.join(dir, 'node_modules', ...platformName.split('/'))
@@ -90,7 +93,7 @@ describe('resolveNativeTypeScriptServer', () => {
     try {
       await writeTypeScriptPackage(dir, { version: '5.7.0', tsserver: true })
       const globalTsrs = path.join(emptyPathDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs')
-      await fs.writeFile(globalTsrs, '')
+      await fs.writeFile(globalTsrs, Buffer.from('7f454c46', 'hex'))
       await fs.chmod(globalTsrs, 0o755)
       const result = resolveNativeTypeScriptServer(dir)
       expect(result?.command).toBe(globalTsrs)
@@ -108,6 +111,29 @@ describe('resolveNativeTypeScriptServer', () => {
       const launcher = await makeTsrs(prefix, { platformBinary: false })
       process.env.PATH = path.dirname(launcher)
       expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+    }
+  })
+
+  test('skips a global wrapper-script tsrs launcher without a platform binary', async () => {
+    if (process.platform === 'win32') { return }
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-wrapper-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-wrapper-prefix-'))
+    try {
+      await makeTsrs(prefix, { platformBinary: false })
+      const wrapperDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-wrapper-bin-'))
+      const wrapper = path.join(wrapperDir, 'tsrs')
+      await fs.writeFile(
+        wrapper,
+        `#!/bin/sh\nexec node "${path.join(prefix, 'node_modules', 'tsrs', 'bin', 'tsrs.js')}" "$@"\n`,
+      )
+      await fs.chmod(wrapper, 0o755)
+      process.env.PATH = wrapperDir
+      expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+      await fs.rm(wrapperDir, { recursive: true, force: true })
     }
     finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -217,6 +243,19 @@ describe('resolveNativeTypeScriptServer', () => {
       await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
       const tsc = await makeBin(dir, 'tsc')
       await makeTsrs(dir, { platformBinary: false })
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips tsrs when only a different platform package is installed', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-wrong-platform-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      await makeTsrs(dir, { platformBinary: true, platformName: '@tsrs/other-platform' })
       expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
     }
     finally {
