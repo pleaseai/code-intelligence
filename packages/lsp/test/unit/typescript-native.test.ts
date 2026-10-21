@@ -78,13 +78,17 @@ async function makeTsrs(
 
 describe('resolveNativeTypeScriptServer', () => {
   const originalPath = process.env.PATH
+  const originalTsrsBinary = process.env.TSRS_BINARY
   let emptyPathDir: string
   beforeEach(async () => {
     emptyPathDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-empty-path-'))
     process.env.PATH = emptyPathDir
+    delete process.env.TSRS_BINARY
   })
   afterEach(async () => {
     process.env.PATH = originalPath
+    if (originalTsrsBinary === undefined) { delete process.env.TSRS_BINARY }
+    else { process.env.TSRS_BINARY = originalTsrsBinary }
     await fs.rm(emptyPathDir, { recursive: true, force: true })
   })
 
@@ -143,7 +147,6 @@ describe('resolveNativeTypeScriptServer', () => {
 
   test('resolves a relative TSRS_BINARY against the project root', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-rel-override-'))
-    const original = process.env.TSRS_BINARY
     try {
       const launcher = await makeTsrs(dir, { platformBinary: false })
       await fs.writeFile(path.join(dir, 'custom-tsrs'), '')
@@ -151,8 +154,6 @@ describe('resolveNativeTypeScriptServer', () => {
       expect(resolveNativeTypeScriptServer(dir)?.command).toBe(launcher)
     }
     finally {
-      if (original === undefined) { delete process.env.TSRS_BINARY }
-      else { process.env.TSRS_BINARY = original }
       await fs.rm(dir, { recursive: true, force: true })
     }
   })

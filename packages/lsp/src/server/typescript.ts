@@ -227,7 +227,13 @@ function resolveGlobalTsrs(root: string): string | undefined {
   if (!bin) { return undefined }
   // An npm-installed launcher (symlinked `<prefix>/bin/tsrs` or Windows `<prefix>/tsrs.cmd`)
   // only works with its platform binary; a native executable is used as-is and a wrapper script is verified.
-  const realBin = fs.realpathSync(bin)
+  let realBin: string
+  try {
+    realBin = fs.realpathSync(bin)
+  }
+  catch {
+    return undefined
+  }
   const candidates = [
     path.dirname(path.dirname(realBin)),
     path.join(path.dirname(bin), 'node_modules', 'tsrs'),
