@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.11...@pleaseai/code-lsp-v0.1.12) (2026-10-21)
+
+
+### Features
+
+* **lsp:** prefer tsrs for the TypeScript LSP when installed ([#124](https://github.com/pleaseai/code-intelligence/issues/124)) ([3d230fe](https://github.com/pleaseai/code-intelligence/commit/3d230fe46a59b0613424be156e79f49a8858db04))
+
 ## [0.1.11](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.10...@pleaseai/code-lsp-v0.1.11) (2026-07-16)
 
 
