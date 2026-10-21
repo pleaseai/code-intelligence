@@ -272,7 +272,7 @@ export const TypescriptServer: LSPServerInfo = {
     const native = resolveNativeTypeScriptServer(root)
     if (native) {
       log.info({ command: native.command }, `Using ${native.label} language server (--lsp --stdio)`)
-      const proc = spawn(native.command, ['--lsp', '--stdio'], {
+      const proc = spawn(process.platform === 'win32' ? `"${native.command}"` : native.command, ['--lsp', '--stdio'], {
         cwd: root,
         env: { ...process.env, BUN_BE_BUN: '1' },
         shell: process.platform === 'win32',

@@ -186,7 +186,7 @@ describe('resolveNativeTypeScriptServer', () => {
       await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
       const tsc = await makeBin(dir, 'tsc')
       const globalTsrs = path.join(emptyPathDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs')
-      await fs.writeFile(globalTsrs, '')
+      await fs.writeFile(globalTsrs, Buffer.from('7f454c46', 'hex'))
       await fs.chmod(globalTsrs, 0o755)
       expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
     }
