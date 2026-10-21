@@ -15,7 +15,7 @@
     "hooks/scripts"
   ],
   "engines": {
-    "bun": ">=1.0.0"
+    "bun": ">=1.4.3"
   },
   "scripts": {
     "start": "bun run packages/code/src/cli.ts",
@@ -42,6 +42,7 @@
     "@commitlint/config-conventional": "^21.2.0",
     "@pleaseai/eslint-config": "^0.0.4",
     "@types/bun": "latest",
+    "@types/node": "^26.6.5",
     "eslint": "^10.6.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
