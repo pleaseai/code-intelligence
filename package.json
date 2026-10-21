@@ -2,7 +2,7 @@
   "name": "code-please",
   "type": "module",
   "version": "0.1.25",
-  "packageManager": "bun@1.3.5",
+  "packageManager": "bun@1.4.3",
   "description": "Auto-format and type-check hooks for AI coding",
   "license": "MIT",
   "repository": {

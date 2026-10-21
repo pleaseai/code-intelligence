@@ -3,7 +3,7 @@
 
 [tools]
 node = "24"
-bun = "1.3.5"
+bun = "1.4.3"
 
 [tasks.dev]
 description = "Run development mode (watch)"
