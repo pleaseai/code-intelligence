@@ -7,7 +7,7 @@
   "author": "Minsu Lee",
   "license": "MIT",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "bun check -p tsconfig.json",
     "test": "bun test ./test"
   },
   "devDependencies": {
