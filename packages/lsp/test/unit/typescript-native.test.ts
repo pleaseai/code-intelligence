@@ -3,7 +3,12 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
-import { getTsrsPlatformPackageName, resolveNativeTypeScriptServer } from '../../src/server/typescript'
+import {
+  getTsrsPlatformPackageName,
+  isMuslLinux,
+  nativeServerSpawnArgs,
+  resolveNativeTypeScriptServer,
+} from '../../src/server/typescript'
 
 async function makeBin(
   dir: string,
@@ -60,6 +65,7 @@ async function makeTsrs(
   opts: { platformBinary: boolean, platformName?: string },
 ): Promise<string> {
   const bin = await makeBin(dir, 'tsrs', 'tsrs')
+  await fs.chmod(path.join(dir, 'node_modules', 'tsrs', 'bin', 'tsrs.js'), 0o755)
   const platformName = opts.platformName ?? getTsrsPlatformPackageName()
   const pkgJson = path.join(dir, 'node_modules', 'tsrs', 'package.json')
   const pkg = JSON.parse(await fs.readFile(pkgJson, 'utf8')) as Record<string, unknown>
@@ -115,6 +121,22 @@ describe('resolveNativeTypeScriptServer', () => {
       const launcher = await makeTsrs(prefix, { platformBinary: false })
       process.env.PATH = path.dirname(launcher)
       expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+    }
+  })
+
+  test('uses a global npm tsrs launcher with its platform binary', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-npm-ok-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-prefix-ok-'))
+    try {
+      const launcher = await makeTsrs(prefix, { platformBinary: true })
+      process.env.PATH = path.dirname(launcher)
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(launcher)
+      expect(result?.label).toBe('global tsrs')
     }
     finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -435,5 +457,55 @@ describe('resolveNativeTypeScriptServer', () => {
     finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('getTsrsPlatformPackageName', () => {
+  test('names the package for each supported host', () => {
+    expect(getTsrsPlatformPackageName('darwin', 'arm64')).toBe('@tsrs/darwin-arm64')
+    expect(getTsrsPlatformPackageName('linux', 'x64', () => false)).toBe('@tsrs/linux-x64-gnu')
+    expect(getTsrsPlatformPackageName('linux', 'arm64', () => true)).toBe('@tsrs/linux-arm64-musl')
+    expect(getTsrsPlatformPackageName('win32', 'x64')).toBe('@tsrs/win32-x64')
+  })
+})
+
+describe('isMuslLinux', () => {
+  const noLdd = (): string => {
+    throw new Error('ENOENT')
+  }
+
+  test('reads musl or glibc from ldd', () => {
+    expect(isMuslLinux(() => '#!/bin/sh\nexec /lib/ld-musl-x86_64.so.1 --list "$@"\n')).toBe(true)
+    expect(isMuslLinux(() => '#!/bin/bash\n# GNU C Library ldd\n')).toBe(false)
+  })
+
+  test('falls back to the process report without ldd', () => {
+    expect(isMuslLinux(noLdd, () => ({ header: { glibcVersionRuntime: '2.39' } }))).toBe(false)
+    expect(isMuslLinux(noLdd, () => ({ header: {}, sharedObjects: ['/lib/ld-musl-aarch64.so.1'] }))).toBe(true)
+  })
+
+  test('defaults to GNU when nothing identifies the libc', () => {
+    expect(isMuslLinux(noLdd, () => undefined)).toBe(false)
+    expect(isMuslLinux(noLdd, () => {
+      throw new Error('report unavailable')
+    })).toBe(false)
+  })
+})
+
+describe('nativeServerSpawnArgs', () => {
+  test('quotes the path and uses the shell on Windows', () => {
+    expect(nativeServerSpawnArgs('C:\\Program Files\\app\\node_modules\\.bin\\tsrs.cmd', 'win32')).toEqual({
+      command: '"C:\\Program Files\\app\\node_modules\\.bin\\tsrs.cmd"',
+      args: ['--lsp', '--stdio'],
+      shell: true,
+    })
+  })
+
+  test('spawns the path directly elsewhere', () => {
+    expect(nativeServerSpawnArgs('/home/jane doe/app/node_modules/.bin/tsrs', 'linux')).toEqual({
+      command: '/home/jane doe/app/node_modules/.bin/tsrs',
+      args: ['--lsp', '--stdio'],
+      shell: false,
+    })
   })
 })

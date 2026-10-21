@@ -97,15 +97,19 @@ function isNativeTypeScriptPackage(packageRoot: string): boolean {
   return !fs.existsSync(path.join(libRoot, 'tsserver.js'))
 }
 
-function isMuslLinux(): boolean {
+/** Detect musl the way the tsrs launcher does. The readers are injectable for testing. */
+export function isMuslLinux(
+  readLdd: () => string = () => fs.readFileSync('/usr/bin/ldd', 'utf8'),
+  getReport: () => unknown = () => process.report?.getReport(),
+): boolean {
   try {
-    return fs.readFileSync('/usr/bin/ldd', 'utf8').includes('musl')
+    return readLdd().includes('musl')
   }
   catch {
     // Fall through to the process report.
   }
   try {
-    const report = process.report?.getReport() as unknown as {
+    const report = getReport() as {
       header?: { glibcVersionRuntime?: string }
       sharedObjects?: string[]
     } | undefined
@@ -119,9 +123,22 @@ function isMuslLinux(): boolean {
 }
 
 /** The single platform package the tsrs launcher resolves for this host. Exported for testing. */
-export function getTsrsPlatformPackageName(): string {
-  const suffix = process.platform === 'linux' ? (isMuslLinux() ? '-musl' : '-gnu') : ''
-  return `@tsrs/${process.platform}-${process.arch}${suffix}`
+export function getTsrsPlatformPackageName(
+  platform: NodeJS.Platform = process.platform,
+  arch: string = process.arch,
+  musl: () => boolean = isMuslLinux,
+): string {
+  const suffix = platform === 'linux' ? (musl() ? '-musl' : '-gnu') : ''
+  return `@tsrs/${platform}-${arch}${suffix}`
+}
+
+/** On Windows a native server runs through the shell, so its path is quoted. Exported for testing. */
+export function nativeServerSpawnArgs(
+  command: string,
+  platform: NodeJS.Platform = process.platform,
+): { command: string, args: string[], shell: boolean } {
+  const win32 = platform === 'win32'
+  return { command: win32 ? `"${command}"` : command, args: ['--lsp', '--stdio'], shell: win32 }
 }
 
 function hasTsrsBinary(packageRoot: string, root: string): boolean {
@@ -278,10 +295,11 @@ export const TypescriptServer: LSPServerInfo = {
     const native = resolveNativeTypeScriptServer(root)
     if (native) {
       log.info({ command: native.command }, `Using ${native.label} language server (--lsp --stdio)`)
-      const proc = spawn(process.platform === 'win32' ? `"${native.command}"` : native.command, ['--lsp', '--stdio'], {
+      const launch = nativeServerSpawnArgs(native.command)
+      const proc = spawn(launch.command, launch.args, {
         cwd: root,
         env: { ...process.env, BUN_BE_BUN: '1' },
-        shell: process.platform === 'win32',
+        shell: launch.shell,
       })
       attachLSPProcessHandlers(proc, 'typescript')
       return { process: proc }
