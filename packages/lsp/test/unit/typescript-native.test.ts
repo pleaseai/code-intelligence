@@ -54,6 +54,25 @@ async function writeTypeScriptPackage(
   }
 }
 
+async function makeTsrs(dir: string, opts: { platformBinary: boolean }): Promise<string> {
+  const bin = await makeBin(dir, 'tsrs', 'tsrs')
+  const platformName = '@tsrs/test-platform'
+  const pkgJson = path.join(dir, 'node_modules', 'tsrs', 'package.json')
+  const pkg = JSON.parse(await fs.readFile(pkgJson, 'utf8')) as Record<string, unknown>
+  pkg.optionalDependencies = { [platformName]: '1.0.0' }
+  await fs.writeFile(pkgJson, JSON.stringify(pkg))
+  if (opts.platformBinary) {
+    const platformDir = path.join(dir, 'node_modules', ...platformName.split('/'))
+    await fs.mkdir(platformDir, { recursive: true })
+    await fs.writeFile(
+      path.join(platformDir, 'package.json'),
+      JSON.stringify({ name: platformName, version: '1.0.0', os: [process.platform], cpu: [process.arch] }),
+    )
+    await fs.writeFile(path.join(platformDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs'), '')
+  }
+  return bin
+}
+
 describe('resolveNativeTypeScriptServer', () => {
   test('returns undefined for a classic TypeScript 5 project', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-classic-'))
@@ -114,6 +133,49 @@ describe('resolveNativeTypeScriptServer', () => {
       const result = resolveNativeTypeScriptServer(dir)
       expect(result?.command).toBe(tsgo)
       expect(result?.label).toBe('native tsgo')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('prefers tsrs over native tsc and tsgo when installed', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      await makeBin(dir, 'tsc')
+      await makeBin(dir, 'tsgo')
+      const tsrs = await makeTsrs(dir, { platformBinary: true })
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(tsrs)
+      expect(result?.label).toBe('tsrs')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips tsrs when no platform binary is installed', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-unsupported-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      await makeTsrs(dir, { platformBinary: false })
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('detects tsrs hoisted in a parent node_modules of a classic project', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-monorepo-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '5.7.0', tsserver: true })
+      const tsrs = await makeTsrs(dir, { platformBinary: true })
+      const pkgDir = path.join(dir, 'packages', 'app')
+      await fs.mkdir(pkgDir, { recursive: true })
+      expect(resolveNativeTypeScriptServer(pkgDir)?.command).toBe(tsrs)
     }
     finally {
       await fs.rm(dir, { recursive: true, force: true })

@@ -240,6 +240,10 @@ falls back to the classic `typescript-language-server --stdio`. There is no sepa
 server id or config toggle, so there are never duplicate diagnostics. The native
 servers report diagnostics via the LSP pull model (`textDocument/diagnostic`), which
 the client handles transparently alongside push (`publishDiagnostics`).
+A project-local `tsrs` (the Rust port of TypeScript 7, same `--lsp --stdio` protocol)
+takes priority over `tsc`/`tsgo`, but only when its native binary is available —
+`TSRS_BINARY`, or an installed `@tsrs/*` platform package matching this os/cpu;
+otherwise (e.g. darwin-x64, unsupported) resolution falls through.
 
 **Config Utilities:**
 ```typescript

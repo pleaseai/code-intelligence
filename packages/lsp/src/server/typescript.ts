@@ -1,11 +1,6 @@
 /**
  * TypeScript Language Server
  *
- * Prefers a project-local native TypeScript 7 (typescript-go) language server —
- * `tsc --lsp --stdio` (or `tsgo --lsp --stdio` from `@typescript/native-preview`)
- * — when the workspace ships one, and falls back to the classic
- * `typescript-language-server --stdio` otherwise.
- *
  * Selection happens per project root at spawn time, so the single `typescript`
  * server transparently upgrades to the native server without a separate server
  * id or config toggle (and therefore without duplicate diagnostics). The native
@@ -15,6 +10,7 @@
 import type { LSPServerInfo } from './types'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
 import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
@@ -100,6 +96,54 @@ function isNativeTypeScriptPackage(packageRoot: string): boolean {
   return !fs.existsSync(path.join(libRoot, 'tsserver.js'))
 }
 
+function hasTsrsBinary(packageRoot: string): boolean {
+  const override = process.env.TSRS_BINARY
+  if (override) { return fs.existsSync(override) }
+  try {
+    const realRoot = fs.realpathSync(packageRoot)
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(realRoot, 'package.json'), 'utf8'),
+    ) as { optionalDependencies?: Record<string, string> }
+    const require = createRequire(path.join(realRoot, 'package.json'))
+    const exeName = process.platform === 'win32' ? 'tsrs.exe' : 'tsrs'
+    return Object.keys(pkg.optionalDependencies ?? {}).some((name) => {
+      try {
+        const platformPkgJson = require.resolve(`${name}/package.json`)
+        const platformPkg = JSON.parse(fs.readFileSync(platformPkgJson, 'utf8')) as {
+          os?: string[]
+          cpu?: string[]
+        }
+        return (platformPkg.os?.includes(process.platform) ?? true)
+          && (platformPkg.cpu?.includes(process.arch) ?? true)
+          && fs.existsSync(path.join(path.dirname(platformPkgJson), exeName))
+      }
+      catch {
+        return false
+      }
+    })
+  }
+  catch {
+    return false
+  }
+}
+
+function findPackageBin(
+  start: string,
+  packageName: string,
+  name: string,
+  isUsable: (packageRoot: string) => boolean = () => true,
+): string | undefined {
+  let dir = path.resolve(start)
+  while (true) {
+    const packageRoot = path.join(dir, 'node_modules', ...packageName.split('/'))
+    const bin = resolvePackageBin(packageRoot, name)
+    if (bin && isUsable(packageRoot)) { return bin }
+    const parent = path.dirname(dir)
+    if (parent === dir) { return undefined }
+    dir = parent
+  }
+}
+
 /**
  * Resolve a project-local native TypeScript 7 LSP command for `root`, if the
  * workspace provides one. Exported for testing.
@@ -107,6 +151,9 @@ function isNativeTypeScriptPackage(packageRoot: string): boolean {
 export function resolveNativeTypeScriptServer(
   root: string,
 ): { command: string, label: string } | undefined {
+  const tsrs = findPackageBin(root, 'tsrs', 'tsrs', hasTsrsBinary)
+  if (tsrs) { return { command: tsrs, label: 'tsrs' } }
+
   // Native `typescript` package (TS 7+) → its node_modules/.bin/tsc.
   const packageRoot = findTypeScriptPackageRoot(root)
   if (packageRoot && isNativeTypeScriptPackage(packageRoot)) {
@@ -115,15 +162,9 @@ export function resolveNativeTypeScriptServer(
   }
 
   // `@typescript/native-preview` installs a `tsgo` bin (can coexist with TS <= 6).
-  let dir = path.resolve(root)
-  while (true) {
-    const nativePreviewRoot = path.join(dir, 'node_modules', '@typescript', 'native-preview')
-    const tsgo = resolvePackageBin(nativePreviewRoot, 'tsgo')
-    if (tsgo) { return { command: tsgo, label: 'native tsgo' } }
-    const parent = path.dirname(dir)
-    if (parent === dir) { return undefined }
-    dir = parent
-  }
+  const tsgo = findPackageBin(root, '@typescript/native-preview', 'tsgo')
+  if (tsgo) { return { command: tsgo, label: 'native tsgo' } }
+  return undefined
 }
 
 export const TypescriptServer: LSPServerInfo = {
