@@ -124,9 +124,10 @@ export function getTsrsPlatformPackageName(): string {
   return `@tsrs/${process.platform}-${process.arch}${suffix}`
 }
 
-function hasTsrsBinary(packageRoot: string): boolean {
+function hasTsrsBinary(packageRoot: string, root: string): boolean {
   const override = process.env.TSRS_BINARY
-  if (override) { return fs.existsSync(override) }
+  // The launcher runs with cwd = root, so a relative override resolves against it.
+  if (override) { return fs.existsSync(path.resolve(root, override)) }
   try {
     const realRoot = fs.realpathSync(packageRoot)
     const require = createRequire(path.join(realRoot, 'package.json'))
@@ -158,8 +159,13 @@ function isNativeExecutable(file: string): boolean {
 function findWrapperPackageRoot(wrapper: string, bin: string): string | undefined {
   const dir = path.dirname(bin)
   const text = wrapper.replace(/\$\{?basedir\}?|%~dp0|%dp0%/g, dir)
-  for (const match of text.matchAll(/([^\s"'`=:;]*node_modules[\\/]tsrs)[\\/]/g)) {
-    const packageRoot = path.resolve(dir, match[1]!)
+  // Quoted strings may contain spaces (e.g. an expanded $basedir); unquoted arguments cannot.
+  const quoted = [...text.matchAll(/"([^"]*)"|'([^']*)'/g)]
+    .map(m => /(.*?node_modules[\\/]tsrs)[\\/]/.exec(m[1] ?? m[2] ?? '')?.[1])
+  const unquoted = [...text.matchAll(/([^\s"'`=:;]*node_modules[\\/]tsrs)[\\/]/g)].map(m => m[1])
+  for (const candidate of [...quoted, ...unquoted]) {
+    if (!candidate) { continue }
+    const packageRoot = path.resolve(dir, candidate)
     try {
       const pkg = JSON.parse(
         fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
@@ -191,13 +197,13 @@ function findPackageBin(
 }
 
 /**
- * Resolve a project-local native TypeScript 7 LSP command for `root`, if the
- * workspace provides one. Exported for testing.
+ * Resolve a native TypeScript 7 LSP command for `root`: a project-local one if
+ * the workspace provides it, else a global `tsrs` on PATH. Exported for testing.
  */
 export function resolveNativeTypeScriptServer(
   root: string,
 ): { command: string, label: string } | undefined {
-  const tsrs = findPackageBin(root, 'tsrs', 'tsrs', hasTsrsBinary)
+  const tsrs = findPackageBin(root, 'tsrs', 'tsrs', packageRoot => hasTsrsBinary(packageRoot, root))
   if (tsrs) { return { command: tsrs, label: 'tsrs' } }
 
   // Native `typescript` package (TS 7+) → its node_modules/.bin/tsc.
@@ -211,12 +217,12 @@ export function resolveNativeTypeScriptServer(
   const tsgo = findPackageBin(root, '@typescript/native-preview', 'tsgo')
   if (tsgo) { return { command: tsgo, label: 'native tsgo' } }
 
-  const globalTsrs = resolveGlobalTsrs()
+  const globalTsrs = resolveGlobalTsrs(root)
   if (globalTsrs) { return { command: globalTsrs, label: 'global tsrs' } }
   return undefined
 }
 
-function resolveGlobalTsrs(): string | undefined {
+function resolveGlobalTsrs(root: string): string | undefined {
   const bin = Bun.which('tsrs', { PATH: process.env.PATH ?? '' })
   if (!bin) { return undefined }
   // An npm-installed launcher (symlinked `<prefix>/bin/tsrs` or Windows `<prefix>/tsrs.cmd`)
@@ -231,7 +237,7 @@ function resolveGlobalTsrs(): string | undefined {
       const pkg = JSON.parse(
         fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
       ) as { name?: unknown }
-      if (pkg.name === 'tsrs') { return hasTsrsBinary(packageRoot) ? bin : undefined }
+      if (pkg.name === 'tsrs') { return hasTsrsBinary(packageRoot, root) ? bin : undefined }
     }
     catch {
       // Not an npm package root.
@@ -241,7 +247,7 @@ function resolveGlobalTsrs(): string | undefined {
     if (isNativeExecutable(realBin)) { return bin }
     // A wrapper script (e.g. pnpm) is only usable when the tsrs package it launches has its binary.
     const packageRoot = findWrapperPackageRoot(fs.readFileSync(realBin, 'utf8'), bin)
-    return packageRoot && hasTsrsBinary(packageRoot) ? bin : undefined
+    return packageRoot && hasTsrsBinary(packageRoot, root) ? bin : undefined
   }
   catch {
     return undefined

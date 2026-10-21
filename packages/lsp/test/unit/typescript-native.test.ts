@@ -141,6 +141,45 @@ describe('resolveNativeTypeScriptServer', () => {
     }
   })
 
+  test('resolves a relative TSRS_BINARY against the project root', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-rel-override-'))
+    const original = process.env.TSRS_BINARY
+    try {
+      const launcher = await makeTsrs(dir, { platformBinary: false })
+      await fs.writeFile(path.join(dir, 'custom-tsrs'), '')
+      process.env.TSRS_BINARY = 'custom-tsrs'
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(launcher)
+    }
+    finally {
+      if (original === undefined) { delete process.env.TSRS_BINARY }
+      else { process.env.TSRS_BINARY = original }
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('resolves a wrapper script in a PATH directory containing spaces', async () => {
+    if (process.platform === 'win32') { return }
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-space-project-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-space-prefix-'))
+    const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-space-parent-'))
+    try {
+      await makeTsrs(prefix, { platformBinary: true })
+      const wrapperDir = path.join(parent, 'Jane Doe', 'pnpm')
+      await fs.mkdir(wrapperDir, { recursive: true })
+      const wrapper = path.join(wrapperDir, 'tsrs')
+      const rel = path.relative(wrapperDir, path.join(prefix, 'node_modules', 'tsrs', 'bin', 'tsrs.js'))
+      await fs.writeFile(wrapper, `#!/bin/sh\nbasedir=$(dirname "$0")\nexec node "$basedir/${rel}" "$@"\n`)
+      await fs.chmod(wrapper, 0o755)
+      process.env.PATH = wrapperDir
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(wrapper)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+      await fs.rm(parent, { recursive: true, force: true })
+    }
+  })
+
   test('prefers project-local native tsc over a global tsrs', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-local-over-global-'))
     try {
