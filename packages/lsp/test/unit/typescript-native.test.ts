@@ -60,6 +60,22 @@ async function writeTypeScriptPackage(
   }
 }
 
+/**
+ * Put `prefix`'s tsrs launcher on PATH and return it. On POSIX that is `binLauncher`, the `.bin` symlink,
+ * which resolves through its realpath like a global `<prefix>/bin/tsrs` link. On Windows `binLauncher` is
+ * unused: npm writes a global `<prefix>\tsrs.cmd` beside `node_modules`, so the helper writes that shim.
+ */
+async function useGlobalLauncher(prefix: string, binLauncher: string): Promise<string> {
+  if (process.platform !== 'win32') {
+    process.env.PATH = path.dirname(binLauncher)
+    return binLauncher
+  }
+  const cmd = path.join(prefix, 'tsrs.cmd')
+  await fs.writeFile(cmd, '@node "%~dp0\\node_modules\\tsrs\\bin\\tsrs.js" %*\n')
+  process.env.PATH = prefix
+  return cmd
+}
+
 async function makeTsrs(
   dir: string,
   opts: { platformBinary: boolean, platformName?: string },
@@ -118,8 +134,7 @@ describe('resolveNativeTypeScriptServer', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-npm-'))
     const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-prefix-'))
     try {
-      const launcher = await makeTsrs(prefix, { platformBinary: false })
-      process.env.PATH = path.dirname(launcher)
+      await useGlobalLauncher(prefix, await makeTsrs(prefix, { platformBinary: false }))
       expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
     }
     finally {
@@ -132,8 +147,7 @@ describe('resolveNativeTypeScriptServer', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-npm-ok-'))
     const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-prefix-ok-'))
     try {
-      const launcher = await makeTsrs(prefix, { platformBinary: true })
-      process.env.PATH = path.dirname(launcher)
+      const launcher = await useGlobalLauncher(prefix, await makeTsrs(prefix, { platformBinary: true }))
       const result = resolveNativeTypeScriptServer(dir)
       expect(result?.command).toBe(launcher)
       expect(result?.label).toBe('global tsrs')
