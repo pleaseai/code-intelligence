@@ -1,8 +1,14 @@
+import { Buffer } from 'node:buffer'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, test } from 'bun:test'
-import { resolveNativeTypeScriptServer } from '../../src/server/typescript'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
+import {
+  getTsrsPlatformPackageName,
+  isMuslLinux,
+  nativeServerSpawnArgs,
+  resolveNativeTypeScriptServer,
+} from '../../src/server/typescript'
 
 async function makeBin(
   dir: string,
@@ -54,7 +60,178 @@ async function writeTypeScriptPackage(
   }
 }
 
+/**
+ * Put `prefix`'s tsrs launcher on PATH and return it. On POSIX that is `binLauncher`, the `.bin` symlink,
+ * which resolves through its realpath like a global `<prefix>/bin/tsrs` link. On Windows `binLauncher` is
+ * unused: npm writes a global `<prefix>\tsrs.cmd` beside `node_modules`, so the helper writes that shim.
+ */
+async function useGlobalLauncher(prefix: string, binLauncher: string): Promise<string> {
+  if (process.platform !== 'win32') {
+    process.env.PATH = path.dirname(binLauncher)
+    return binLauncher
+  }
+  const cmd = path.join(prefix, 'tsrs.cmd')
+  await fs.writeFile(cmd, '@node "%~dp0\\node_modules\\tsrs\\bin\\tsrs.js" %*\n')
+  process.env.PATH = prefix
+  return cmd
+}
+
+async function makeTsrs(
+  dir: string,
+  opts: { platformBinary: boolean, platformName?: string },
+): Promise<string> {
+  const bin = await makeBin(dir, 'tsrs', 'tsrs')
+  await fs.chmod(path.join(dir, 'node_modules', 'tsrs', 'bin', 'tsrs.js'), 0o755)
+  const platformName = opts.platformName ?? getTsrsPlatformPackageName()
+  const pkgJson = path.join(dir, 'node_modules', 'tsrs', 'package.json')
+  const pkg = JSON.parse(await fs.readFile(pkgJson, 'utf8')) as Record<string, unknown>
+  await fs.writeFile(pkgJson, JSON.stringify(pkg))
+  if (opts.platformBinary) {
+    const platformDir = path.join(dir, 'node_modules', ...platformName.split('/'))
+    await fs.mkdir(platformDir, { recursive: true })
+    await fs.writeFile(
+      path.join(platformDir, 'package.json'),
+      JSON.stringify({ name: platformName, version: '1.0.0', os: [process.platform], cpu: [process.arch] }),
+    )
+    await fs.writeFile(path.join(platformDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs'), '')
+  }
+  return bin
+}
+
 describe('resolveNativeTypeScriptServer', () => {
+  const originalPath = process.env.PATH
+  const originalTsrsBinary = process.env.TSRS_BINARY
+  let emptyPathDir: string
+  beforeEach(async () => {
+    emptyPathDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-empty-path-'))
+    process.env.PATH = emptyPathDir
+    delete process.env.TSRS_BINARY
+  })
+  afterEach(async () => {
+    process.env.PATH = originalPath
+    if (originalTsrsBinary === undefined) { delete process.env.TSRS_BINARY }
+    else { process.env.TSRS_BINARY = originalTsrsBinary }
+    await fs.rm(emptyPathDir, { recursive: true, force: true })
+  })
+
+  test('falls back to a native tsrs binary on PATH when no project-local server exists', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '5.7.0', tsserver: true })
+      const globalTsrs = path.join(emptyPathDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs')
+      await fs.writeFile(globalTsrs, Buffer.from('7f454c46', 'hex'))
+      await fs.chmod(globalTsrs, 0o755)
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(globalTsrs)
+      expect(result?.label).toBe('global tsrs')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips a global npm tsrs launcher without a platform binary', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-npm-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-prefix-'))
+    try {
+      await useGlobalLauncher(prefix, await makeTsrs(prefix, { platformBinary: false }))
+      expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+    }
+  })
+
+  test('uses a global npm tsrs launcher with its platform binary', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-npm-ok-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-prefix-ok-'))
+    try {
+      const launcher = await useGlobalLauncher(prefix, await makeTsrs(prefix, { platformBinary: true }))
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(launcher)
+      expect(result?.label).toBe('global tsrs')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+    }
+  })
+
+  test('skips a global wrapper-script tsrs launcher without a platform binary', async () => {
+    if (process.platform === 'win32') { return }
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-tsrs-wrapper-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-global-wrapper-prefix-'))
+    try {
+      await makeTsrs(prefix, { platformBinary: false })
+      const wrapperDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-wrapper-bin-'))
+      const wrapper = path.join(wrapperDir, 'tsrs')
+      await fs.writeFile(
+        wrapper,
+        `#!/bin/sh\nexec node "${path.join(prefix, 'node_modules', 'tsrs', 'bin', 'tsrs.js')}" "$@"\n`,
+      )
+      await fs.chmod(wrapper, 0o755)
+      process.env.PATH = wrapperDir
+      expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+      await fs.rm(wrapperDir, { recursive: true, force: true })
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+    }
+  })
+
+  test('resolves a relative TSRS_BINARY against the project root', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-rel-override-'))
+    try {
+      const launcher = await makeTsrs(dir, { platformBinary: false })
+      await fs.writeFile(path.join(dir, 'custom-tsrs'), '')
+      process.env.TSRS_BINARY = 'custom-tsrs'
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(launcher)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('resolves a wrapper script in a PATH directory containing spaces', async () => {
+    if (process.platform === 'win32') { return }
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-space-project-'))
+    const prefix = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-space-prefix-'))
+    const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-space-parent-'))
+    try {
+      await makeTsrs(prefix, { platformBinary: true })
+      const wrapperDir = path.join(parent, 'Jane Doe', 'pnpm')
+      await fs.mkdir(wrapperDir, { recursive: true })
+      const wrapper = path.join(wrapperDir, 'tsrs')
+      const rel = path.relative(wrapperDir, path.join(prefix, 'node_modules', 'tsrs', 'bin', 'tsrs.js'))
+      await fs.writeFile(wrapper, `#!/bin/sh\nbasedir=$(dirname "$0")\nexec node "$basedir/${rel}" "$@"\n`)
+      await fs.chmod(wrapper, 0o755)
+      process.env.PATH = wrapperDir
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(wrapper)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+      await fs.rm(prefix, { recursive: true, force: true })
+      await fs.rm(parent, { recursive: true, force: true })
+    }
+  })
+
+  test('prefers project-local native tsc over a global tsrs', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-local-over-global-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      const globalTsrs = path.join(emptyPathDir, process.platform === 'win32' ? 'tsrs.exe' : 'tsrs')
+      await fs.writeFile(globalTsrs, Buffer.from('7f454c46', 'hex'))
+      await fs.chmod(globalTsrs, 0o755)
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   test('returns undefined for a classic TypeScript 5 project', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-classic-'))
     try {
@@ -114,6 +291,62 @@ describe('resolveNativeTypeScriptServer', () => {
       const result = resolveNativeTypeScriptServer(dir)
       expect(result?.command).toBe(tsgo)
       expect(result?.label).toBe('native tsgo')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('prefers tsrs over native tsc and tsgo when installed', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      await makeBin(dir, 'tsc')
+      await makeBin(dir, 'tsgo')
+      const tsrs = await makeTsrs(dir, { platformBinary: true })
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(tsrs)
+      expect(result?.label).toBe('tsrs')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips tsrs when no platform binary is installed', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-unsupported-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      await makeTsrs(dir, { platformBinary: false })
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips tsrs when only a different platform package is installed', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-wrong-platform-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '7.0.0', tsserver: false })
+      const tsc = await makeBin(dir, 'tsc')
+      await makeTsrs(dir, { platformBinary: true, platformName: '@tsrs/other-platform' })
+      expect(resolveNativeTypeScriptServer(dir)?.command).toBe(tsc)
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('detects tsrs hoisted in a parent node_modules of a classic project', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsrs-monorepo-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '5.7.0', tsserver: true })
+      const tsrs = await makeTsrs(dir, { platformBinary: true })
+      const pkgDir = path.join(dir, 'packages', 'app')
+      await fs.mkdir(pkgDir, { recursive: true })
+      expect(resolveNativeTypeScriptServer(pkgDir)?.command).toBe(tsrs)
     }
     finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -238,5 +471,55 @@ describe('resolveNativeTypeScriptServer', () => {
     finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('getTsrsPlatformPackageName', () => {
+  test('names the package for each supported host', () => {
+    expect(getTsrsPlatformPackageName('darwin', 'arm64')).toBe('@tsrs/darwin-arm64')
+    expect(getTsrsPlatformPackageName('linux', 'x64', () => false)).toBe('@tsrs/linux-x64-gnu')
+    expect(getTsrsPlatformPackageName('linux', 'arm64', () => true)).toBe('@tsrs/linux-arm64-musl')
+    expect(getTsrsPlatformPackageName('win32', 'x64')).toBe('@tsrs/win32-x64')
+  })
+})
+
+describe('isMuslLinux', () => {
+  const noLdd = (): string => {
+    throw new Error('ENOENT')
+  }
+
+  test('reads musl or glibc from ldd', () => {
+    expect(isMuslLinux(() => '#!/bin/sh\nexec /lib/ld-musl-x86_64.so.1 --list "$@"\n')).toBe(true)
+    expect(isMuslLinux(() => '#!/bin/bash\n# GNU C Library ldd\n')).toBe(false)
+  })
+
+  test('falls back to the process report without ldd', () => {
+    expect(isMuslLinux(noLdd, () => ({ header: { glibcVersionRuntime: '2.39' } }))).toBe(false)
+    expect(isMuslLinux(noLdd, () => ({ header: {}, sharedObjects: ['/lib/ld-musl-aarch64.so.1'] }))).toBe(true)
+  })
+
+  test('defaults to GNU when nothing identifies the libc', () => {
+    expect(isMuslLinux(noLdd, () => undefined)).toBe(false)
+    expect(isMuslLinux(noLdd, () => {
+      throw new Error('report unavailable')
+    })).toBe(false)
+  })
+})
+
+describe('nativeServerSpawnArgs', () => {
+  test('quotes the path and uses the shell on Windows', () => {
+    expect(nativeServerSpawnArgs('C:\\Program Files\\app\\node_modules\\.bin\\tsrs.cmd', 'win32')).toEqual({
+      command: '"C:\\Program Files\\app\\node_modules\\.bin\\tsrs.cmd"',
+      args: ['--lsp', '--stdio'],
+      shell: true,
+    })
+  })
+
+  test('spawns the path directly elsewhere', () => {
+    expect(nativeServerSpawnArgs('/home/jane doe/app/node_modules/.bin/tsrs', 'linux')).toEqual({
+      command: '/home/jane doe/app/node_modules/.bin/tsrs',
+      args: ['--lsp', '--stdio'],
+      shell: false,
+    })
   })
 })
