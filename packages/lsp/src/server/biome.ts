@@ -10,6 +10,9 @@ import path from 'node:path'
 import process from 'node:process'
 import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
 
+/** @biomejs/biome version installed by the bunx fallback. */
+export const BIOME_VERSION = '2.6.2'
+
 export const BiomeServer: LSPServerInfo = {
   id: 'biome',
   extensions: [
@@ -60,7 +63,8 @@ export const BiomeServer: LSPServerInfo = {
     }
 
     // Check global PATH
-    const globalBin = Bun.which('biome')
+    // Read PATH now rather than the copy Bun captured at startup
+    const globalBin = Bun.which('biome', { PATH: process.env.PATH ?? '' })
     if (globalBin) {
       const proc = spawn(globalBin, ['lsp-proxy', '--stdio'], {
         cwd: root,
@@ -70,9 +74,9 @@ export const BiomeServer: LSPServerInfo = {
       return { process: proc }
     }
 
-    // Fallback: Try via bunx
+    // Fallback: Try via bunx. The unscoped `biome` npm package is an unrelated project.
     try {
-      const proc = spawn('bunx', ['biome', 'lsp-proxy', '--stdio'], {
+      const proc = spawn('bunx', [`@biomejs/biome@${BIOME_VERSION}`, 'lsp-proxy', '--stdio'], {
         cwd: root,
         env: { ...process.env, BUN_BE_BUN: '1' },
       })
