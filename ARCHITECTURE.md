@@ -343,7 +343,7 @@ These are constraints that must be maintained. Violating them will break things.
 
 ### Build & Release
 
-- **Package manager**: Bun 1.3.5+
+- **Package manager**: Bun 1.4.3+
 - **Build orchestration**: Turborepo with `build → typecheck → test` pipeline.
   Package builds depend on their upstream packages (`^build`).
 - **Release**: release-please for changelog generation and version bumps.
