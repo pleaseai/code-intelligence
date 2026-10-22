@@ -1,8 +1,10 @@
+import type { LSPServerInfo } from '../../src/server/types'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, spyOn, test } from 'bun:test'
 import {
+  BiomeServer,
   DartServer,
   DenoServer,
   EslintServer,
@@ -18,7 +20,7 @@ import {
   TypescriptServer,
   VueServer,
 } from '../../src/server'
-import { findRunnableBin } from '../../src/server/utils'
+import { findRunnableBin, log } from '../../src/server/utils'
 
 describe('LSP_SERVERS', () => {
   test('contains expected servers', () => {
@@ -461,38 +463,45 @@ describe.skipIf(process.platform === 'win32')('findRunnableBin', () => {
   })
 })
 
-describe.skipIf(process.platform === 'win32')('TypescriptServer classic fallback', () => {
-  // Each fake server records its name and arguments in `invoked` under the project root.
-  const recorder = (name: string): string => `#!/bin/sh\necho "${name} $*" > invoked\n`
+// Each fake server records its name and arguments in `invoked` under the project root.
+const recorder = (name: string): string => `#!/bin/sh\necho "${name} $*" > invoked\n`
 
-  async function spawnTypescriptWith(
-    pathBins: Record<string, string>,
-    setupRoot: (rootDir: string) => Promise<void> = async () => {},
-  ): Promise<string> {
-    const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-fallback-bin-'))
-    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-fallback-root-'))
-    const savedPath = process.env.PATH
-    try {
-      for (const [name, script] of Object.entries(pathBins)) {
-        await fs.writeFile(path.join(binDir, name), script, { mode: 0o755 })
-      }
-      await setupRoot(rootDir)
-      process.env.PATH = binDir
-      const handle = await TypescriptServer.spawn(rootDir)
-      process.env.PATH = savedPath
-      expect(handle).toBeDefined()
-      const proc = handle!.process
-      if (proc.exitCode === null && proc.signalCode === null) {
-        await new Promise(resolve => proc.once('exit', resolve))
-      }
-      return (await fs.readFile(path.join(rootDir, 'invoked'), 'utf8')).trim()
+/** Spawn `server` with only `pathBins` on PATH and return what the launched binary recorded. */
+async function spawnServerWith(
+  server: LSPServerInfo,
+  pathBins: Record<string, string>,
+  setupRoot: (rootDir: string) => Promise<void> = async () => {},
+): Promise<string> {
+  const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-bin-'))
+  const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-root-'))
+  const savedPath = process.env.PATH
+  try {
+    for (const [name, script] of Object.entries(pathBins)) {
+      await fs.writeFile(path.join(binDir, name), script, { mode: 0o755 })
     }
-    finally {
-      process.env.PATH = savedPath
-      await fs.rm(binDir, { recursive: true, force: true })
-      await fs.rm(rootDir, { recursive: true, force: true })
+    await setupRoot(rootDir)
+    process.env.PATH = binDir
+    const handle = await server.spawn(rootDir)
+    process.env.PATH = savedPath
+    expect(handle).toBeDefined()
+    const proc = handle!.process
+    if (proc.exitCode === null && proc.signalCode === null) {
+      await new Promise(resolve => proc.once('exit', resolve))
     }
+    return (await fs.readFile(path.join(rootDir, 'invoked'), 'utf8')).trim()
   }
+  finally {
+    process.env.PATH = savedPath
+    await fs.rm(binDir, { recursive: true, force: true })
+    await fs.rm(rootDir, { recursive: true, force: true })
+  }
+}
+
+describe.skipIf(process.platform === 'win32')('TypescriptServer classic fallback', () => {
+  const spawnTypescriptWith = (
+    pathBins: Record<string, string>,
+    setupRoot?: (rootDir: string) => Promise<void>,
+  ): Promise<string> => spawnServerWith(TypescriptServer, pathBins, setupRoot)
 
   test('falls back to bunx with a pinned typescript-language-server when the one on PATH cannot run', async () => {
     const invoked = await spawnTypescriptWith({
@@ -523,6 +532,45 @@ describe.skipIf(process.platform === 'win32')('TypescriptServer classic fallback
   test('skips a project-local typescript-language-server that fails --version', async () => {
     const invoked = await spawnTypescriptWith({ bunx: recorder('bunx') }, rootDir => installLocalServer(rootDir, '#!/bin/sh\nexit 1\n'))
     expect(invoked).toBe('bunx typescript-language-server@4.3.3 --stdio')
+  })
+})
+
+describe.skipIf(process.platform === 'win32')('BiomeServer fallback', () => {
+  test('falls back to bunx with a pinned @biomejs/biome when biome is not installed', async () => {
+    const invoked = await spawnServerWith(BiomeServer, { bunx: recorder('bunx') })
+    expect(invoked).toBe('bunx @biomejs/biome@2.6.2 lsp-proxy --stdio')
+  })
+
+  test('prefers biome on PATH over bunx', async () => {
+    const invoked = await spawnServerWith(BiomeServer, { biome: recorder('path'), bunx: recorder('bunx') })
+    expect(invoked).toBe('path lsp-proxy --stdio')
+  })
+
+  test('prefers a project-local biome', async () => {
+    const invoked = await spawnServerWith(BiomeServer, { biome: recorder('path'), bunx: recorder('bunx') }, async (rootDir) => {
+      const binDir = path.join(rootDir, 'node_modules', '.bin')
+      await fs.mkdir(binDir, { recursive: true })
+      await fs.writeFile(path.join(binDir, 'biome'), recorder('local'), { mode: 0o755 })
+    })
+    expect(invoked).toBe('local lsp-proxy --stdio')
+  })
+
+  test('returns undefined with the install hint when bunx is missing', async () => {
+    const emptyDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-empty-'))
+    const savedPath = process.env.PATH
+    const warn = spyOn(log, 'warn')
+    try {
+      process.env.PATH = emptyDir
+      const handle = await BiomeServer.spawn(emptyDir)
+      process.env.PATH = savedPath
+      expect(handle).toBeUndefined()
+      expect(warn).toHaveBeenCalledWith(expect.anything(), 'Biome not found. Install with: npm install @biomejs/biome')
+    }
+    finally {
+      warn.mockRestore()
+      process.env.PATH = savedPath
+      await fs.rm(emptyDir, { recursive: true, force: true })
+    }
   })
 })
 
