@@ -399,16 +399,20 @@ describe('DartServer', () => {
     }
   })
 
-  describe('findSystemDart', () => {
+  describe.skipIf(process.platform === 'win32')('findSystemDart', () => {
     // Bun.which reads PATH at process startup, so probe in a child process with a fake PATH
-    async function findSystemDartWith(dartScript: string): Promise<{ result: string, fakeDart: string }> {
+    async function findSystemDartWith(dartScript: string, rootFiles: string[] = []): Promise<{ result: string, fakeDart: string }> {
       const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-bin-'))
+      const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-root-'))
       try {
         const fakeDart = path.join(binDir, 'dart')
         await fs.writeFile(fakeDart, dartScript, { mode: 0o755 })
+        for (const file of rootFiles) {
+          await fs.writeFile(path.join(rootDir, file), '')
+        }
         const dartModule = path.join(import.meta.dir, '../../src/server/dart.ts')
         const proc = Bun.spawn(
-          [process.execPath, '-e', `import { findSystemDart } from ${JSON.stringify(dartModule)}; console.log(String(await findSystemDart()))`],
+          [process.execPath, '-e', `import { findSystemDart } from ${JSON.stringify(dartModule)}; console.log(String(await findSystemDart(${JSON.stringify(rootDir)})))`],
           { env: { ...process.env, PATH: binDir }, stdout: 'pipe', stderr: 'ignore' },
         )
         const stdout = await new Response(proc.stdout).text()
@@ -417,6 +421,7 @@ describe('DartServer', () => {
       }
       finally {
         await fs.rm(binDir, { recursive: true, force: true })
+        await fs.rm(rootDir, { recursive: true, force: true })
       }
     }
 
@@ -425,8 +430,18 @@ describe('DartServer', () => {
       expect(result).toBe('undefined')
     })
 
+    test('ignores a dart on PATH that cannot be spawned', async () => {
+      const { result } = await findSystemDartWith('\x7FELF not a real binary')
+      expect(result).toBe('undefined')
+    })
+
     test('returns a dart on PATH that runs --version', async () => {
       const { result, fakeDart } = await findSystemDartWith('#!/bin/sh\nexit 0\n')
+      expect(result).toBe(fakeDart)
+    })
+
+    test('probes --version in the project root', async () => {
+      const { result, fakeDart } = await findSystemDartWith('#!/bin/sh\n[ -f .tool-versions ] || exit 1\n', ['.tool-versions'])
       expect(result).toBe(fakeDart)
     })
   })

@@ -111,24 +111,34 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
   }
 }
 
+const DART_PROBE_TIMEOUT_MS = 10_000
+
 /**
  * Find a system Dart that actually runs. A version-manager shim (e.g. mise) can resolve
  * on PATH while exiting non-zero because no SDK version is configured.
  */
-export async function findSystemDart(): Promise<string | undefined> {
+export async function findSystemDart(root: string): Promise<string | undefined> {
   const systemDart = Bun.which('dart')
   if (!systemDart) {
     return undefined
   }
 
-  const proc = Bun.spawn([systemDart, '--version'], {
-    stdout: 'ignore',
-    stderr: 'pipe',
-  })
-  const exitCode = await proc.exited
-  if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text()
-    log.warn({ systemDart, exitCode, stderr: stderr.slice(0, 200) }, 'System Dart failed --version, trying auto-download')
+  try {
+    // Run in the project root: version managers resolve the SDK per directory
+    const proc = Bun.spawn([systemDart, '--version'], {
+      cwd: root,
+      stdout: 'ignore',
+      stderr: 'ignore',
+      timeout: DART_PROBE_TIMEOUT_MS,
+    })
+    const exitCode = await proc.exited
+    if (exitCode !== 0) {
+      log.warn({ systemDart, exitCode, signal: proc.signalCode }, 'System Dart failed --version, trying auto-download')
+      return undefined
+    }
+  }
+  catch (err) {
+    log.warn({ systemDart, err }, 'Failed to spawn system Dart for version check, trying auto-download')
     return undefined
   }
 
@@ -140,7 +150,7 @@ export const DartServer: LSPServerInfo = {
   extensions: ['.dart'],
   root: nearestRoot(['pubspec.yaml', 'pubspec.lock']),
   async spawn(root) {
-    const systemDart = await findSystemDart()
+    const systemDart = await findSystemDart(root)
     if (systemDart) {
       try {
         const proc = spawn(systemDart, ['language-server', '--client-id', 'dora.dart', '--client-version', '1.0'], {
