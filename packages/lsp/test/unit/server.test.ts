@@ -441,6 +441,89 @@ describe.skipIf(process.platform === 'win32')('findRunnableBin', () => {
     const { result, fakeBin } = await findRunnableBinWith('#!/bin/sh\n[ -f .tool-versions ] || exit 1\n', ['.tool-versions'])
     expect(result).toBe(fakeBin)
   })
+
+  test('skips a failing binary for a runnable one later on PATH', async () => {
+    const shimDir = await fs.mkdtemp(path.join(os.tmpdir(), 'runnable-shim-'))
+    const installDir = await fs.mkdtemp(path.join(os.tmpdir(), 'runnable-install-'))
+    const savedPath = process.env.PATH
+    try {
+      await fs.writeFile(path.join(shimDir, 'fake-tool'), '#!/bin/sh\nexit 1\n', { mode: 0o755 })
+      const installed = path.join(installDir, 'fake-tool')
+      await fs.writeFile(installed, '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+      process.env.PATH = [shimDir, installDir].join(path.delimiter)
+      expect(await findRunnableBin('fake-tool', installDir)).toBe(installed)
+    }
+    finally {
+      process.env.PATH = savedPath
+      await fs.rm(shimDir, { recursive: true, force: true })
+      await fs.rm(installDir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe.skipIf(process.platform === 'win32')('TypescriptServer classic fallback', () => {
+  // Each fake server records its name and arguments in `invoked` under the project root.
+  const recorder = (name: string): string => `#!/bin/sh\necho "${name} $*" > invoked\n`
+
+  async function spawnTypescriptWith(
+    pathBins: Record<string, string>,
+    setupRoot: (rootDir: string) => Promise<void> = async () => {},
+  ): Promise<string> {
+    const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-fallback-bin-'))
+    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-fallback-root-'))
+    const savedPath = process.env.PATH
+    try {
+      for (const [name, script] of Object.entries(pathBins)) {
+        await fs.writeFile(path.join(binDir, name), script, { mode: 0o755 })
+      }
+      await setupRoot(rootDir)
+      process.env.PATH = binDir
+      const handle = await TypescriptServer.spawn(rootDir)
+      process.env.PATH = savedPath
+      expect(handle).toBeDefined()
+      const proc = handle!.process
+      if (proc.exitCode === null && proc.signalCode === null) {
+        await new Promise(resolve => proc.once('exit', resolve))
+      }
+      return (await fs.readFile(path.join(rootDir, 'invoked'), 'utf8')).trim()
+    }
+    finally {
+      process.env.PATH = savedPath
+      await fs.rm(binDir, { recursive: true, force: true })
+      await fs.rm(rootDir, { recursive: true, force: true })
+    }
+  }
+
+  test('falls back to bunx with a pinned typescript-language-server when the one on PATH cannot run', async () => {
+    const invoked = await spawnTypescriptWith({
+      'typescript-language-server': '#!/bin/sh\nexit 1\n',
+      'bunx': recorder('bunx'),
+    })
+    expect(invoked).toBe('bunx typescript-language-server@4.3.3 --stdio')
+  })
+
+  async function installLocalServer(rootDir: string, script: string): Promise<void> {
+    const packageDir = path.join(rootDir, 'node_modules', 'typescript-language-server')
+    await fs.mkdir(path.join(packageDir, 'lib'), { recursive: true })
+    await fs.writeFile(
+      path.join(packageDir, 'package.json'),
+      JSON.stringify({ name: 'typescript-language-server', bin: { 'typescript-language-server': 'lib/cli.mjs' } }),
+    )
+    await fs.writeFile(path.join(packageDir, 'lib', 'cli.mjs'), script, { mode: 0o755 })
+    const binDir = path.join(rootDir, 'node_modules', '.bin')
+    await fs.mkdir(binDir)
+    await fs.symlink(path.join('..', 'typescript-language-server', 'lib', 'cli.mjs'), path.join(binDir, 'typescript-language-server'))
+  }
+
+  test('prefers a project-local typescript-language-server', async () => {
+    const invoked = await spawnTypescriptWith({ bunx: recorder('bunx') }, rootDir => installLocalServer(rootDir, recorder('local')))
+    expect(invoked).toBe('local --stdio')
+  })
+
+  test('skips a project-local typescript-language-server that fails --version', async () => {
+    const invoked = await spawnTypescriptWith({ bunx: recorder('bunx') }, rootDir => installLocalServer(rootDir, '#!/bin/sh\nexit 1\n'))
+    expect(invoked).toBe('bunx typescript-language-server@4.3.3 --stdio')
+  })
 })
 
 describe('VueServer', () => {

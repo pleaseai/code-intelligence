@@ -51,17 +51,30 @@ export function attachLSPProcessHandlers(
 const VERSION_PROBE_TIMEOUT_MS = 10_000
 
 /**
- * Find `name` on PATH, but only if `name --version` exits 0 when run in `root`.
+ * Find the first `name` on PATH whose `name --version` exits 0 when run in `root`.
  * A version-manager shim (e.g. mise) can resolve on PATH while exiting non-zero
- * because no version is configured for that directory.
+ * because no version is configured for that directory, and a working install may
+ * sit in a later PATH entry.
  */
 export async function findRunnableBin(name: string, root: string): Promise<string | undefined> {
-  // Bun.which defaults to the PATH captured at startup; follow the current environment
-  const bin = Bun.which(name, { PATH: process.env.PATH ?? '' })
-  if (!bin) {
-    return undefined
+  // Read PATH now rather than the copy Bun captured at startup
+  const dirs = (process.env.PATH ?? '').split(path.delimiter).filter(Boolean)
+  const seen = new Set<string>()
+  for (const dir of dirs) {
+    const bin = Bun.which(name, { PATH: dir })
+    if (!bin || seen.has(bin)) {
+      continue
+    }
+    seen.add(bin)
+    if (await runsVersion(bin, root)) {
+      return bin
+    }
   }
+  return undefined
+}
 
+/** Whether `bin --version` exits 0 when run in `root`. */
+export async function runsVersion(bin: string, root: string): Promise<boolean> {
   try {
     const proc = Bun.spawn([bin, '--version'], {
       cwd: root,
@@ -72,15 +85,14 @@ export async function findRunnableBin(name: string, root: string): Promise<strin
     const exitCode = await proc.exited
     if (exitCode !== 0) {
       log.warn({ bin, exitCode, signal: proc.signalCode }, 'Binary on PATH failed --version, skipping it')
-      return undefined
+      return false
     }
+    return true
   }
   catch (err) {
     log.warn({ bin, err }, 'Failed to spawn binary on PATH for version check, skipping it')
-    return undefined
+    return false
   }
-
-  return bin
 }
 
 // =============================================================================

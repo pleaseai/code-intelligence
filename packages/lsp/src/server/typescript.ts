@@ -14,9 +14,12 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, findRunnableBin, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, findRunnableBin, log, nearestRoot, runsVersion } from './utils'
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']
+
+/** typescript-language-server version installed by the bunx fallback and the Vue server. */
+export const TS_LANGUAGE_SERVER_VERSION = '4.3.3'
 
 /** Walk up from `start` to the nearest `node_modules/typescript` package dir. */
 function findTypeScriptPackageRoot(start: string): string | undefined {
@@ -305,13 +308,16 @@ export const TypescriptServer: LSPServerInfo = {
       return { process: proc }
     }
 
-    // Classic fallback: typescript-language-server.
-    const tsserver = await findRunnableBin('typescript-language-server', root)
+    // Classic fallback: typescript-language-server, project-local before PATH.
+    const local = findPackageBin(root, 'typescript-language-server', 'typescript-language-server')
+    const tsserver = local && await runsVersion(local, root)
+      ? local
+      : await findRunnableBin('typescript-language-server', root)
     if (!tsserver) {
       // Try via bunx. The version tag makes bunx install from the registry instead of
       // reusing a typescript-language-server on PATH, which may be the shim just rejected.
       try {
-        const proc = spawn('bunx', ['typescript-language-server@latest', '--stdio'], {
+        const proc = spawn('bunx', [`typescript-language-server@${TS_LANGUAGE_SERVER_VERSION}`, '--stdio'], {
           cwd: root,
           env: { ...process.env, BUN_BE_BUN: '1' },
         })
@@ -324,9 +330,12 @@ export const TypescriptServer: LSPServerInfo = {
       }
     }
 
-    const proc = spawn(tsserver, ['--stdio'], {
+    // On Windows the bin is a .cmd shim, which only runs through a shell.
+    const launch = nativeServerSpawnArgs(tsserver)
+    const proc = spawn(launch.command, ['--stdio'], {
       cwd: root,
       env: { ...process.env, BUN_BE_BUN: '1' },
+      shell: launch.shell,
     })
     attachLSPProcessHandlers(proc, 'typescript')
     return { process: proc }
