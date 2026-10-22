@@ -9,7 +9,9 @@
 
 scripts:
   setup: |
-    set -e
+    # -u aborts on an unset ORCA_* variable; cd pins every step to the new worktree.
+    set -eu
+    cd "$ORCA_WORKTREE_PATH"
     # 1. Trust the new worktree's mise.toml (trust is per-path) and install its pinned tools (node, bun).
     mise trust --quiet
     mise install
