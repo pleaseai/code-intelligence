@@ -7,6 +7,7 @@ import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import type { RootFunction } from './types'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import process from 'node:process'
 import { createLogger } from '@pleaseai/logger'
 
 // Re-export from @pleaseai/binaries
@@ -45,6 +46,53 @@ export function attachLSPProcessHandlers(
       serverLog.error({ signal }, 'LSP killed by signal')
     }
   })
+}
+
+const VERSION_PROBE_TIMEOUT_MS = 10_000
+
+/**
+ * Find the first `name` on PATH whose `name --version` exits 0 when run in `root`.
+ * A version-manager shim (e.g. mise) can resolve on PATH while exiting non-zero
+ * because no version is configured for that directory, and a working install may
+ * sit in a later PATH entry.
+ */
+export async function findRunnableBin(name: string, root: string): Promise<string | undefined> {
+  // Read PATH now rather than the copy Bun captured at startup
+  const dirs = (process.env.PATH ?? '').split(path.delimiter).filter(Boolean)
+  const seen = new Set<string>()
+  for (const dir of dirs) {
+    const bin = Bun.which(name, { PATH: dir })
+    if (!bin || seen.has(bin)) {
+      continue
+    }
+    seen.add(bin)
+    if (await runsVersion(bin, root)) {
+      return bin
+    }
+  }
+  return undefined
+}
+
+/** Whether `bin --version` exits 0 when run in `root`. */
+export async function runsVersion(bin: string, root: string): Promise<boolean> {
+  try {
+    const proc = Bun.spawn([bin, '--version'], {
+      cwd: root,
+      stdout: 'ignore',
+      stderr: 'ignore',
+      timeout: VERSION_PROBE_TIMEOUT_MS,
+    })
+    const exitCode = await proc.exited
+    if (exitCode !== 0) {
+      log.warn({ bin, exitCode, signal: proc.signalCode }, 'Binary failed --version, skipping it')
+      return false
+    }
+    return true
+  }
+  catch (err) {
+    log.warn({ bin, err }, 'Failed to spawn binary for version check, skipping it')
+    return false
+  }
 }
 
 // =============================================================================

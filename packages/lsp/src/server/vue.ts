@@ -9,6 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
+import { TS_LANGUAGE_SERVER_VERSION } from './typescript'
 import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
 
 /**
@@ -29,7 +30,7 @@ const VUE_RUNTIME_DEPS = {
   },
   typeScriptLanguageServer: {
     package: 'typescript-language-server',
-    version: '4.3.3',
+    version: TS_LANGUAGE_SERVER_VERSION,
   },
 }
 
