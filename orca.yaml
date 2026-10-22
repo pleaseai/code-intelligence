@@ -10,8 +10,11 @@
 scripts:
   setup: |
     set -e
-    # 1. Copy gitignored local files (.env*, .claude/settings.local.json, ...) from the main checkout,
+    # 1. Trust the new worktree's mise.toml (trust is per-path) and install its pinned tools (node, bun).
+    mise trust --quiet
+    mise install
+    # 2. Copy gitignored local files (.env*, .claude/settings.local.json, ...) from the main checkout,
     #    as listed in .worktreeinclude.
-    bunx @pleaseai/worktreeinclude "$ORCA_ROOT_PATH" "$ORCA_WORKTREE_PATH"
-    # 2. Install dependencies inside the worktree.
-    bun install
+    mise exec -- bunx @pleaseai/worktreeinclude@0.1.0 "$ORCA_ROOT_PATH" "$ORCA_WORKTREE_PATH"
+    # 3. Install dependencies inside the worktree.
+    mise exec -- bun install
