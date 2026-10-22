@@ -37,7 +37,8 @@ function formatDiagnostic(
   const col = diagnostic.range.start.character + 1
 
   const code = diagnostic.code ? ` [${diagnostic.code}]` : ''
-  const message = diagnostic.message.split('\n')[0] // First line only
+  const text = typeof diagnostic.message === 'string' ? diagnostic.message : diagnostic.message.value
+  const message = text.split('\n')[0] // First line only
 
   return `  ${icon} ${relativePath}:${line}:${col}${code}: ${message}`
 }

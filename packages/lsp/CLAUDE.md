@@ -231,6 +231,22 @@ lsp:
 - `root: string` - Custom project root path (must be non-empty)
 - `command: string[]` - Custom spawn command (must have at least one element)
 
+**Native TypeScript 7 (typescript-go):** The single `typescript` server auto-selects
+its binary per project root at spawn time. When the workspace ships a native
+TypeScript 7 build — `node_modules/typescript` at major version ≥ 7 (or missing
+`lib/tsserver.js` / carrying `lib/getExePath.js`), or a `@typescript/native-preview`
+`tsgo` bin — it spawns `tsc --lsp --stdio` (or `tsgo --lsp --stdio`); otherwise it
+falls back to the classic `typescript-language-server --stdio`. There is no separate
+server id or config toggle, so there are never duplicate diagnostics. The native
+servers report diagnostics via the LSP pull model (`textDocument/diagnostic`), which
+the client handles transparently alongside push (`publishDiagnostics`).
+A project-local `tsrs` (the Rust port of TypeScript 7, same `--lsp --stdio` protocol)
+takes priority over `tsc`/`tsgo`, but only when its native binary is available —
+`TSRS_BINARY` (resolved against the project root), or the one `@tsrs/<os>-<cpu>[-gnu|-musl]`
+platform package the tsrs launcher itself would load, with its binary present; otherwise (e.g. darwin-x64, unsupported) resolution falls through. When no
+project-local tsrs/tsc/tsgo exists, a `tsrs` on `PATH` is used before the classic
+server (an npm launcher on `PATH` gets the same platform-binary check).
+
 **Config Utilities:**
 ```typescript
 import { getServerRoot, isServerEnabled, loadLspConfig } from '@pleaseai/code-lsp'

@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.25](https://github.com/pleaseai/code-intelligence/compare/code-please-v0.1.24...code-please-v0.1.25) (2026-10-21)
+
+
+### Features
+
+* **lsp:** prefer tsrs for the TypeScript LSP when installed ([#124](https://github.com/pleaseai/code-intelligence/issues/124)) ([3d230fe](https://github.com/pleaseai/code-intelligence/commit/3d230fe46a59b0613424be156e79f49a8858db04))
+
+## [0.1.24](https://github.com/pleaseai/code-intelligence/compare/code-please-v0.1.23...code-please-v0.1.24) (2026-07-16)
+
+
+### Features
+
+* **lsp:** add native TypeScript 7 (typescript-go) LSP support ([#120](https://github.com/pleaseai/code-intelligence/issues/120)) ([4989812](https://github.com/pleaseai/code-intelligence/commit/498981205a91f08b4dc25e40402b0ef6485b7167))
+
+
+### Bug Fixes
+
+* resolve leftover stash conflict markers in .claude/settings.json ([#106](https://github.com/pleaseai/code-intelligence/issues/106)) ([2ed8a3a](https://github.com/pleaseai/code-intelligence/commit/2ed8a3a429fb5ad8e683e608bc90863f26cb685a))
+
 ## [0.1.23](https://github.com/pleaseai/code-intelligence/compare/code-please-v0.1.22...code-please-v0.1.23) (2026-07-01)
 
 

@@ -121,7 +121,7 @@ packages/lsp/src/
 ├── language.ts         # File extension → language ID mapping
 └── server/             # Server definitions (30+ files)
     ├── index.ts        # LSP_SERVERS registry array
-    ├── typescript.ts   # TypeScript/JavaScript server
+    ├── typescript.ts   # TypeScript/JavaScript server (auto-selects native TS 7)
     ├── pyright.ts      # Python server
     └── ...             # One file per language server
 ```
@@ -343,7 +343,7 @@ These are constraints that must be maintained. Violating them will break things.
 
 ### Build & Release
 
-- **Package manager**: Bun 1.3.5+
+- **Package manager**: Bun 1.4.3+
 - **Build orchestration**: Turborepo with `build → typecheck → test` pipeline.
   Package builds depend on their upstream packages (`^build`).
 - **Release**: release-please for changelog generation and version bumps.

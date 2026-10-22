@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.12](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.11...@pleaseai/code-lsp-v0.1.12) (2026-10-21)
+
+
+### Features
+
+* **lsp:** prefer tsrs for the TypeScript LSP when installed ([#124](https://github.com/pleaseai/code-intelligence/issues/124)) ([3d230fe](https://github.com/pleaseai/code-intelligence/commit/3d230fe46a59b0613424be156e79f49a8858db04))
+
+## [0.1.11](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.10...@pleaseai/code-lsp-v0.1.11) (2026-07-16)
+
+
+### Features
+
+* **lsp:** add native TypeScript 7 (typescript-go) LSP support ([#120](https://github.com/pleaseai/code-intelligence/issues/120)) ([4989812](https://github.com/pleaseai/code-intelligence/commit/498981205a91f08b4dc25e40402b0ef6485b7167))
+
 ## [0.1.10](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.9...@pleaseai/code-lsp-v0.1.10) (2026-07-01)
 
 
