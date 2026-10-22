@@ -75,17 +75,17 @@ export const BiomeServer: LSPServerInfo = {
     }
 
     // Fallback: Try via bunx. The unscoped `biome` npm package is an unrelated project.
-    try {
-      const proc = spawn('bunx', [`@biomejs/biome@${BIOME_VERSION}`, 'lsp-proxy', '--stdio'], {
-        cwd: root,
-        env: { ...process.env, BUN_BE_BUN: '1' },
-      })
-      attachLSPProcessHandlers(proc, 'biome')
-      return { process: proc }
-    }
-    catch (err) {
-      log.warn({ root, err }, 'Biome not found. Install with: npm install @biomejs/biome')
+    // spawn reports a missing bunx only as an async 'error' event, so check for it first.
+    const bunx = Bun.which('bunx', { PATH: process.env.PATH ?? '' })
+    if (!bunx) {
+      log.warn({ root }, 'Biome not found. Install with: npm install @biomejs/biome')
       return undefined
     }
+    const proc = spawn(bunx, [`@biomejs/biome@${BIOME_VERSION}`, 'lsp-proxy', '--stdio'], {
+      cwd: root,
+      env: { ...process.env, BUN_BE_BUN: '1' },
+    })
+    attachLSPProcessHandlers(proc, 'biome')
+    return { process: proc }
   },
 }

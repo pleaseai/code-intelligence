@@ -2,7 +2,7 @@ import type { LSPServerInfo } from '../../src/server/types'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, spyOn, test } from 'bun:test'
 import {
   BiomeServer,
   DartServer,
@@ -20,7 +20,7 @@ import {
   TypescriptServer,
   VueServer,
 } from '../../src/server'
-import { findRunnableBin } from '../../src/server/utils'
+import { findRunnableBin, log } from '../../src/server/utils'
 
 describe('LSP_SERVERS', () => {
   test('contains expected servers', () => {
@@ -553,6 +553,24 @@ describe.skipIf(process.platform === 'win32')('BiomeServer fallback', () => {
       await fs.writeFile(path.join(binDir, 'biome'), recorder('local'), { mode: 0o755 })
     })
     expect(invoked).toBe('local lsp-proxy --stdio')
+  })
+
+  test('returns undefined with the install hint when bunx is missing', async () => {
+    const emptyDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-empty-'))
+    const savedPath = process.env.PATH
+    const warn = spyOn(log, 'warn')
+    try {
+      process.env.PATH = emptyDir
+      const handle = await BiomeServer.spawn(emptyDir)
+      process.env.PATH = savedPath
+      expect(handle).toBeUndefined()
+      expect(warn).toHaveBeenCalledWith(expect.anything(), 'Biome not found. Install with: npm install @biomejs/biome')
+    }
+    finally {
+      warn.mockRestore()
+      process.env.PATH = savedPath
+      await fs.rm(emptyDir, { recursive: true, force: true })
+    }
   })
 })
 
