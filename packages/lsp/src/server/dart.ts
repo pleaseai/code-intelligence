@@ -118,7 +118,8 @@ const DART_PROBE_TIMEOUT_MS = 10_000
  * on PATH while exiting non-zero because no SDK version is configured.
  */
 export async function findSystemDart(root: string): Promise<string | undefined> {
-  const systemDart = Bun.which('dart')
+  // Bun.which defaults to the PATH captured at startup; follow the current environment
+  const systemDart = Bun.which('dart', { PATH: process.env.PATH ?? '' })
   if (!systemDart) {
     return undefined
   }

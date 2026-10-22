@@ -18,6 +18,7 @@ import {
   TypescriptServer,
   VueServer,
 } from '../../src/server'
+import { findSystemDart } from '../../src/server/dart'
 
 describe('LSP_SERVERS', () => {
   test('contains expected servers', () => {
@@ -400,26 +401,21 @@ describe('DartServer', () => {
   })
 
   describe.skipIf(process.platform === 'win32')('findSystemDart', () => {
-    // Bun.which reads PATH at process startup, so probe in a child process with a fake PATH
-    async function findSystemDartWith(dartScript: string, rootFiles: string[] = []): Promise<{ result: string, fakeDart: string }> {
+    async function findSystemDartWith(dartScript: string, rootFiles: string[] = []): Promise<{ result: string | undefined, fakeDart: string }> {
       const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-bin-'))
       const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-root-'))
+      const savedPath = process.env.PATH
       try {
         const fakeDart = path.join(binDir, 'dart')
         await fs.writeFile(fakeDart, dartScript, { mode: 0o755 })
         for (const file of rootFiles) {
           await fs.writeFile(path.join(rootDir, file), '')
         }
-        const dartModule = path.join(import.meta.dir, '../../src/server/dart.ts')
-        const proc = Bun.spawn(
-          [process.execPath, '-e', `import { findSystemDart } from ${JSON.stringify(dartModule)}; console.log(String(await findSystemDart(${JSON.stringify(rootDir)})))`],
-          { env: { ...process.env, PATH: binDir }, stdout: 'pipe', stderr: 'ignore' },
-        )
-        const stdout = await new Response(proc.stdout).text()
-        await proc.exited
-        return { result: stdout.trim().split('\n').at(-1) ?? '', fakeDart }
+        process.env.PATH = binDir
+        return { result: await findSystemDart(rootDir), fakeDart }
       }
       finally {
+        process.env.PATH = savedPath
         await fs.rm(binDir, { recursive: true, force: true })
         await fs.rm(rootDir, { recursive: true, force: true })
       }
@@ -427,12 +423,12 @@ describe('DartServer', () => {
 
     test('ignores a dart on PATH that fails --version', async () => {
       const { result } = await findSystemDartWith('#!/bin/sh\necho "No version is set for shim: dart" >&2\nexit 1\n')
-      expect(result).toBe('undefined')
+      expect(result).toBeUndefined()
     })
 
     test('ignores a dart on PATH that cannot be spawned', async () => {
       const { result } = await findSystemDartWith('\x7FELF not a real binary')
-      expect(result).toBe('undefined')
+      expect(result).toBeUndefined()
     })
 
     test('returns a dart on PATH that runs --version', async () => {
