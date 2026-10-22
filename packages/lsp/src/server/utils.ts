@@ -7,6 +7,7 @@ import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import type { RootFunction } from './types'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import process from 'node:process'
 import { createLogger } from '@pleaseai/logger'
 
 // Re-export from @pleaseai/binaries
@@ -45,6 +46,41 @@ export function attachLSPProcessHandlers(
       serverLog.error({ signal }, 'LSP killed by signal')
     }
   })
+}
+
+const VERSION_PROBE_TIMEOUT_MS = 10_000
+
+/**
+ * Find `name` on PATH, but only if `name --version` exits 0 when run in `root`.
+ * A version-manager shim (e.g. mise) can resolve on PATH while exiting non-zero
+ * because no version is configured for that directory.
+ */
+export async function findRunnableBin(name: string, root: string): Promise<string | undefined> {
+  // Bun.which defaults to the PATH captured at startup; follow the current environment
+  const bin = Bun.which(name, { PATH: process.env.PATH ?? '' })
+  if (!bin) {
+    return undefined
+  }
+
+  try {
+    const proc = Bun.spawn([bin, '--version'], {
+      cwd: root,
+      stdout: 'ignore',
+      stderr: 'ignore',
+      timeout: VERSION_PROBE_TIMEOUT_MS,
+    })
+    const exitCode = await proc.exited
+    if (exitCode !== 0) {
+      log.warn({ bin, exitCode, signal: proc.signalCode }, 'Binary on PATH failed --version, skipping it')
+      return undefined
+    }
+  }
+  catch (err) {
+    log.warn({ bin, err }, 'Failed to spawn binary on PATH for version check, skipping it')
+    return undefined
+  }
+
+  return bin
 }
 
 // =============================================================================

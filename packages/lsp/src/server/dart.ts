@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadAndExtract, getPlatformId, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, downloadAndExtract, findRunnableBin, getPlatformId, log, nearestRoot } from './utils'
 
 /**
  * Dart SDK runtime dependency configuration
@@ -111,47 +111,12 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
   }
 }
 
-const DART_PROBE_TIMEOUT_MS = 10_000
-
-/**
- * Find a system Dart that actually runs. A version-manager shim (e.g. mise) can resolve
- * on PATH while exiting non-zero because no SDK version is configured.
- */
-export async function findSystemDart(root: string): Promise<string | undefined> {
-  // Bun.which defaults to the PATH captured at startup; follow the current environment
-  const systemDart = Bun.which('dart', { PATH: process.env.PATH ?? '' })
-  if (!systemDart) {
-    return undefined
-  }
-
-  try {
-    // Run in the project root: version managers resolve the SDK per directory
-    const proc = Bun.spawn([systemDart, '--version'], {
-      cwd: root,
-      stdout: 'ignore',
-      stderr: 'ignore',
-      timeout: DART_PROBE_TIMEOUT_MS,
-    })
-    const exitCode = await proc.exited
-    if (exitCode !== 0) {
-      log.warn({ systemDart, exitCode, signal: proc.signalCode }, 'System Dart failed --version, trying auto-download')
-      return undefined
-    }
-  }
-  catch (err) {
-    log.warn({ systemDart, err }, 'Failed to spawn system Dart for version check, trying auto-download')
-    return undefined
-  }
-
-  return systemDart
-}
-
 export const DartServer: LSPServerInfo = {
   id: 'dart',
   extensions: ['.dart'],
   root: nearestRoot(['pubspec.yaml', 'pubspec.lock']),
   async spawn(root) {
-    const systemDart = await findSystemDart(root)
+    const systemDart = await findRunnableBin('dart', root)
     if (systemDart) {
       try {
         const proc = spawn(systemDart, ['language-server', '--client-id', 'dora.dart', '--client-version', '1.0'], {

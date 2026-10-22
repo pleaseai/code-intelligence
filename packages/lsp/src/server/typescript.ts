@@ -14,7 +14,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, findRunnableBin, log, nearestRoot } from './utils'
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']
 
@@ -306,11 +306,12 @@ export const TypescriptServer: LSPServerInfo = {
     }
 
     // Classic fallback: typescript-language-server.
-    const tsserver = Bun.which('typescript-language-server')
+    const tsserver = await findRunnableBin('typescript-language-server', root)
     if (!tsserver) {
-      // Try via bunx
+      // Try via bunx. The version tag makes bunx install from the registry instead of
+      // reusing a typescript-language-server on PATH, which may be the shim just rejected.
       try {
-        const proc = spawn('bunx', ['typescript-language-server', '--stdio'], {
+        const proc = spawn('bunx', ['typescript-language-server@latest', '--stdio'], {
           cwd: root,
           env: { ...process.env, BUN_BE_BUN: '1' },
         })
