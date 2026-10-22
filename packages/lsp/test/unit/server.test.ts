@@ -533,6 +533,27 @@ describe.skipIf(process.platform === 'win32')('TypescriptServer classic fallback
     const invoked = await spawnTypescriptWith({ bunx: recorder('bunx') }, rootDir => installLocalServer(rootDir, '#!/bin/sh\nexit 1\n'))
     expect(invoked).toBe('bunx typescript-language-server@4.3.3 --stdio')
   })
+
+  test('returns undefined with the install hint when bunx is missing', async () => {
+    const emptyDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-empty-'))
+    const savedPath = process.env.PATH
+    const warn = spyOn(log, 'warn')
+    try {
+      process.env.PATH = emptyDir
+      const handle = await TypescriptServer.spawn(emptyDir)
+      process.env.PATH = savedPath
+      expect(handle).toBeUndefined()
+      expect(warn).toHaveBeenCalledWith(
+        expect.anything(),
+        'typescript-language-server not found. Install with: npm install typescript-language-server typescript',
+      )
+    }
+    finally {
+      warn.mockRestore()
+      process.env.PATH = savedPath
+      await fs.rm(emptyDir, { recursive: true, force: true })
+    }
+  })
 })
 
 describe.skipIf(process.platform === 'win32')('BiomeServer fallback', () => {

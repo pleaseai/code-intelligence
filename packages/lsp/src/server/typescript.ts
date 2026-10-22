@@ -316,18 +316,18 @@ export const TypescriptServer: LSPServerInfo = {
     if (!tsserver) {
       // Try via bunx. The version tag makes bunx install from the registry instead of
       // reusing a typescript-language-server on PATH, which may be the shim just rejected.
-      try {
-        const proc = spawn('bunx', [`typescript-language-server@${TS_LANGUAGE_SERVER_VERSION}`, '--stdio'], {
-          cwd: root,
-          env: { ...process.env, BUN_BE_BUN: '1' },
-        })
-        attachLSPProcessHandlers(proc, 'typescript')
-        return { process: proc }
-      }
-      catch (err) {
-        log.error({ err }, 'Failed to spawn typescript-language-server via bunx')
+      // spawn reports a missing bunx only as an async 'error' event, so check for it first.
+      const bunx = Bun.which('bunx', { PATH: process.env.PATH ?? '' })
+      if (!bunx) {
+        log.warn({ root }, 'typescript-language-server not found. Install with: npm install typescript-language-server typescript')
         return undefined
       }
+      const proc = spawn(bunx, [`typescript-language-server@${TS_LANGUAGE_SERVER_VERSION}`, '--stdio'], {
+        cwd: root,
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      })
+      attachLSPProcessHandlers(proc, 'typescript')
+      return { process: proc }
     }
 
     // On Windows the bin is a .cmd shim, which only runs through a shell.
