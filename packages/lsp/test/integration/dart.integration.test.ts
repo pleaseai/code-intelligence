@@ -15,8 +15,18 @@ const DART_PROJECT_PATH = path.join(import.meta.dir, '../fixtures/dart-project')
 const MAIN_DART_PATH = path.join(DART_PROJECT_PATH, 'lib/main.dart')
 const HELPER_DART_PATH = path.join(DART_PROJECT_PATH, 'lib/helper.dart')
 
-// Check if Dart is available
-const isDartAvailable = Bun.which('dart') !== null
+// Check that Dart actually runs: a version-manager shim (e.g. mise) can resolve on PATH
+// while exiting non-zero because no SDK version is configured.
+function canRunDart(): boolean {
+  try {
+    return Bun.spawnSync(['dart', '--version'], { stdout: 'ignore', stderr: 'ignore' }).exitCode === 0
+  }
+  catch {
+    return false
+  }
+}
+
+const isDartAvailable = canRunDart()
 
 describe.skipIf(!isDartAvailable)('DartServer Integration', () => {
   let manager: LSPManager
