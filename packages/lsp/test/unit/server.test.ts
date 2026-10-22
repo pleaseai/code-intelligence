@@ -398,6 +398,38 @@ describe('DartServer', () => {
       await fs.rm(tempDir, { recursive: true, force: true })
     }
   })
+
+  describe('findSystemDart', () => {
+    // Bun.which reads PATH at process startup, so probe in a child process with a fake PATH
+    async function findSystemDartWith(dartScript: string): Promise<{ result: string, fakeDart: string }> {
+      const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-bin-'))
+      try {
+        const fakeDart = path.join(binDir, 'dart')
+        await fs.writeFile(fakeDart, dartScript, { mode: 0o755 })
+        const dartModule = path.join(import.meta.dir, '../../src/server/dart.ts')
+        const proc = Bun.spawn(
+          [process.execPath, '-e', `import { findSystemDart } from ${JSON.stringify(dartModule)}; console.log(String(await findSystemDart()))`],
+          { env: { ...process.env, PATH: binDir }, stdout: 'pipe', stderr: 'ignore' },
+        )
+        const stdout = await new Response(proc.stdout).text()
+        await proc.exited
+        return { result: stdout.trim().split('\n').at(-1) ?? '', fakeDart }
+      }
+      finally {
+        await fs.rm(binDir, { recursive: true, force: true })
+      }
+    }
+
+    test('ignores a dart on PATH that fails --version', async () => {
+      const { result } = await findSystemDartWith('#!/bin/sh\necho "No version is set for shim: dart" >&2\nexit 1\n')
+      expect(result).toBe('undefined')
+    })
+
+    test('returns a dart on PATH that runs --version', async () => {
+      const { result, fakeDart } = await findSystemDartWith('#!/bin/sh\nexit 0\n')
+      expect(result).toBe(fakeDart)
+    })
+  })
 })
 
 describe('VueServer', () => {
