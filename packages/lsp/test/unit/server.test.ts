@@ -18,6 +18,7 @@ import {
   TypescriptServer,
   VueServer,
 } from '../../src/server'
+import { findSystemDart } from '../../src/server/dart'
 
 describe('LSP_SERVERS', () => {
   test('contains expected servers', () => {
@@ -397,6 +398,48 @@ describe('DartServer', () => {
     finally {
       await fs.rm(tempDir, { recursive: true, force: true })
     }
+  })
+
+  describe.skipIf(process.platform === 'win32')('findSystemDart', () => {
+    async function findSystemDartWith(dartScript: string, rootFiles: string[] = []): Promise<{ result: string | undefined, fakeDart: string }> {
+      const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-bin-'))
+      const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dart-root-'))
+      const savedPath = process.env.PATH
+      try {
+        const fakeDart = path.join(binDir, 'dart')
+        await fs.writeFile(fakeDart, dartScript, { mode: 0o755 })
+        for (const file of rootFiles) {
+          await fs.writeFile(path.join(rootDir, file), '')
+        }
+        process.env.PATH = binDir
+        return { result: await findSystemDart(rootDir), fakeDart }
+      }
+      finally {
+        process.env.PATH = savedPath
+        await fs.rm(binDir, { recursive: true, force: true })
+        await fs.rm(rootDir, { recursive: true, force: true })
+      }
+    }
+
+    test('ignores a dart on PATH that fails --version', async () => {
+      const { result } = await findSystemDartWith('#!/bin/sh\necho "No version is set for shim: dart" >&2\nexit 1\n')
+      expect(result).toBeUndefined()
+    })
+
+    test('ignores a dart on PATH that cannot be spawned', async () => {
+      const { result } = await findSystemDartWith('\x7FELF not a real binary')
+      expect(result).toBeUndefined()
+    })
+
+    test('returns a dart on PATH that runs --version', async () => {
+      const { result, fakeDart } = await findSystemDartWith('#!/bin/sh\nexit 0\n')
+      expect(result).toBe(fakeDart)
+    })
+
+    test('probes --version in the project root', async () => {
+      const { result, fakeDart } = await findSystemDartWith('#!/bin/sh\n[ -f .tool-versions ] || exit 1\n', ['.tool-versions'])
+      expect(result).toBe(fakeDart)
+    })
   })
 })
 
