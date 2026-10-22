@@ -84,13 +84,13 @@ export async function runsVersion(bin: string, root: string): Promise<boolean> {
     })
     const exitCode = await proc.exited
     if (exitCode !== 0) {
-      log.warn({ bin, exitCode, signal: proc.signalCode }, 'Binary on PATH failed --version, skipping it')
+      log.warn({ bin, exitCode, signal: proc.signalCode }, 'Binary failed --version, skipping it')
       return false
     }
     return true
   }
   catch (err) {
-    log.warn({ bin, err }, 'Failed to spawn binary on PATH for version check, skipping it')
+    log.warn({ bin, err }, 'Failed to spawn binary for version check, skipping it')
     return false
   }
 }
