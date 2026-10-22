@@ -36,6 +36,9 @@ coverage/
 # Claude settings
 /.claude/settings.local.json
 
+# Local MCP config
+/.mcp.local.json
+
 # Please runtime state
 .please/state/
 .please/memory/tasklist.json

@@ -1,0 +1,9 @@
+# .worktreeinclude — gitignored local files copied into new worktrees
+# (gitignore syntax; a file is copied only if it matches here AND is gitignored)
+.env
+.env.*
+apps/*/.env
+packages/*/.env
+.claude/settings.local.json
+.mcp.local.json
+.turbo/config.json
