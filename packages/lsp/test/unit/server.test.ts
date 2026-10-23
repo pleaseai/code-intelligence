@@ -595,6 +595,36 @@ describe.skipIf(process.platform === 'win32')('BiomeServer fallback', () => {
   })
 })
 
+describe.skipIf(process.platform === 'win32')('PyrightServer fallback', () => {
+  test('falls back to bunx with a pinned pyright when pyright-langserver is not installed', async () => {
+    const invoked = await spawnServerWith(PyrightServer, { bunx: recorder('bunx') })
+    expect(invoked).toBe('bunx -p pyright@1.1.414 pyright-langserver --stdio')
+  })
+
+  test('prefers pyright-langserver on PATH over bunx', async () => {
+    const invoked = await spawnServerWith(PyrightServer, { 'pyright-langserver': recorder('path'), 'bunx': recorder('bunx') })
+    expect(invoked).toBe('path --stdio')
+  })
+
+  test('returns undefined with the install hint when bunx is missing', async () => {
+    const emptyDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-empty-'))
+    const savedPath = process.env.PATH
+    const warn = spyOn(log, 'warn')
+    try {
+      process.env.PATH = emptyDir
+      const handle = await PyrightServer.spawn(emptyDir)
+      process.env.PATH = savedPath
+      expect(handle).toBeUndefined()
+      expect(warn).toHaveBeenCalledWith(expect.anything(), 'pyright not found. Install with: npm install pyright')
+    }
+    finally {
+      warn.mockRestore()
+      process.env.PATH = savedPath
+      await fs.rm(emptyDir, { recursive: true, force: true })
+    }
+  })
+})
+
 describe('VueServer', () => {
   test('has correct id', () => {
     expect(VueServer.id).toBe('vue')
