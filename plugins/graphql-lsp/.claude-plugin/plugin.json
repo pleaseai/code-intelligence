@@ -1,6 +1,6 @@
 {
   "name": "graphql-lsp",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "GraphQL Language Server for Claude Code",
   "repository": "https://github.com/chatbot-pf/code-please",
   "author": {

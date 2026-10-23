@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.13](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.12...@pleaseai/code-lsp-v0.1.13) (2026-10-23)
+
+
+### Bug Fixes
+
+* **lsp:** check a project-local pyright-langserver before PATH and bunx ([#148](https://github.com/pleaseai/code-intelligence/issues/148)) ([d4c6a15](https://github.com/pleaseai/code-intelligence/commit/d4c6a15dcb3a74e7d05ee2b264de0bf1aa658298))
+* **lsp:** check for bunx before the typescript bunx fallback ([#136](https://github.com/pleaseai/code-intelligence/issues/136)) ([c5f57a4](https://github.com/pleaseai/code-intelligence/commit/c5f57a48088e0f6caae21b50e7812772183743f6)), closes [#135](https://github.com/pleaseai/code-intelligence/issues/135)
+* **lsp:** fall back to downloaded dart sdk when system dart cannot run ([#129](https://github.com/pleaseai/code-intelligence/issues/129)) ([669801c](https://github.com/pleaseai/code-intelligence/commit/669801cacbfdfc606dc2cccde49f532be6f5079e)), closes [#127](https://github.com/pleaseai/code-intelligence/issues/127)
+* **lsp:** run a pinned @biomejs/biome in the biome bunx fallback ([#134](https://github.com/pleaseai/code-intelligence/issues/134)) ([5d53def](https://github.com/pleaseai/code-intelligence/commit/5d53def0cbbba36ce57528b144590e2a5f25f04f))
+* **lsp:** run a pinned pyright in the pyright bunx fallback ([#146](https://github.com/pleaseai/code-intelligence/issues/146)) ([a497e40](https://github.com/pleaseai/code-intelligence/commit/a497e40a92cfbd514c68c9afbfd5c5b652908e29)), closes [#137](https://github.com/pleaseai/code-intelligence/issues/137)
+* **lsp:** skip an unrunnable typescript-language-server and fall back to bunx ([#131](https://github.com/pleaseai/code-intelligence/issues/131)) ([15954b7](https://github.com/pleaseai/code-intelligence/commit/15954b7501a17854c4103f8cb5cbbbfe8961c07f))
+
 ## [0.1.12](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-lsp-v0.1.11...@pleaseai/code-lsp-v0.1.12) (2026-10-21)
 
 

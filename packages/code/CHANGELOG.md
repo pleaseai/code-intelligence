@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.17](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-v0.1.16...@pleaseai/code-v0.1.17) (2026-10-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-lsp bumped to 0.1.13
+
 ## [0.1.16](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/code-v0.1.15...@pleaseai/code-v0.1.16) (2026-10-21)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.13](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/dora-v0.1.12...@pleaseai/dora-v0.1.13) (2026-10-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @pleaseai/code-lsp bumped to 0.1.13
+
 ## [0.1.12](https://github.com/pleaseai/code-intelligence/compare/@pleaseai/dora-v0.1.11...@pleaseai/dora-v0.1.12) (2026-10-21)
 
 
