@@ -466,11 +466,11 @@ describe.skipIf(process.platform === 'win32')('findRunnableBin', () => {
 // Each fake server records its name and arguments in `invoked` under the project root.
 const recorder = (name: string): string => `#!/bin/sh\necho "${name} $*" > invoked\n`
 
-/** Spawn `server` with only `pathBins` on PATH and return what the launched binary recorded. */
 async function spawnServerWith(
   server: LSPServerInfo,
   pathBins: Record<string, string>,
   setupRoot: (rootDir: string) => Promise<void> = async () => {},
+  subdir = '',
 ): Promise<string> {
   const binDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-bin-'))
   const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'lsp-fallback-root-'))
@@ -480,15 +480,17 @@ async function spawnServerWith(
       await fs.writeFile(path.join(binDir, name), script, { mode: 0o755 })
     }
     await setupRoot(rootDir)
+    const spawnRoot = path.join(rootDir, subdir)
+    await fs.mkdir(spawnRoot, { recursive: true })
     process.env.PATH = binDir
-    const handle = await server.spawn(rootDir)
+    const handle = await server.spawn(spawnRoot)
     process.env.PATH = savedPath
     expect(handle).toBeDefined()
     const proc = handle!.process
     if (proc.exitCode === null && proc.signalCode === null) {
       await new Promise(resolve => proc.once('exit', resolve))
     }
-    return (await fs.readFile(path.join(rootDir, 'invoked'), 'utf8')).trim()
+    return (await fs.readFile(path.join(spawnRoot, 'invoked'), 'utf8')).trim()
   }
   finally {
     process.env.PATH = savedPath
@@ -603,6 +605,42 @@ describe.skipIf(process.platform === 'win32')('PyrightServer fallback', () => {
 
   test('prefers pyright-langserver on PATH over bunx', async () => {
     const invoked = await spawnServerWith(PyrightServer, { 'pyright-langserver': recorder('path'), 'bunx': recorder('bunx') })
+    expect(invoked).toBe('path --stdio')
+  })
+
+  async function installLocalPyright(dir: string, script: string, strayShim?: string): Promise<void> {
+    const packageDir = path.join(dir, 'node_modules', 'pyright')
+    await fs.mkdir(packageDir, { recursive: true })
+    await fs.writeFile(
+      path.join(packageDir, 'package.json'),
+      JSON.stringify({ name: 'pyright', bin: { 'pyright': 'index.js', 'pyright-langserver': 'langserver.index.js' } }),
+    )
+    await fs.writeFile(path.join(packageDir, 'langserver.index.js'), script, { mode: 0o755 })
+    const binDir = path.join(dir, 'node_modules', '.bin')
+    await fs.mkdir(binDir)
+    const shim = path.join(binDir, 'pyright-langserver')
+    if (strayShim) {
+      await fs.writeFile(shim, strayShim, { mode: 0o755 })
+    }
+    else {
+      await fs.symlink(path.join('..', 'pyright', 'langserver.index.js'), shim)
+    }
+  }
+
+  const pathAndBunx = { 'pyright-langserver': recorder('path'), 'bunx': recorder('bunx') }
+
+  test('prefers a project-local pyright-langserver over PATH and bunx', async () => {
+    const invoked = await spawnServerWith(PyrightServer, pathAndBunx, rootDir => installLocalPyright(rootDir, recorder('local')))
+    expect(invoked).toBe('local --stdio')
+  })
+
+  test('finds a project-local pyright-langserver in a parent of the root', async () => {
+    const invoked = await spawnServerWith(PyrightServer, pathAndBunx, rootDir => installLocalPyright(rootDir, recorder('local')), 'backend')
+    expect(invoked).toBe('local --stdio')
+  })
+
+  test('ignores a .bin/pyright-langserver shim the pyright package does not own', async () => {
+    const invoked = await spawnServerWith(PyrightServer, pathAndBunx, rootDir => installLocalPyright(rootDir, recorder('local'), recorder('stray')))
     expect(invoked).toBe('path --stdio')
   })
 

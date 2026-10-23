@@ -5,6 +5,7 @@
 
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import type { RootFunction } from './types'
+import { existsSync, lstatSync, readFileSync, readlinkSync, realpathSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
@@ -92,6 +93,69 @@ export async function runsVersion(bin: string, root: string): Promise<boolean> {
   catch (err) {
     log.warn({ bin, err }, 'Failed to spawn binary for version check, skipping it')
     return false
+  }
+}
+
+/** Resolve a package-owned bin declared by the package and exposed by its shared shim. */
+export function resolvePackageBin(packageRoot: string, name: string): string | undefined {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
+    ) as { bin?: string | Record<string, string> }
+    const relativeTarget = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin?.[name]
+    if (!relativeTarget) { return undefined }
+
+    const target = path.resolve(packageRoot, relativeTarget)
+    if (!existsSync(target)) { return undefined }
+    const ext = process.platform === 'win32' ? '.cmd' : ''
+    const packageDir = path.dirname(packageRoot)
+    const nodeModules = path.basename(packageDir).startsWith('@')
+      ? path.dirname(packageDir)
+      : packageDir
+    const shim = path.join(nodeModules, '.bin', `${name}${ext}`)
+    if (!existsSync(shim)) { return undefined }
+
+    // npm-style symlinks and package-manager-generated wrapper scripts are both
+    // valid shims. For wrappers, require a reference to the package's declared
+    // target so a stale or unrelated shared shim is never selected.
+    const stat = lstatSync(shim)
+    if (stat.isSymbolicLink()) {
+      const resolvedShim = path.resolve(path.dirname(shim), readlinkSync(shim))
+      return existsSync(resolvedShim)
+        && realpathSync(resolvedShim) === realpathSync(target)
+        ? shim
+        : undefined
+    }
+    const normalizeShimPath = (value: string): string => {
+      const normalized = value.replaceAll('\\', '/')
+      return process.platform === 'win32' ? normalized.toLowerCase() : normalized
+    }
+    const wrapper = normalizeShimPath(readFileSync(shim, 'utf8'))
+    const relativeFromBin = normalizeShimPath(path.relative(path.dirname(shim), target))
+    const normalizedTarget = normalizeShimPath(target)
+    return wrapper.includes(relativeFromBin) || wrapper.includes(normalizedTarget)
+      ? shim
+      : undefined
+  }
+  catch {
+    return undefined
+  }
+}
+
+export function findPackageBin(
+  start: string,
+  packageName: string,
+  name: string,
+  isUsable: (packageRoot: string) => boolean = () => true,
+): string | undefined {
+  let dir = path.resolve(start)
+  while (true) {
+    const packageRoot = path.join(dir, 'node_modules', ...packageName.split('/'))
+    const bin = resolvePackageBin(packageRoot, name)
+    if (bin && isUsable(packageRoot)) { return bin }
+    const parent = path.dirname(dir)
+    if (parent === dir) { return undefined }
+    dir = parent
   }
 }
 
