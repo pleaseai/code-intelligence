@@ -14,7 +14,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, findPackageBin, findRunnableBin, log, nearestRoot, resolvePackageBin, runsVersion } from './utils'
+import { attachLSPProcessHandlers, findPackageBin, findRunnableBin, log, nearestRoot, prepareSpawnCommand, resolvePackageBin, runsVersion } from './utils'
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']
 
@@ -94,8 +94,7 @@ export function nativeServerSpawnArgs(
   command: string,
   platform: NodeJS.Platform = process.platform,
 ): { command: string, args: string[], shell: boolean } {
-  const win32 = platform === 'win32'
-  return { command: win32 ? `"${command}"` : command, args: ['--lsp', '--stdio'], shell: win32 }
+  return { ...prepareSpawnCommand(command, platform), args: ['--lsp', '--stdio'] }
 }
 
 function hasTsrsBinary(packageRoot: string, root: string): boolean {
@@ -268,7 +267,7 @@ export const TypescriptServer: LSPServerInfo = {
     }
 
     // On Windows the bin is a .cmd shim, which only runs through a shell.
-    const launch = nativeServerSpawnArgs(tsserver)
+    const launch = prepareSpawnCommand(tsserver)
     const proc = spawn(launch.command, ['--stdio'], {
       cwd: root,
       env: { ...process.env, BUN_BE_BUN: '1' },

@@ -5,8 +5,7 @@
 import type { LSPServerInfo } from './types'
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { nativeServerSpawnArgs } from './typescript'
-import { attachLSPProcessHandlers, findPackageBin, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, findPackageBin, log, nearestRoot, prepareSpawnCommand } from './utils'
 
 export const PYRIGHT_VERSION = '1.1.414'
 
@@ -38,9 +37,7 @@ export const PyrightServer: LSPServerInfo = {
       return { process: proc }
     }
 
-    // On Windows both a project-local and an npm-global pyright-langserver are .cmd shims,
-    // which spawn can only run through a shell.
-    const launch = nativeServerSpawnArgs(pyright)
+    const launch = prepareSpawnCommand(pyright)
     const proc = spawn(launch.command, ['--stdio'], {
       cwd: root,
       shell: launch.shell,

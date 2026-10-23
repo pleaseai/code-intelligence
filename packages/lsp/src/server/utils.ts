@@ -96,6 +96,18 @@ export async function runsVersion(bin: string, root: string): Promise<boolean> {
   }
 }
 
+/**
+ * On Windows an npm bin is a .cmd shim, which spawn can only run through a shell,
+ * so the path is quoted for it.
+ */
+export function prepareSpawnCommand(
+  command: string,
+  platform: NodeJS.Platform = process.platform,
+): { command: string, shell: boolean } {
+  const win32 = platform === 'win32'
+  return { command: win32 ? `"${command}"` : command, shell: win32 }
+}
+
 /** Resolve a package-owned bin declared by the package and exposed by its shared shim. */
 export function resolvePackageBin(packageRoot: string, name: string): string | undefined {
   try {
