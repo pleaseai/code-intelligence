@@ -131,9 +131,16 @@ export function resolvePackageBin(packageRoot: string, name: string): string | u
       return process.platform === 'win32' ? normalized.toLowerCase() : normalized
     }
     const wrapper = normalizeShimPath(readFileSync(shim, 'utf8'))
-    const relativeFromBin = normalizeShimPath(path.relative(path.dirname(shim), target))
-    const normalizedTarget = normalizeShimPath(target)
-    return wrapper.includes(relativeFromBin) || wrapper.includes(normalizedTarget)
+    // pnpm wrappers reference the package's real path in its .pnpm store, not the node_modules link.
+    const binDir = path.dirname(shim)
+    const realTarget = realpathSync(target)
+    const references = [
+      path.relative(binDir, target),
+      target,
+      path.relative(realpathSync(binDir), realTarget),
+      realTarget,
+    ].map(normalizeShimPath)
+    return references.some(reference => wrapper.includes(reference))
       ? shim
       : undefined
   }

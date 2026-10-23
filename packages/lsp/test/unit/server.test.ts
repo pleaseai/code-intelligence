@@ -639,6 +639,28 @@ describe.skipIf(process.platform === 'win32')('PyrightServer fallback', () => {
     expect(invoked).toBe('local --stdio')
   })
 
+  test('accepts a pnpm wrapper shim that points into the .pnpm store', async () => {
+    const invoked = await spawnServerWith(PyrightServer, pathAndBunx, async (rootDir) => {
+      const storeRelative = path.join('.pnpm', 'pyright@1.1.414', 'node_modules', 'pyright')
+      const storeDir = path.join(rootDir, 'node_modules', storeRelative)
+      await fs.mkdir(storeDir, { recursive: true })
+      await fs.writeFile(
+        path.join(storeDir, 'package.json'),
+        JSON.stringify({ name: 'pyright', bin: { 'pyright-langserver': 'langserver.index.js' } }),
+      )
+      await fs.writeFile(path.join(storeDir, 'langserver.index.js'), recorder('local'), { mode: 0o755 })
+      await fs.symlink(storeRelative, path.join(rootDir, 'node_modules', 'pyright'))
+      const binDir = path.join(rootDir, 'node_modules', '.bin')
+      await fs.mkdir(binDir)
+      await fs.writeFile(
+        path.join(binDir, 'pyright-langserver'),
+        `#!/bin/sh\nbasedir=\${0%/*}\nexec "$basedir/../${storeRelative}/langserver.index.js" "$@"\n`,
+        { mode: 0o755 },
+      )
+    })
+    expect(invoked).toBe('local --stdio')
+  })
+
   test('ignores a .bin/pyright-langserver shim the pyright package does not own', async () => {
     const invoked = await spawnServerWith(PyrightServer, pathAndBunx, rootDir => installLocalPyright(rootDir, recorder('local'), recorder('stray')))
     expect(invoked).toBe('path --stdio')
