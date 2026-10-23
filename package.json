@@ -47,7 +47,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "turbo": "^2.10.11",
-    "typescript": "^5.7.0"
+    "typescript": "^7.0.2"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --fix"
