@@ -5,7 +5,7 @@
 import type { LSPServerInfo } from './types'
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, findPackageBin, log, nearestRoot, prepareSpawnCommand } from './utils'
 
 export const PYRIGHT_VERSION = '1.1.414'
 
@@ -20,7 +20,8 @@ export const PyrightServer: LSPServerInfo = {
   ]),
   async spawn(root) {
     // Read PATH now rather than the copy Bun captured at startup
-    const pyright = Bun.which('pyright-langserver', { PATH: process.env.PATH ?? '' })
+    const pyright = findPackageBin(root, 'pyright', 'pyright-langserver')
+      ?? Bun.which('pyright-langserver', { PATH: process.env.PATH ?? '' })
     if (!pyright) {
       // pyright-langserver is a bin of the pyright package, not a package itself.
       // spawn reports a missing bunx only as an async 'error' event, so check for it first.
@@ -36,8 +37,10 @@ export const PyrightServer: LSPServerInfo = {
       return { process: proc }
     }
 
-    const proc = spawn(pyright, ['--stdio'], {
+    const launch = prepareSpawnCommand(pyright)
+    const proc = spawn(launch.command, ['--stdio'], {
       cwd: root,
+      shell: launch.shell,
     })
     attachLSPProcessHandlers(proc, 'pyright')
     return { process: proc }

@@ -14,7 +14,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, findRunnableBin, log, nearestRoot, runsVersion } from './utils'
+import { attachLSPProcessHandlers, findPackageBin, findRunnableBin, log, nearestRoot, prepareSpawnCommand, resolvePackageBin, runsVersion } from './utils'
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']
 
@@ -30,52 +30,6 @@ function findTypeScriptPackageRoot(start: string): string | undefined {
     const parent = path.dirname(dir)
     if (parent === dir) { return undefined }
     dir = parent
-  }
-}
-
-/** Resolve a package-owned bin declared by the package and exposed by its shared shim. */
-function resolvePackageBin(packageRoot: string, name: string): string | undefined {
-  try {
-    const pkg = JSON.parse(
-      fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
-    ) as { bin?: string | Record<string, string> }
-    const relativeTarget = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin?.[name]
-    if (!relativeTarget) { return undefined }
-
-    const target = path.resolve(packageRoot, relativeTarget)
-    if (!fs.existsSync(target)) { return undefined }
-    const ext = process.platform === 'win32' ? '.cmd' : ''
-    const packageDir = path.dirname(packageRoot)
-    const nodeModules = path.basename(packageDir).startsWith('@')
-      ? path.dirname(packageDir)
-      : packageDir
-    const shim = path.join(nodeModules, '.bin', `${name}${ext}`)
-    if (!fs.existsSync(shim)) { return undefined }
-
-    // npm-style symlinks and package-manager-generated wrapper scripts are both
-    // valid shims. For wrappers, require a reference to the package's declared
-    // target so a stale or unrelated shared shim is never selected.
-    const stat = fs.lstatSync(shim)
-    if (stat.isSymbolicLink()) {
-      const resolvedShim = path.resolve(path.dirname(shim), fs.readlinkSync(shim))
-      return fs.existsSync(resolvedShim)
-        && fs.realpathSync(resolvedShim) === fs.realpathSync(target)
-        ? shim
-        : undefined
-    }
-    const normalizeShimPath = (value: string): string => {
-      const normalized = value.replaceAll('\\', '/')
-      return process.platform === 'win32' ? normalized.toLowerCase() : normalized
-    }
-    const wrapper = normalizeShimPath(fs.readFileSync(shim, 'utf8'))
-    const relativeFromBin = normalizeShimPath(path.relative(path.dirname(shim), target))
-    const normalizedTarget = normalizeShimPath(target)
-    return wrapper.includes(relativeFromBin) || wrapper.includes(normalizedTarget)
-      ? shim
-      : undefined
-  }
-  catch {
-    return undefined
   }
 }
 
@@ -140,8 +94,7 @@ export function nativeServerSpawnArgs(
   command: string,
   platform: NodeJS.Platform = process.platform,
 ): { command: string, args: string[], shell: boolean } {
-  const win32 = platform === 'win32'
-  return { command: win32 ? `"${command}"` : command, args: ['--lsp', '--stdio'], shell: win32 }
+  return { ...prepareSpawnCommand(command, platform), args: ['--lsp', '--stdio'] }
 }
 
 function hasTsrsBinary(packageRoot: string, root: string): boolean {
@@ -197,23 +150,6 @@ function findWrapperPackageRoot(wrapper: string, bin: string): string | undefine
     }
   }
   return undefined
-}
-
-function findPackageBin(
-  start: string,
-  packageName: string,
-  name: string,
-  isUsable: (packageRoot: string) => boolean = () => true,
-): string | undefined {
-  let dir = path.resolve(start)
-  while (true) {
-    const packageRoot = path.join(dir, 'node_modules', ...packageName.split('/'))
-    const bin = resolvePackageBin(packageRoot, name)
-    if (bin && isUsable(packageRoot)) { return bin }
-    const parent = path.dirname(dir)
-    if (parent === dir) { return undefined }
-    dir = parent
-  }
 }
 
 /**
@@ -331,7 +267,7 @@ export const TypescriptServer: LSPServerInfo = {
     }
 
     // On Windows the bin is a .cmd shim, which only runs through a shell.
-    const launch = nativeServerSpawnArgs(tsserver)
+    const launch = prepareSpawnCommand(tsserver)
     const proc = spawn(launch.command, ['--stdio'], {
       cwd: root,
       env: { ...process.env, BUN_BE_BUN: '1' },
