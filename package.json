@@ -40,7 +40,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
-    "@pleaseai/eslint-config": "^0.0.4",
+    "@pleaseai/eslint-config": "^0.1.0",
     "@types/bun": "latest",
     "@types/node": "^26.6.5",
     "eslint": "^10.6.0",
