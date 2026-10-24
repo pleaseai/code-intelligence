@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "vscode-jsonrpc": "^8.2.1",
+    "vscode-jsonrpc": "^9.0.3",
     "vscode-languageserver-types": "^3.18.0",
     "yaml": "^2.9.0"
   },
