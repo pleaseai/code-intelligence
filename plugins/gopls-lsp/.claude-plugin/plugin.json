@@ -6,15 +6,36 @@
   "author": {
     "name": "PassionFactory"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in false|0|no|off) ;; *) command -v gopls >/dev/null 2>&1 || [ -x \"${CLAUDE_PLUGIN_DATA}/bin/gopls\" ] || ! command -v go >/dev/null 2>&1 || GOBIN=\"${CLAUDE_PLUGIN_DATA}/bin\" go install golang.org/x/tools/gopls@latest || true ;; esac",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  },
   "lspServers": {
     "gopls": {
-      "command": "gopls",
+      "command": "bash",
       "args": [
-        "serve"
+        "${CLAUDE_PLUGIN_ROOT}/scripts/lsp.sh"
       ],
       "extensionToLanguage": {
         ".go": "go"
       }
+    }
+  },
+  "userConfig": {
+    "auto_install": {
+      "type": "boolean",
+      "title": "Auto-install language server",
+      "description": "When gopls is not on PATH, install it into the plugin data directory with `go install` at session start (requires Go). Turn off to manage gopls yourself.",
+      "default": true
     }
   }
 }
