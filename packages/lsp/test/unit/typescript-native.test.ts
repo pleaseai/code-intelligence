@@ -282,6 +282,43 @@ describe('resolveNativeTypeScriptServer', () => {
     }
   })
 
+  async function writeNativeAlias(dir: string, version: string): Promise<void> {
+    const aliasDir = path.join(dir, 'node_modules', '@typescript', 'native')
+    await fs.mkdir(path.join(aliasDir, 'lib'), { recursive: true })
+    await fs.writeFile(path.join(aliasDir, 'package.json'), JSON.stringify({ name: 'typescript', version }))
+    if (!version.startsWith('7')) {
+      await fs.writeFile(path.join(aliasDir, 'lib', 'tsserver.js'), '// classic entry\n')
+    }
+  }
+
+  test('selects TS 7 aliased as @typescript/native beside a classic typescript', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-alias-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '6.0.3', tsserver: true })
+      await writeNativeAlias(dir, '7.0.2')
+      const tsc = await makeBin(dir, 'tsc', '@typescript/native')
+      const result = resolveNativeTypeScriptServer(dir)
+      expect(result?.command).toBe(tsc)
+      expect(result?.label).toBe('native tsc (@typescript/native)')
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  test('skips an @typescript/native alias that points at a classic TypeScript', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-alias-classic-'))
+    try {
+      await writeTypeScriptPackage(dir, { version: '6.0.3', tsserver: true })
+      await writeNativeAlias(dir, '6.0.3')
+      await makeBin(dir, 'tsc', '@typescript/native')
+      expect(resolveNativeTypeScriptServer(dir)).toBeUndefined()
+    }
+    finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   test('falls back to tsgo bin (@typescript/native-preview) when present', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts7-tsgo-'))
     try {

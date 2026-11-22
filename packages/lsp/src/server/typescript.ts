@@ -169,6 +169,9 @@ export function resolveNativeTypeScriptServer(
     if (tsc) { return { command: tsc, label: 'native tsc' } }
   }
 
+  const nativeAlias = findPackageBin(root, '@typescript/native', 'tsc', isNativeTypeScriptPackage)
+  if (nativeAlias) { return { command: nativeAlias, label: 'native tsc (@typescript/native)' } }
+
   // `@typescript/native-preview` installs a `tsgo` bin (can coexist with TS <= 6).
   const tsgo = findPackageBin(root, '@typescript/native-preview', 'tsgo')
   if (tsgo) { return { command: tsgo, label: 'native tsgo' } }
