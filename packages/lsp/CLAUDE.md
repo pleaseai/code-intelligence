@@ -234,7 +234,9 @@ lsp:
 **Native TypeScript 7 (typescript-go):** The single `typescript` server auto-selects
 its binary per project root at spawn time. When the workspace ships a native
 TypeScript 7 build — `node_modules/typescript` at major version ≥ 7 (or missing
-`lib/tsserver.js` / carrying `lib/getExePath.js`), or a `@typescript/native-preview`
+`lib/tsserver.js` / carrying `lib/getExePath.js`), a TS 7+ `tsc` aliased as
+`@typescript/native` (`npm:typescript@^7`, installed beside a classic `typescript`
+that typescript-eslint still needs), or a `@typescript/native-preview`
 `tsgo` bin — it spawns `tsc --lsp --stdio` (or `tsgo --lsp --stdio`); otherwise it
 falls back to the classic `typescript-language-server --stdio`. There is no separate
 server id or config toggle, so there are never duplicate diagnostics. The native
