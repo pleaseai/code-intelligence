@@ -12,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in false|0|no|off) ;; *) command -v ocamllsp >/dev/null 2>&1 || ! command -v opam >/dev/null 2>&1 || opam install -y ocaml-lsp-server || true ;; esac",
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in [fF][aA][lL][sS][eE]|0|[nN][oO]|[oO][fF][fF]) ;; *) command -v ocamllsp >/dev/null 2>&1 || ! command -v opam >/dev/null 2>&1 || opam exec -- ocamllsp --version >/dev/null 2>&1 || opam install -y ocaml-lsp-server || true ;; esac",
             "timeout": 600
           }
         ]
@@ -21,8 +21,10 @@
   },
   "lspServers": {
     "ocaml": {
-      "command": "ocamllsp",
-      "args": [],
+      "command": "bash",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/lsp.sh"
+      ],
       "extensionToLanguage": {
         ".ml": "ocaml",
         ".mli": "ocaml"
@@ -33,7 +35,7 @@
     "auto_install": {
       "type": "boolean",
       "title": "Auto-install language server",
-      "description": "When ocamllsp is not on PATH, install ocaml-lsp-server into the current opam switch at session start (requires opam; the first build can take minutes). Turn off to manage ocamllsp yourself.",
+      "description": "When ocamllsp is not available, install ocaml-lsp-server into the current opam switch at session start (requires opam; the first build can take minutes). Turn off to manage ocamllsp yourself.",
       "default": true
     }
   }

@@ -12,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in false|0|no|off) ;; *) command -v gopls >/dev/null 2>&1 || [ -x \"${CLAUDE_PLUGIN_DATA}/bin/gopls\" ] || ! command -v go >/dev/null 2>&1 || GOBIN=\"${CLAUDE_PLUGIN_DATA}/bin\" go install golang.org/x/tools/gopls@latest || true ;; esac",
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in [fF][aA][lL][sS][eE]|0|[nN][oO]|[oO][fF][fF]) ;; *) command -v gopls >/dev/null 2>&1 || { [ -n \"${CLAUDE_PLUGIN_DATA:-}\" ] && [ -x \"${CLAUDE_PLUGIN_DATA}/bin/gopls\" ]; } || ! command -v go >/dev/null 2>&1 || [ -z \"${CLAUDE_PLUGIN_DATA:-}\" ] || GOBIN=\"${CLAUDE_PLUGIN_DATA}/bin\" go install golang.org/x/tools/gopls@latest || true ;; esac",
             "timeout": 300
           }
         ]

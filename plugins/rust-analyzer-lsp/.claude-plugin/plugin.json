@@ -12,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in false|0|no|off) ;; *) rust-analyzer --version >/dev/null 2>&1 || ! command -v rustup >/dev/null 2>&1 || rustup component add rust-analyzer || true ;; esac",
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in [fF][aA][lL][sS][eE]|0|[nN][oO]|[oO][fF][fF]) ;; *) rust-analyzer --version >/dev/null 2>&1 || ! command -v rustup >/dev/null 2>&1 || rustup component add rust-analyzer || true ;; esac",
             "timeout": 300
           }
         ]
