@@ -37,8 +37,17 @@ Install only the language servers you need:
 /plugin install rust-analyzer-lsp@code-intelligence
 ```
 
-> **Note:** Language server binaries are auto-installed via `npm install` on first session start.
-> No manual binary installation is required.
+> **Note:** Language servers are auto-installed at session start, so you don't install them by hand:
+>
+> - **npm-based servers** (including the biome and oxlint fallbacks): `npm install` into the
+>   plugin data directory on first start and whenever the plugin's `package.json` changes.
+> - **`gopls`**: `go install`, **`rust-analyzer`**: `rustup component add`, **`ocamllsp`**:
+>   `opam install`. Each runs only when the server is missing and its toolchain (Go, rustup,
+>   opam) is on `PATH`.
+> - **`deno`, `gleam`, `sourcekit-lsp`**: ship with their toolchains and are not installed.
+>
+> Each installing plugin has an **Auto-install language server** option (`auto_install`, default
+> on). Turn it off in `/config` to stop session-start installs and updates for that plugin.
 
 ### Plugin management
 

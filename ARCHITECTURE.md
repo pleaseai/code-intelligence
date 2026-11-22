@@ -196,10 +196,17 @@ under `~/.cache/dora/`.
 
 ### `plugins/` — LSP Server Plugins
 
-32 LSP server plugin directories (plus `dora-jetbrains-plugin` for IDE
-integration), each containing a `package.json` that declares dependencies.
-LSP plugins are auto-installed via `npm install` into `$CLAUDE_PLUGIN_DATA`
-on first session start.
+33 LSP server plugin directories (plus `dora-jetbrains-plugin` for IDE
+integration). 27 of them carry a `package.json` that declares their npm
+dependencies; the rest either install through a toolchain (gopls,
+rust-analyzer, ocaml-lsp) or ship with one (deno, gleam, swift).
+A SessionStart hook auto-installs each server: npm-based plugins run
+`npm install` into `$CLAUDE_PLUGIN_DATA`, gopls uses `go install` into the same
+directory, and rust-analyzer and ocaml-lsp install into the active rustup
+toolchain and opam switch. Every installing plugin declares a
+`userConfig.auto_install` boolean
+(default `true`); the hook reads it as `CLAUDE_PLUGIN_OPTION_AUTO_INSTALL` and
+skips the install when it is off.
 
 Example (`plugins/typescript-lsp/package.json`):
 ```json

@@ -6,6 +6,19 @@
   "author": {
     "name": "PassionFactory"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in [fF][aA][lL][sS][eE]|0|[nN][oO]|[oO][fF][fF]) ;; *) rust-analyzer --version >/dev/null 2>&1 || ! command -v rustup >/dev/null 2>&1 || rustup component add rust-analyzer || true ;; esac",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  },
   "lspServers": {
     "rust-analyzer": {
       "command": "rust-analyzer",
@@ -13,6 +26,14 @@
       "extensionToLanguage": {
         ".rs": "rust"
       }
+    }
+  },
+  "userConfig": {
+    "auto_install": {
+      "type": "boolean",
+      "title": "Auto-install language server",
+      "description": "When rust-analyzer cannot run, add it with `rustup component add rust-analyzer` at session start (requires rustup). Turn off to manage rust-analyzer yourself.",
+      "default": true
     }
   }
 }

@@ -6,6 +6,18 @@
   "author": {
     "name": "PassionFactory"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in [fF][aA][lL][sS][eE]|0|[nN][oO]|[oO][fF][fF]) ;; *) [ -n \"${CLAUDE_PLUGIN_DATA:-}\" ] || exit 0; [ -x \"${CLAUDE_PLUGIN_DATA}/node_modules/.bin/biome\" ] && diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1 || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install --loglevel=error) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\" ;; esac"
+          }
+        ]
+      }
+    ]
+  },
   "lspServers": {
     "biome": {
       "command": "bash",
@@ -31,6 +43,14 @@
         ".gql": "graphql",
         ".html": "html"
       }
+    }
+  },
+  "userConfig": {
+    "auto_install": {
+      "type": "boolean",
+      "title": "Auto-install language server",
+      "description": "Install @biomejs/biome into the plugin data directory at session start, used only when the project has no local biome and none is on PATH. Turn off to skip it.",
+      "default": true
     }
   }
 }

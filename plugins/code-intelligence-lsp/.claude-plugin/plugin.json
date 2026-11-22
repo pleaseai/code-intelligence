@@ -12,11 +12,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1 || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install --loglevel=error) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\""
+            "command": "case \"${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}\" in [fF][aA][lL][sS][eE]|0|[nN][oO]|[oO][fF][fF]) ;; *) [ -n \"${CLAUDE_PLUGIN_DATA:-}\" ] || exit 0; diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1 || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install --loglevel=error) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\" ;; esac"
           }
         ]
       }
     ]
   },
-  "lspServers": "./.lsp.json"
+  "lspServers": "./.lsp.json",
+  "userConfig": {
+    "auto_install": {
+      "type": "boolean",
+      "title": "Auto-install language server",
+      "description": "Install and update the language server in the plugin data directory at session start. Turn off to skip it; the server then runs whatever is already installed there.",
+      "default": true
+    }
+  }
 }
