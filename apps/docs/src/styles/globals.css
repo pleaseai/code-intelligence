@@ -57,7 +57,7 @@
 	--nb-selected: oklch(0.92 0 0);
 	/* Inline code's tint. */
 	--nb-code-tint: color-mix(in oklch, var(--nb-foreground) 4.5%, transparent);
-	--nb-ring: oklch(0.373 0.034 260.2 / 0.4);
+	--nb-ring: oklch(0.373 0.034 260.2 / 0.7);
 
 	/* Status colors — paired (saturated for text/border + muted for bg) */
 	--nb-info: oklch(0.424 0.199 265.638);

@@ -30,6 +30,7 @@ interface PagefindApi {
 }
 
 let pagefind: PagefindApi | undefined;
+let loading: Promise<void> | undefined;
 
 /**
  * Search leaves out deprecated versions when the site has any: the layouts
@@ -58,25 +59,33 @@ function filtersForPage(): PagefindFilters | undefined {
   return excludeDeprecated;
 }
 
+async function loadPagefind(): Promise<void> {
+  // `searchIndex.bundle` is the site's bundle (`/pagefind/`, under the
+  // base when there is one); a site built in slices (`NIMBUS_BUILD_ONLY`)
+  // keeps each slice's bundle under its prefix, and `merge` names the other
+  // slices' bundles, so one search box still covers the site. Both are
+  // served URLs, base included.
+  const pagefindUrl = new URL(`${searchIndex.bundle}pagefind.js`, window.location.origin);
+  const loaded = (await import(/* @vite-ignore */ pagefindUrl.href)) as PagefindApi;
+  // Every index is built from the output root, so result URLs already carry
+  // their prefix and need only the base, which Pagefind adds to each one.
+  const baseUrl = `${(import.meta.env.BASE_URL ?? "/").replace(/\/+$/, "")}/`;
+  await loaded.options({ baseUrl });
+  await loaded.init();
+  // A slice that holds several collections writes one bundle; the other
+  // collections' URLs answer 404 and are skipped.
+  await mergeSearchIndexes(loaded, searchIndex.merge, { baseUrl });
+  pagefind = loaded;
+}
+
 export const provider: SearchProvider = {
   async init() {
     if (pagefind) return;
-    // `searchIndex.bundle` is the site's bundle (`/pagefind/`, under the
-    // base when there is one); a site built in slices (`NIMBUS_BUILD_ONLY`)
-    // keeps each slice's bundle under its prefix, and `merge` names the other
-    // slices' bundles, so one search box still covers the site. Both are
-    // served URLs, base included.
-    const pagefindUrl = new URL(`${searchIndex.bundle}pagefind.js`, window.location.origin);
-    const loaded = (await import(/* @vite-ignore */ pagefindUrl.href)) as PagefindApi;
-    // Every index is built from the output root, so result URLs already carry
-    // their prefix and need only the base, which Pagefind adds to each one.
-    const baseUrl = `${(import.meta.env.BASE_URL ?? "/").replace(/\/+$/, "")}/`;
-    await loaded.options({ baseUrl });
-    await loaded.init();
-    // A slice that holds several collections writes one bundle; the other
-    // collections' URLs answer 404 and are skipped.
-    await mergeSearchIndexes(loaded, searchIndex.merge, { baseUrl });
-    pagefind = loaded;
+    loading ??= loadPagefind().catch((error: unknown) => {
+      loading = undefined;
+      throw error;
+    });
+    return loading;
   },
 
   async search(query) {

@@ -6,11 +6,11 @@
  *     the target.
  *   - page → select: an IntersectionObserver mirrors the active heading back
  *     into the select value — the topmost heading inside the reading band, or
- *     the first/last heading clamped by scroll position when none intersect.
+ *     the last heading above the band (or the page top) when none intersect.
  *
  * Teardown via AbortController for view transitions; a persistent in-band set
  * (like the desktop rail in `toc.client.ts`) so the active heading is stable
- * when several fall inside the band at once; rect-based clamping so it doesn't
+ * when several fall inside the band at once; rect-based fallback so it doesn't
  * rely on `offsetParent` layout.
  */
 
@@ -96,18 +96,17 @@ function initMobileToc(root: HTMLElement): () => void {
       return;
     }
 
-    // Nothing in the band — clamp to the first or last heading based on where
-    // the boundary headings sit relative to the band; otherwise keep the
-    // current value (we're mid-section between two headings).
+    // Nothing in the band: above the first heading is the page top; otherwise
+    // the section being read is the last heading above the band. Derived from
+    // positions, not the previous value, so a reload or restored scroll
+    // mid-section shows the right section.
     const bandTop = window.innerHeight * BAND_TOP;
-    const firstTop = headings[0].el.getBoundingClientRect().top;
-    const lastTop =
-      headings[headings.length - 1].el.getBoundingClientRect().top;
-    if (firstTop > bandTop) {
-      setActive("_top");
-    } else if (lastTop < bandTop) {
-      setActive(headings[headings.length - 1].slug);
+    let current: string = "_top";
+    for (const heading of headings) {
+      if (heading.el.getBoundingClientRect().top >= bandTop) break;
+      current = heading.slug;
     }
+    setActive(current);
   }
 
   const observer = new IntersectionObserver(
