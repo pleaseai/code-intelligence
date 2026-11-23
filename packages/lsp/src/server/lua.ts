@@ -15,6 +15,29 @@ function getLuaLsResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'lua-lsp')
 }
 
+/**
+ * Moves a complete staged install to `installDir`. A working install already there
+ * (another start published first) is kept; only a leftover without the binary is replaced.
+ */
+async function publishInstall(stagingDir: string, installDir: string, bin: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await fs.rename(stagingDir, installDir)
+      return true
+    }
+    catch {
+      try {
+        await fs.access(bin)
+        return true
+      }
+      catch {
+        await fs.rm(installDir, { force: true, recursive: true })
+      }
+    }
+  }
+  return false
+}
+
 export const LuaLsServer: LSPServerInfo = {
   id: 'lua-ls',
   extensions: ['.lua'],
@@ -70,46 +93,49 @@ export const LuaLsServer: LSPServerInfo = {
         return undefined
       }
 
-      // Extract next to installDir and move it into place only once it is complete,
-      // so an interrupted download never leaves a binary the lookup above would reuse.
-      const stagingDir = `${installDir}.partial`
-      await fs.rm(stagingDir, { force: true, recursive: true })
-      await fs.mkdir(stagingDir, { recursive: true })
+      // Extract into a per-attempt staging dir and move it into place only once it is
+      // complete, so an interrupted download or a concurrent start never leaves a
+      // half-extracted install that the lookup above would reuse.
+      const stagingDir = await fs.mkdtemp(`${installDir}.partial-`)
+      const archivePath = `${stagingDir}-${assetName}`
+      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
+      try {
+        await downloadFile(asset.browser_download_url, archivePath)
 
-      const archivePath = path.join(resourcesDir, assetName)
-      await downloadFile(asset.browser_download_url, archivePath)
+        if (archiveExt === 'zip') {
+          await extractZip(archivePath, stagingDir)
+        }
+        else {
+          const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', stagingDir], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+          })
+          const tarExitCode = await tarProc.exited
+          if (tarExitCode !== 0) {
+            const stderr = await new Response(tarProc.stderr).text()
+            log.error({ tarExitCode, stderr }, 'Failed to extract lua-language-server archive')
+            return undefined
+          }
+        }
 
-      if (archiveExt === 'zip') {
-        await extractZip(archivePath, stagingDir)
-      }
-      else {
-        const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', stagingDir], {
-          stdout: 'pipe',
-          stderr: 'pipe',
-        })
-        const tarExitCode = await tarProc.exited
-        if (tarExitCode !== 0) {
-          const stderr = await new Response(tarProc.stderr).text()
-          log.error({ tarExitCode, stderr }, 'Failed to extract lua-language-server archive')
-          await fs.rm(archivePath, { force: true })
+        const stagedBin = path.join(stagingDir, 'bin', `lua-language-server${ext}`)
+        try {
+          await fs.access(stagedBin)
+        }
+        catch {
+          log.error({ bin: stagedBin }, 'lua-language-server binary not found after extraction')
+          return undefined
+        }
+
+        if (!await publishInstall(stagingDir, installDir, bin)) {
+          log.error({ bin }, 'lua-language-server install could not be moved into place')
           return undefined
         }
       }
-
-      await fs.rm(archivePath, { force: true })
-
-      const stagedBin = path.join(stagingDir, 'bin', `lua-language-server${ext}`)
-      try {
-        await fs.access(stagedBin)
+      finally {
+        await fs.rm(archivePath, { force: true })
+        await fs.rm(stagingDir, { force: true, recursive: true })
       }
-      catch {
-        log.error({ bin: stagedBin }, 'lua-language-server binary not found after extraction')
-        return undefined
-      }
-
-      await fs.rm(installDir, { force: true, recursive: true })
-      await fs.rename(stagingDir, installDir)
-      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
 
       if (!isWindows) {
         await fs.chmod(bin, 0o755)
