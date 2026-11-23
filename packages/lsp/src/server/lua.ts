@@ -31,7 +31,13 @@ async function publishInstall(stagingDir: string, installDir: string, bin: strin
         return true
       }
       catch {
-        await fs.rm(installDir, { force: true, recursive: true })
+        try {
+          await fs.rm(installDir, { force: true, recursive: true })
+        }
+        catch (err) {
+          log.warn({ err, installDir }, 'Failed to remove a broken lua-language-server install')
+          return false
+        }
       }
     }
   }
