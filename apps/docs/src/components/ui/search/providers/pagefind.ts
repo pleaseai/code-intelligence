@@ -88,12 +88,14 @@ export const provider: SearchProvider = {
     return loading;
   },
 
-  async search(query) {
+  async search(query, opts) {
     if (!pagefind) await this.init?.();
-    if (!pagefind) return [];
+    if (!pagefind || opts?.signal?.aborted) return [];
 
     const filters = filtersForPage();
     const search = await pagefind.search(query, filters ? { filters } : undefined);
+    // A newer query superseded this one: skip fetching its result fragments.
+    if (opts?.signal?.aborted) return [];
     const results = await Promise.all(search.results.slice(0, 10).map((result) => result.data()));
     return results.map((result): SearchResult => ({
       title: result.meta?.title ?? "Untitled",
