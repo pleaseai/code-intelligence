@@ -1,0 +1,54 @@
+---
+title: Code Please
+description: Auto-format and type-check hooks for AI coding
+sidebar:
+  order: 0
+---
+
+CLI and Claude Code plugin for AI-assisted coding with auto-formatting and LSP diagnostics.
+
+<LinkButton href="/getting-started/introduction/" variant="primary" size="lg">Get Started</LinkButton>
+<LinkButton href="https://github.com/pleaseai/code-intelligence" variant="secondary" size="lg">View on GitHub</LinkButton>
+
+## Features
+
+<CardGrid>
+  <Card title="Auto-Formatting" icon="ph:magic-wand">
+    Automatically format files after Claude Code edits with support for 20+ formatters including Biome, Prettier, gofmt, and more.
+  </Card>
+  <Card title="LSP Diagnostics" icon="ph:bug">
+    Real-time type checking feedback for AI coding sessions with support for 30+ language servers.
+  </Card>
+  <Card title="Multi-Language" icon="ph:translate">
+    Full support for TypeScript, Python, Go, Rust, Kotlin, Dart, and many more languages.
+  </Card>
+  <Card title="Zero Config" icon="ph:gear-six">
+    Works out of the box with sensible defaults. Customize when needed via `.please/config.yml`.
+  </Card>
+</CardGrid>
+
+## Quick Start
+
+Install globally and add hooks to your Claude Code settings:
+
+```bash
+npm install -g @pleaseai/code
+```
+
+Add to `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "npx @pleaseai/code format --stdin" },
+          { "type": "command", "command": "npx @pleaseai/code lsp --stdin" }
+        ]
+      }
+    ]
+  }
+}
+```
