@@ -55,7 +55,7 @@ export async function downloadReleaseBinary(spec: ReleaseBinarySpec, destDir: st
     await extractArchive(archivePath, destDir)
     await fs.access(bin)
     if (process.platform !== 'win32') {
-      await fs.chmod(bin, 0o755)
+      await fs.chmod(bin, 0o700)
     }
   }
   catch (err) {
