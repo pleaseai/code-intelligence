@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import { LuaLsServer } from '../../src/server/lua'
 import { TerraformServer } from '../../src/server/terraform'
 import { TexlabServer } from '../../src/server/texlab'
 import { AUTO_INSTALL_ENV, isAutoInstallEnabled } from '../../src/server/utils'
@@ -75,6 +76,18 @@ describe('spawn with auto-install disabled', () => {
     await fs.writeFile(bin, '#!/bin/sh\nexit 0\n', { mode: 0o755 })
 
     const handle = await TexlabServer.spawn(tmp)
+
+    expect(handle).toBeDefined()
+    expect(fetchCalls).toEqual([])
+    handle?.process.kill()
+  })
+
+  test.skipIf(process.platform === 'win32')('lua-ls still runs a binary from an earlier download', async () => {
+    const binDir = path.join(tmp, '.cache', 'dora', 'lua-lsp', `lua-language-server-${process.arch}-${process.platform}`, 'bin')
+    await fs.mkdir(binDir, { recursive: true })
+    await fs.writeFile(path.join(binDir, 'lua-language-server'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+
+    const handle = await LuaLsServer.spawn(tmp)
 
     expect(handle).toBeDefined()
     expect(fetchCalls).toEqual([])

@@ -31,10 +31,11 @@ export const LuaLsServer: LSPServerInfo = {
     const isWindows = process.platform === 'win32'
     const ext = isWindows ? '.exe' : ''
     const resourcesDir = getLuaLsResourcesDir()
+    const installDir = path.join(resourcesDir, `lua-language-server-${process.arch}-${process.platform}`)
 
-    // Check PATH first
+    // Check PATH first, then a previous download
     let bin = Bun.which('lua-language-server', {
-      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+      PATH: [process.env.PATH, resourcesDir, path.join(installDir, 'bin')].filter(Boolean).join(path.delimiter),
     })
 
     if (!bin) {
@@ -69,25 +70,20 @@ export const LuaLsServer: LSPServerInfo = {
         return undefined
       }
 
-      const installDir = path.join(resourcesDir, `lua-language-server-${arch}-${platform}`)
-
-      // Remove old installation
-      try {
-        await fs.rm(installDir, { force: true, recursive: true })
-      }
-      catch {
-        // Directory doesn't exist
-      }
-      await fs.mkdir(installDir, { recursive: true })
+      // Extract next to installDir and move it into place only once it is complete,
+      // so an interrupted download never leaves a binary the lookup above would reuse.
+      const stagingDir = `${installDir}.partial`
+      await fs.rm(stagingDir, { force: true, recursive: true })
+      await fs.mkdir(stagingDir, { recursive: true })
 
       const archivePath = path.join(resourcesDir, assetName)
       await downloadFile(asset.browser_download_url, archivePath)
 
       if (archiveExt === 'zip') {
-        await extractZip(archivePath, installDir)
+        await extractZip(archivePath, stagingDir)
       }
       else {
-        const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', installDir], {
+        const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', stagingDir], {
           stdout: 'pipe',
           stderr: 'pipe',
         })
@@ -102,14 +98,18 @@ export const LuaLsServer: LSPServerInfo = {
 
       await fs.rm(archivePath, { force: true })
 
-      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
+      const stagedBin = path.join(stagingDir, 'bin', `lua-language-server${ext}`)
       try {
-        await fs.access(bin)
+        await fs.access(stagedBin)
       }
       catch {
-        log.error({ bin }, 'lua-language-server binary not found after extraction')
+        log.error({ bin: stagedBin }, 'lua-language-server binary not found after extraction')
         return undefined
       }
+
+      await fs.rm(installDir, { force: true, recursive: true })
+      await fs.rename(stagingDir, installDir)
+      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
 
       if (!isWindows) {
         await fs.chmod(bin, 0o755)

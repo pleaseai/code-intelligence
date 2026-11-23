@@ -40,7 +40,7 @@
     "auto_install": {
       "type": "boolean",
       "title": "Auto-install language server",
-      "description": "Install and update the language server at session start, and let it download its own binaries the first time it runs. Turn off to skip both; the server then runs only what is already installed or on PATH.",
+      "description": "Install and update the language server at session start, and let it download its own binaries the first time it runs. Turn off to skip both; the plugin then needs an install from an earlier session, and runs only a server that is already cached or on PATH.",
       "default": true
     }
   }
