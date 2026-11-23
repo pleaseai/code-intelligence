@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadAndExtract, getPlatformId, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadAndExtract, getPlatformId, log, nearestRoot } from './utils'
 
 /**
  * Kotlin Language Server runtime dependency configuration
@@ -91,6 +91,7 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
     }
 
     // Java not found, download it
+    if (autoInstallDisabled('kotlin')) { return undefined }
     log.info({ platformId }, 'Downloading Java 21')
     try {
       await downloadAndExtract(javaConfig.url, javaDir)
@@ -141,6 +142,7 @@ async function setupKotlinDependencies(platformId: PlatformId): Promise<{
     }
 
     // Kotlin LSP not found, download it
+    if (autoInstallDisabled('kotlin')) { return undefined }
     log.info('Downloading Kotlin Language Server')
     try {
       await downloadAndExtract(KOTLIN_RUNTIME_DEPS.kotlinLsp.url, resourcesDir)

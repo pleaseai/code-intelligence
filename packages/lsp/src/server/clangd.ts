@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadFile, extractZip, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadFile, extractZip, log, nearestRoot } from './utils'
 
 function getClangdResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'clangd-lsp')
@@ -55,6 +55,7 @@ export const ClangdServer: LSPServerInfo = {
     }
 
     // Download from GitHub releases
+    if (autoInstallDisabled('clangd')) { return undefined }
     log.info('Downloading clangd from GitHub releases')
     await fs.mkdir(resourcesDir, { recursive: true })
 

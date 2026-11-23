@@ -8,7 +8,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 const SVELTE_RUNTIME_DEPS = {
   svelteLanguageServer: {
@@ -47,6 +47,8 @@ async function setupSvelteDependencies(): Promise<string | undefined> {
   catch {
     needsInstall = true
   }
+
+  if (needsInstall && autoInstallDisabled('svelte')) { needsInstall = false }
 
   if (needsInstall) {
     log.info('Installing Svelte Language Server')

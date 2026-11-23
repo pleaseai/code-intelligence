@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadFile, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadFile, log, nearestRoot } from './utils'
 
 function getJdtlsResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'jdtls-lsp')
@@ -56,6 +56,7 @@ export const JdtlsServer: LSPServerInfo = {
       await fs.access(launcherDir)
     }
     catch {
+      if (autoInstallDisabled('jdtls')) { return undefined }
       log.info('Downloading JDTLS from Eclipse')
       await fs.mkdir(distPath, { recursive: true })
 

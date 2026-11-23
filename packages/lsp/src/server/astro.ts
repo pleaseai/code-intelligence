@@ -8,7 +8,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 const ASTRO_RUNTIME_DEPS = {
   astroLanguageServer: {
@@ -62,6 +62,8 @@ async function setupAstroDependencies(): Promise<{
   catch {
     needsInstall = true
   }
+
+  if (needsInstall && autoInstallDisabled('astro')) { needsInstall = false }
 
   if (needsInstall) {
     log.info('Installing Astro Language Server')

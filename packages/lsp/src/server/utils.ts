@@ -22,6 +22,31 @@ export type { PlatformId } from '@pleaseai/binaries'
 
 export const log = createLogger('lsp')
 
+/** Plugins set this from their `auto_install` option through the lspServers `env`. */
+export const AUTO_INSTALL_ENV = 'CODE_LSP_AUTO_INSTALL'
+
+/**
+ * Whether a server may download or install itself at spawn time. Only an explicit
+ * false, 0, no, or off (any case) turns it off, so an unset or unsubstituted value
+ * keeps the default.
+ */
+export function isAutoInstallEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const value = env[AUTO_INSTALL_ENV]?.trim().toLowerCase()
+  return !(value === 'false' || value === '0' || value === 'no' || value === 'off')
+}
+
+/** Logs and returns true when auto-install is off, so the caller skips its download. */
+export function autoInstallDisabled(serverId: string): boolean {
+  if (isAutoInstallEnabled()) {
+    return false
+  }
+  log.warn(
+    { serverId, env: AUTO_INSTALL_ENV },
+    'Auto-install is off: not downloading the language server. Put it on PATH or turn auto_install back on.',
+  )
+  return true
+}
+
 // =============================================================================
 // Process Lifecycle Utilities
 // =============================================================================

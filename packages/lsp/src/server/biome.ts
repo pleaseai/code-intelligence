@@ -8,7 +8,7 @@ import { spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 /** @biomejs/biome version installed by the bunx fallback. */
 export const BIOME_VERSION = '2.6.2'
@@ -81,6 +81,7 @@ export const BiomeServer: LSPServerInfo = {
       log.warn({ root }, 'Biome not found. Install with: npm install @biomejs/biome')
       return undefined
     }
+    if (autoInstallDisabled('biome')) { return undefined }
     const proc = spawn(bunx, [`@biomejs/biome@${BIOME_VERSION}`, 'lsp-proxy', '--stdio'], {
       cwd: root,
       env: { ...process.env, BUN_BE_BUN: '1' },

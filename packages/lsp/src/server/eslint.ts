@@ -11,7 +11,7 @@ import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { pipeline } from 'node:stream/promises'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 function getEslintResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'eslint-lsp')
@@ -36,6 +36,8 @@ async function setupEslintDependencies(): Promise<string | undefined> {
       return undefined
     }
   }
+
+  if (autoInstallDisabled('eslint')) { return undefined }
 
   log.info('Downloading and building VS Code ESLint server...')
 

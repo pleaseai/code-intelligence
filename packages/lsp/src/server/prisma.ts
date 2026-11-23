@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 const PRISMA_RUNTIME_DEPS = {
   prismaLanguageServer: {
@@ -50,6 +50,8 @@ async function setupPrismaDependencies(): Promise<string | undefined> {
   catch {
     needsInstall = true
   }
+
+  if (needsInstall && autoInstallDisabled('prisma')) { needsInstall = false }
 
   if (needsInstall) {
     log.info('Installing Prisma Language Server')

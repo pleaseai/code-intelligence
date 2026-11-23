@@ -48,10 +48,13 @@ export type { LSPServerHandle, LSPServerInfo, PlatformId, RootFunction } from '.
 // Re-export utilities
 export {
   attachLSPProcessHandlers,
+  AUTO_INSTALL_ENV,
+  autoInstallDisabled,
   downloadAndExtract,
   downloadFile,
   extractZip,
   getPlatformId,
+  isAutoInstallEnabled,
   log,
   nearestRoot,
 } from './utils'

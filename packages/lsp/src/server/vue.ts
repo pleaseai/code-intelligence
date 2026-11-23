@@ -10,7 +10,7 @@ import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { TS_LANGUAGE_SERVER_VERSION } from './typescript'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 /**
  * Vue Language Server runtime dependency configuration
@@ -85,6 +85,8 @@ async function setupVueDependencies(): Promise<{
   catch {
     needsInstall = true
   }
+
+  if (needsInstall && autoInstallDisabled('vue')) { needsInstall = false }
 
   if (needsInstall) {
     log.info('Installing Vue Language Server dependencies')

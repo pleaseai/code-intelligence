@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 function getFsharpResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'fsharp-lsp')
@@ -36,6 +36,8 @@ export const FsharpServer: LSPServerInfo = {
         log.warn('.NET SDK is required for fsautocomplete. Install .NET SDK first.')
         return undefined
       }
+
+      if (autoInstallDisabled('fsharp')) { return undefined }
 
       log.info('Installing fsautocomplete via dotnet tool')
       await fs.mkdir(resourcesDir, { recursive: true })

@@ -8,7 +8,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log } from './utils'
 
 const DOCKERFILE_RUNTIME_DEPS = {
   dockerfileLanguageServer: {
@@ -47,6 +47,8 @@ async function setupDockerfileDependencies(): Promise<string | undefined> {
   catch {
     needsInstall = true
   }
+
+  if (needsInstall && autoInstallDisabled('dockerfile')) { needsInstall = false }
 
   if (needsInstall) {
     log.info('Installing Dockerfile Language Server')
