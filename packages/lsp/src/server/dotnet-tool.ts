@@ -24,15 +24,20 @@ async function installDotnetTool(serverId: string, tool: string, toolPath: strin
   }
 
   log.info({ tool }, 'Installing language server via dotnet tool')
-  await fs.mkdir(toolPath, { recursive: true })
-  const proc = Bun.spawn(['dotnet', 'tool', 'install', tool, '--tool-path', toolPath], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
-  const exitCode = await proc.exited
-  if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text()
-    log.error({ tool, exitCode, stderr }, 'dotnet tool install failed')
+  try {
+    await fs.mkdir(toolPath, { recursive: true })
+    const proc = Bun.spawn(['dotnet', 'tool', 'install', tool, '--tool-path', toolPath], {
+      stdout: 'ignore',
+      stderr: 'pipe',
+    })
+    const [exitCode, stderr] = await Promise.all([proc.exited, new Response(proc.stderr).text()])
+    if (exitCode !== 0) {
+      log.error({ tool, exitCode, stderr }, 'dotnet tool install failed')
+      return undefined
+    }
+  }
+  catch (err) {
+    log.error({ tool, err }, 'Failed to run dotnet tool install')
     return undefined
   }
 

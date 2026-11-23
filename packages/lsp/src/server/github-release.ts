@@ -28,29 +28,44 @@ export function findCachedBinary(name: string, ...dirs: string[]): string | null
   })
 }
 
+async function findReleaseAsset(spec: ReleaseBinarySpec): Promise<GithubRelease['assets'][number] | undefined> {
+  const { serverId, repo } = spec
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`)
+    if (!response.ok) {
+      log.error({ serverId, repo, status: response.status, statusText: response.statusText }, 'Failed to fetch release info from GitHub')
+      return undefined
+    }
+    const release = await response.json() as GithubRelease
+    const assetName = spec.assetName(release)
+    const asset = release.assets.find(a => a.name === assetName)
+    if (!asset) {
+      log.error({ serverId, assetName, availableAssets: release.assets.map(a => a.name).slice(0, 10) }, 'Release asset not found for this platform')
+    }
+    return asset
+  }
+  catch (err) {
+    log.error({ serverId, repo, err }, 'Failed to fetch release info from GitHub')
+    return undefined
+  }
+}
+
 /**
  * Extracts this platform's asset from the latest release of `spec.repo` into `destDir`
  * and makes `bin` executable. Returns false, after logging, when any step fails.
  */
 export async function downloadReleaseBinary(spec: ReleaseBinarySpec, destDir: string, bin: string): Promise<boolean> {
-  const { serverId, repo } = spec
-  const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`)
-  if (!response.ok) {
-    log.error({ serverId, repo, status: response.status, statusText: response.statusText }, 'Failed to fetch release info from GitHub')
-    return false
-  }
-
-  const release = await response.json() as GithubRelease
-  const assetName = spec.assetName(release)
-  const asset = release.assets.find(a => a.name === assetName)
+  const { serverId } = spec
+  const asset = await findReleaseAsset(spec)
   if (!asset) {
-    log.error({ serverId, assetName, availableAssets: release.assets.map(a => a.name).slice(0, 10) }, 'Release asset not found for this platform')
     return false
   }
+  const assetName = asset.name
 
-  const downloadDir = await fs.mkdtemp(path.join(os.tmpdir(), `dora-${serverId}-`))
-  const archivePath = path.join(downloadDir, assetName)
+  let downloadDir: string | undefined
   try {
+    downloadDir = await fs.mkdtemp(path.join(os.tmpdir(), `dora-${serverId}-`))
+    const archivePath = path.join(downloadDir, assetName)
     await downloadFile(asset.browser_download_url, archivePath)
     await extractArchive(archivePath, destDir)
     await fs.access(bin)
@@ -63,9 +78,11 @@ export async function downloadReleaseBinary(spec: ReleaseBinarySpec, destDir: st
     return false
   }
   finally {
-    await fs.rm(downloadDir, { force: true, recursive: true }).catch((err) => {
-      log.warn({ serverId, downloadDir, err }, 'Failed to clean up release download')
-    })
+    if (downloadDir) {
+      await fs.rm(downloadDir, { force: true, recursive: true }).catch((err) => {
+        log.warn({ serverId, downloadDir, err }, 'Failed to clean up release download')
+      })
+    }
   }
   return true
 }

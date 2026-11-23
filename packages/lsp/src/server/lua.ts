@@ -79,6 +79,15 @@ export const LuaLsServer: LSPServerInfo = {
           log.error({ bin }, 'lua-language-server install could not be moved into place')
           return undefined
         }
+        if (process.platform !== 'win32') {
+          try {
+            await fs.chmod(bin, 0o700)
+          }
+          catch (err) {
+            log.error({ bin, err }, 'Failed to make lua-language-server executable')
+            return undefined
+          }
+        }
       }
       finally {
         await fs.rm(stagingDir, { force: true, recursive: true }).catch((err) => {

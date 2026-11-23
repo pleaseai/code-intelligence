@@ -70,6 +70,13 @@ describe('spawn with a stubbed network (auto-install off unless a test turns it 
     expect(fetchCalls).toEqual([])
   })
 
+  test('terraform returns undefined when the release lookup fails with auto-install on', async () => {
+    process.env[AUTO_INSTALL_ENV] = 'true'
+
+    expect(await TerraformServer.spawn(tmp)).toBeUndefined()
+    expect(fetchCalls).toHaveLength(1)
+  })
+
   test.skipIf(process.platform === 'win32')('texlab still runs a binary already in the cache', async () => {
     const cacheDir = path.join(tmp, '.cache', 'dora', 'texlab-lsp')
     await fs.mkdir(cacheDir, { recursive: true })
