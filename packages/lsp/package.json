@@ -34,7 +34,7 @@
     "@pleaseai/code-format": "workspace:*",
     "@pleaseai/logger": "workspace:*",
     "vscode-jsonrpc": "^8.2.1",
-    "vscode-languageserver-types": "^3.18.0",
+    "vscode-languageserver-types": "^3.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
