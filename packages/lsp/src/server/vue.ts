@@ -3,48 +3,27 @@
  * Uses @vue/language-server with Full Hybrid Mode
  */
 
+import type { NpmCacheSpec } from './npm-cache'
 import type { LSPServerInfo } from './types'
 import { spawn } from 'node:child_process'
-import fs from 'node:fs/promises'
-import os from 'node:os'
 import path from 'node:path'
-import process from 'node:process'
+import { ensureNpmCache, npmBin } from './npm-cache'
 import { TS_LANGUAGE_SERVER_VERSION } from './typescript'
-import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
 
-/**
- * Vue Language Server runtime dependency configuration
- */
-const VUE_RUNTIME_DEPS = {
-  vueLanguageServer: {
-    package: '@vue/language-server',
-    version: '2.2.0',
-  },
-  vueTypeScriptPlugin: {
-    package: '@vue/typescript-plugin',
-    version: '2.2.0',
-  },
-  typescript: {
-    package: 'typescript',
-    version: '5.7.2',
-  },
-  typeScriptLanguageServer: {
-    package: 'typescript-language-server',
-    version: TS_LANGUAGE_SERVER_VERSION,
-  },
-}
+const VUE_PLUGIN_PATH = path.join('node_modules', '@vue', 'typescript-plugin')
+const VUE_TSDK_PATH = path.join('node_modules', 'typescript', 'lib')
 
-function getVueResourcesDir(): string {
-  return path.join(os.homedir(), '.cache', 'dora', 'vue-lsp')
-}
-
-function getVueExpectedVersion(): string {
-  return [
-    VUE_RUNTIME_DEPS.vueLanguageServer.version,
-    VUE_RUNTIME_DEPS.vueTypeScriptPlugin.version,
-    VUE_RUNTIME_DEPS.typescript.version,
-    VUE_RUNTIME_DEPS.typeScriptLanguageServer.version,
-  ].join('_')
+const VUE_NPM: NpmCacheSpec = {
+  serverId: 'vue',
+  cacheDir: 'vue-lsp',
+  packages: [
+    { package: '@vue/language-server', version: '2.2.0' },
+    { package: '@vue/typescript-plugin', version: '2.2.0' },
+    { package: 'typescript', version: '5.7.2' },
+    { package: 'typescript-language-server', version: TS_LANGUAGE_SERVER_VERSION },
+  ],
+  required: [npmBin('vue-language-server'), npmBin('typescript-language-server'), VUE_TSDK_PATH, VUE_PLUGIN_PATH],
 }
 
 async function setupVueDependencies(): Promise<{
@@ -53,99 +32,16 @@ async function setupVueDependencies(): Promise<{
   tsdkPath: string
   vuePluginPath: string
 } | undefined> {
-  const resourcesDir = getVueResourcesDir()
-  const isWindows = process.platform === 'win32'
-  const ext = isWindows ? '.cmd' : ''
-
-  const vueServerPath = path.join(resourcesDir, 'node_modules', '.bin', `vue-language-server${ext}`)
-  const tsServerPath = path.join(resourcesDir, 'node_modules', '.bin', `typescript-language-server${ext}`)
-  const tsdkPath = path.join(resourcesDir, 'node_modules', 'typescript', 'lib')
-  const vuePluginPath = path.join(resourcesDir, 'node_modules', '@vue', 'typescript-plugin')
-
-  const versionFile = path.join(resourcesDir, '.installed_version')
-  const expectedVersion = getVueExpectedVersion()
-
-  let needsInstall = false
-
-  try {
-    await fs.access(vueServerPath)
-    await fs.access(tsServerPath)
-
-    try {
-      const installedVersion = await fs.readFile(versionFile, 'utf-8')
-      if (installedVersion.trim() !== expectedVersion) {
-        log.warn({ installed: installedVersion.trim(), expected: expectedVersion }, 'Vue version mismatch')
-        needsInstall = true
-      }
-    }
-    catch {
-      needsInstall = true
-    }
+  const resourcesDir = await ensureNpmCache(VUE_NPM)
+  if (!resourcesDir) {
+    return undefined
   }
-  catch {
-    needsInstall = true
+  return {
+    vueServerPath: path.join(resourcesDir, npmBin('vue-language-server')),
+    tsServerPath: path.join(resourcesDir, npmBin('typescript-language-server')),
+    tsdkPath: path.join(resourcesDir, VUE_TSDK_PATH),
+    vuePluginPath: path.join(resourcesDir, VUE_PLUGIN_PATH),
   }
-
-  if (needsInstall && autoInstallDisabled('vue')) { needsInstall = false }
-
-  if (needsInstall) {
-    log.info('Installing Vue Language Server dependencies')
-
-    try {
-      await fs.mkdir(resourcesDir, { recursive: true })
-
-      const packages = [
-        `${VUE_RUNTIME_DEPS.vueLanguageServer.package}@${VUE_RUNTIME_DEPS.vueLanguageServer.version}`,
-        `${VUE_RUNTIME_DEPS.vueTypeScriptPlugin.package}@${VUE_RUNTIME_DEPS.vueTypeScriptPlugin.version}`,
-        `${VUE_RUNTIME_DEPS.typescript.package}@${VUE_RUNTIME_DEPS.typescript.version}`,
-        `${VUE_RUNTIME_DEPS.typeScriptLanguageServer.package}@${VUE_RUNTIME_DEPS.typeScriptLanguageServer.version}`,
-      ]
-
-      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, ...packages], {
-        cwd: resourcesDir,
-        stdout: 'pipe',
-        stderr: 'pipe',
-      })
-
-      const exitCode = await proc.exited
-      if (exitCode !== 0) {
-        const stderr = await new Response(proc.stderr).text()
-        log.error({ exitCode, stderr }, 'Vue npm install failed')
-        return undefined
-      }
-
-      try {
-        await fs.writeFile(versionFile, expectedVersion)
-      }
-      catch (writeErr) {
-        log.warn({ err: writeErr }, 'Failed to write Vue version marker file')
-      }
-      log.info('Vue Language Server dependencies installed successfully')
-    }
-    catch (err) {
-      log.error({ err }, 'Failed to install Vue dependencies')
-      return undefined
-    }
-  }
-
-  const requiredPaths = [
-    { path: vueServerPath, name: 'vue-language-server' },
-    { path: tsServerPath, name: 'typescript-language-server' },
-    { path: tsdkPath, name: 'TypeScript SDK' },
-    { path: vuePluginPath, name: '@vue/typescript-plugin' },
-  ]
-
-  for (const { path: filePath, name } of requiredPaths) {
-    try {
-      await fs.access(filePath)
-    }
-    catch (err) {
-      log.error({ name, filePath, err }, 'Vue required file not found after installation')
-      return undefined
-    }
-  }
-
-  return { vueServerPath, tsServerPath, tsdkPath, vuePluginPath }
 }
 
 export const VueServer: LSPServerInfo = {

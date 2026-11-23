@@ -4,6 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
 import { LuaLsServer } from '../../src/server/lua'
+import { ensureNpmCache, npmBin } from '../../src/server/npm-cache'
 import { TerraformServer } from '../../src/server/terraform'
 import { TexlabServer } from '../../src/server/texlab'
 import { AUTO_INSTALL_ENV, isAutoInstallEnabled } from '../../src/server/utils'
@@ -122,5 +123,26 @@ describe('spawn with a stubbed network (auto-install off unless a test turns it 
     await fs.access(path.join(installDir, 'bin', 'lua-language-server'))
     expect((await fs.readdir(resourcesDir)).filter(name => name.includes('.partial-'))).toEqual([])
     handle?.process.kill()
+  })
+
+  test('npm cache: returns undefined without installing when nothing is cached', async () => {
+    const spec = { serverId: 'yaml', cacheDir: 'yaml-lsp', packages: [{ package: 'yaml-language-server', version: '1.17.0' }], required: [npmBin('yaml-language-server')] }
+
+    expect(await ensureNpmCache(spec)).toBeUndefined()
+    await expect(fs.access(path.join(tmp, '.cache', 'dora', 'yaml-lsp'))).rejects.toThrow()
+  })
+
+  test.each([
+    ['a matching', '1.17.0'],
+    ['an outdated', '1.0.0'],
+  ])('npm cache: uses an install with %s version marker', async (_name, marker) => {
+    const cacheDir = path.join(tmp, '.cache', 'dora', 'yaml-lsp')
+    const bin = path.join(cacheDir, npmBin('yaml-language-server'))
+    await fs.mkdir(path.dirname(bin), { recursive: true })
+    await fs.writeFile(bin, '')
+    await fs.writeFile(path.join(cacheDir, '.installed_version'), marker)
+    const spec = { serverId: 'yaml', cacheDir: 'yaml-lsp', packages: [{ package: 'yaml-language-server', version: '1.17.0' }], required: [npmBin('yaml-language-server')] }
+
+    expect(await ensureNpmCache(spec)).toBe(cacheDir)
   })
 })
