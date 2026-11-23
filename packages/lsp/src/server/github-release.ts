@@ -4,6 +4,8 @@ import path from 'node:path'
 import process from 'node:process'
 import { downloadFile, extractZip, log } from './utils'
 
+const RELEASE_INFO_TIMEOUT_MS = 30_000
+
 export interface GithubRelease {
   tag_name: string
   assets: Array<{ name: string, browser_download_url: string }>
@@ -31,7 +33,9 @@ export function findCachedBinary(name: string, ...dirs: string[]): string | null
 async function findReleaseAsset(spec: ReleaseBinarySpec): Promise<GithubRelease['assets'][number] | undefined> {
   const { serverId, repo } = spec
   try {
-    const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`)
+    const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+      signal: AbortSignal.timeout(RELEASE_INFO_TIMEOUT_MS),
+    })
     if (!response.ok) {
       log.error({ serverId, repo, status: response.status, statusText: response.statusText }, 'Failed to fetch release info from GitHub')
       return undefined
@@ -93,9 +97,9 @@ async function extractArchive(archivePath: string, destDir: string): Promise<voi
     return
   }
   await fs.mkdir(destDir, { recursive: true })
-  const proc = Bun.spawn(['tar', '-xzf', archivePath, '-C', destDir], { stdout: 'pipe', stderr: 'pipe' })
-  const exitCode = await proc.exited
+  const proc = Bun.spawn(['tar', '-xzf', archivePath, '-C', destDir], { stdout: 'ignore', stderr: 'pipe' })
+  const [exitCode, stderr] = await Promise.all([proc.exited, new Response(proc.stderr).text()])
   if (exitCode !== 0) {
-    throw new Error(`tar exited ${exitCode}: ${await new Response(proc.stderr).text()}`)
+    throw new Error(`tar exited ${exitCode}: ${stderr}`)
   }
 }
