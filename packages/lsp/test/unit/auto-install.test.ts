@@ -21,7 +21,7 @@ describe('isAutoInstallEnabled', () => {
   })
 })
 
-describe('spawn with auto-install disabled', () => {
+describe('spawn with a stubbed network (auto-install off unless a test turns it on)', () => {
   const saved = {
     path: process.env.PATH,
     flag: process.env[AUTO_INSTALL_ENV],
@@ -91,6 +91,36 @@ describe('spawn with auto-install disabled', () => {
 
     expect(handle).toBeDefined()
     expect(fetchCalls).toEqual([])
+    handle?.process.kill()
+  })
+
+  test.skipIf(process.platform === 'win32')('lua-ls download replaces a broken leftover and cleans up staging', async () => {
+    process.env[AUTO_INSTALL_ENV] = 'true'
+    const resourcesDir = path.join(tmp, '.cache', 'dora', 'lua-lsp')
+    const installDir = path.join(resourcesDir, `lua-language-server-${process.arch}-${process.platform}`)
+    await fs.mkdir(path.join(installDir, 'script'), { recursive: true })
+
+    const src = path.join(tmp, 'archive-src')
+    await fs.mkdir(path.join(src, 'bin'), { recursive: true })
+    await fs.writeFile(path.join(src, 'bin', 'lua-language-server'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+    const archive = path.join(tmp, 'lua.tar.gz')
+    expect(Bun.spawnSync(['tar', '-czf', archive, '-C', src, '.']).exitCode).toBe(0)
+    const assetName = `lua-language-server-9.9.9-${process.platform}-${process.arch}.tar.gz`
+    globalThis.fetch = (async (input: unknown) => {
+      const url = String(input)
+      fetchCalls.push(url)
+      if (url.includes('/releases/latest')) {
+        return Response.json({ tag_name: 'v9.9.9', assets: [{ name: assetName, browser_download_url: 'https://example.test/lua.tar.gz' }] })
+      }
+      return new Response(await fs.readFile(archive))
+    }) as unknown as typeof fetch
+
+    const handle = await LuaLsServer.spawn(tmp)
+
+    expect(handle).toBeDefined()
+    expect(fetchCalls).toHaveLength(2)
+    await fs.access(path.join(installDir, 'bin', 'lua-language-server'))
+    expect((await fs.readdir(resourcesDir)).filter(name => name.includes('.partial-'))).toEqual([])
     handle?.process.kill()
   })
 })

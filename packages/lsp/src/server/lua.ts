@@ -133,8 +133,15 @@ export const LuaLsServer: LSPServerInfo = {
         }
       }
       finally {
-        await fs.rm(archivePath, { force: true })
-        await fs.rm(stagingDir, { force: true, recursive: true })
+        const cleanup = await Promise.allSettled([
+          fs.rm(archivePath, { force: true }),
+          fs.rm(stagingDir, { force: true, recursive: true }),
+        ])
+        for (const result of cleanup) {
+          if (result.status === 'rejected') {
+            log.warn({ err: result.reason, archivePath, stagingDir }, 'Failed to clean up lua-language-server download files')
+          }
+        }
       }
 
       if (!isWindows) {
