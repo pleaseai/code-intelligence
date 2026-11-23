@@ -28,6 +28,9 @@
       "extensionToLanguage": {
         ".zig": "zig",
         ".zon": "zig"
+      },
+      "env": {
+        "CODE_LSP_AUTO_INSTALL": "${user_config.auto_install}"
       }
     }
   },
@@ -35,7 +38,7 @@
     "auto_install": {
       "type": "boolean",
       "title": "Auto-install language server",
-      "description": "Install and update the language server in the plugin data directory at session start. Turn off to skip it; the server then runs whatever is already installed there.",
+      "description": "Install and update the language server at session start, and let it download its own binaries the first time it runs. Turn off to skip both; the server then runs only what is already installed or on PATH.",
       "default": true
     }
   }

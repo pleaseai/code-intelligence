@@ -48,6 +48,9 @@ Install only the language servers you need:
 >
 > Each installing plugin has an **Auto-install language server** option (`auto_install`, default
 > on). Turn it off in `/config` to stop session-start installs and updates for that plugin.
+> For plugins that run through `code` (clangd, kotlin, dart, and the others that download a
+> server the first time it starts), turning it off also stops those downloads, so the plugin
+> uses only a server that is already installed or on `PATH`.
 
 ### Plugin management
 

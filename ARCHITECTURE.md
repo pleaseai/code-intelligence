@@ -206,7 +206,12 @@ directory, and rust-analyzer and ocaml-lsp install into the active rustup
 toolchain and opam switch. Every installing plugin declares a
 `userConfig.auto_install` boolean
 (default `true`); the hook reads it as `CLAUDE_PLUGIN_OPTION_AUTO_INSTALL` and
-skips the install when it is off.
+skips the install when it is off. Plugins that launch `code lsp-server` or
+`code lsp-multiplex` also pass the option to the server process as
+`CODE_LSP_AUTO_INSTALL` through the lspServers `env`, and
+`autoInstallDisabled()` in `packages/lsp/src/server/utils.ts` then stops each
+server's spawn-time download or install (GitHub releases, `npm install` into
+`~/.cache/dora/`, `dotnet tool`, `gem`, versioned `bunx`).
 
 Example (`plugins/typescript-lsp/package.json`):
 ```json

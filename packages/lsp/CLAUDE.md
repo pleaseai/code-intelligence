@@ -90,7 +90,10 @@ export const MyServer: LSPServerInfo = {
 
 ## Auto-Download Pattern (Kotlin Example)
 
-For servers requiring runtime dependencies:
+For servers requiring runtime dependencies. Call `autoInstallDisabled('<id>')` from
+`./utils` right before any download or install, after the PATH and cache lookups:
+it returns true when `CODE_LSP_AUTO_INSTALL` is false/0/no/off, which the plugins
+set from their `auto_install` option.
 
 ```typescript
 const KOTLIN_RUNTIME_DEPS = {
