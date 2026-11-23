@@ -2,92 +2,24 @@
  * Bash Language Server
  */
 
+import type { NpmCacheSpec } from './npm-cache'
 import type { LSPServerInfo } from './types'
 import { spawn } from 'node:child_process'
-import fs from 'node:fs/promises'
-import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, autoInstallDisabled, log } from './utils'
+import { ensureNpmCache, npmBin } from './npm-cache'
+import { attachLSPProcessHandlers, log } from './utils'
 
-const BASH_RUNTIME_DEPS = {
-  bashLanguageServer: {
-    package: 'bash-language-server',
-    version: '5.4.3',
-  },
-}
-
-function getBashResourcesDir(): string {
-  return path.join(os.homedir(), '.cache', 'dora', 'bash-lsp')
+const BASH_NPM: NpmCacheSpec = {
+  serverId: 'bash',
+  cacheDir: 'bash-lsp',
+  packages: [{ package: 'bash-language-server', version: '5.4.3' }],
+  required: [npmBin('bash-language-server')],
 }
 
 async function setupBashDependencies(): Promise<string | undefined> {
-  const resourcesDir = getBashResourcesDir()
-  const isWindows = process.platform === 'win32'
-  const ext = isWindows ? '.cmd' : ''
-
-  const serverPath = path.join(resourcesDir, 'node_modules', '.bin', `bash-language-server${ext}`)
-  const versionFile = path.join(resourcesDir, '.installed_version')
-  const expectedVersion = BASH_RUNTIME_DEPS.bashLanguageServer.version
-
-  let needsInstall = false
-
-  try {
-    await fs.access(serverPath)
-    try {
-      const installedVersion = await fs.readFile(versionFile, 'utf-8')
-      if (installedVersion.trim() !== expectedVersion) {
-        needsInstall = true
-      }
-    }
-    catch {
-      needsInstall = true
-    }
-  }
-  catch {
-    needsInstall = true
-  }
-
-  if (needsInstall && autoInstallDisabled('bash')) { needsInstall = false }
-
-  if (needsInstall) {
-    log.info('Installing Bash Language Server')
-    try {
-      await fs.mkdir(resourcesDir, { recursive: true })
-      const packageSpec = `${BASH_RUNTIME_DEPS.bashLanguageServer.package}@${BASH_RUNTIME_DEPS.bashLanguageServer.version}`
-      const proc = Bun.spawn(['npm', 'install', '--prefix', resourcesDir, packageSpec], {
-        cwd: resourcesDir,
-        stdout: 'pipe',
-        stderr: 'pipe',
-      })
-      const exitCode = await proc.exited
-      if (exitCode !== 0) {
-        const stderr = await new Response(proc.stderr).text()
-        log.error({ exitCode, stderr }, 'Bash npm install failed')
-        return undefined
-      }
-      try {
-        await fs.writeFile(versionFile, expectedVersion)
-      }
-      catch (writeErr) {
-        log.warn({ err: writeErr }, 'Failed to write Bash version marker')
-      }
-      log.info('Bash Language Server installed successfully')
-    }
-    catch (err) {
-      log.error({ err }, 'Failed to install Bash dependencies')
-      return undefined
-    }
-  }
-
-  try {
-    await fs.access(serverPath)
-    return serverPath
-  }
-  catch {
-    log.error({ serverPath }, 'Bash LSP binary not found after installation')
-    return undefined
-  }
+  const resourcesDir = await ensureNpmCache(BASH_NPM)
+  return resourcesDir && path.join(resourcesDir, npmBin('bash-language-server'))
 }
 
 export const BashServer: LSPServerInfo = {
