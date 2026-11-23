@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadAndExtract, findRunnableBin, getPlatformId, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadAndExtract, findRunnableBin, getPlatformId, log, nearestRoot } from './utils'
 
 /**
  * Dart SDK runtime dependency configuration
@@ -78,6 +78,7 @@ async function setupDartDependencies(platformId: PlatformId): Promise<string | u
     }
 
     // Dart not found, download it
+    if (autoInstallDisabled('dart')) { return undefined }
     log.info({ version: DART_RUNTIME_DEPS.version, platformId }, 'Downloading Dart SDK')
     try {
       await downloadAndExtract(config.url, resourcesDir)

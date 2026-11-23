@@ -5,7 +5,7 @@
 import type { LSPServerInfo } from './types'
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { attachLSPProcessHandlers, findPackageBin, log, nearestRoot, prepareSpawnCommand } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, findPackageBin, log, nearestRoot, prepareSpawnCommand } from './utils'
 
 export const PYRIGHT_VERSION = '1.1.414'
 
@@ -30,6 +30,7 @@ export const PyrightServer: LSPServerInfo = {
         log.warn({ root }, 'pyright not found. Install with: npm install pyright')
         return undefined
       }
+      if (autoInstallDisabled('pyright')) { return undefined }
       const proc = spawn(bunx, ['-p', `pyright@${PYRIGHT_VERSION}`, 'pyright-langserver', '--stdio'], {
         cwd: root,
       })

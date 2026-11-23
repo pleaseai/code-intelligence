@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadFile, extractZip, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadFile, extractZip, log, nearestRoot } from './utils'
 
 function getTerraformResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'terraform-lsp')
@@ -30,6 +30,7 @@ export const TerraformServer: LSPServerInfo = {
     })
 
     if (!bin) {
+      if (autoInstallDisabled('terraform')) { return undefined }
       log.info('Downloading terraform-ls from GitHub releases')
       await fs.mkdir(resourcesDir, { recursive: true })
 

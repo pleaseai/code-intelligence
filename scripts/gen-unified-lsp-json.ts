@@ -50,6 +50,8 @@ function main(): void {
       args: ['lsp-multiplex'],
       extensionToLanguage,
       startupTimeout: 60000,
+      // eslint-disable-next-line no-template-curly-in-string -- literal Claude Code plugin variable
+      env: { CODE_LSP_AUTO_INSTALL: '${user_config.auto_install}' },
     },
   }
 

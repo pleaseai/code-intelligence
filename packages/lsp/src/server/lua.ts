@@ -9,10 +9,39 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadFile, extractZip, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadFile, extractZip, log, nearestRoot } from './utils'
 
 function getLuaLsResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'lua-lsp')
+}
+
+/**
+ * Moves a complete staged install to `installDir`. A working install already there
+ * (another start published first) is kept; only a leftover without the binary is replaced.
+ */
+async function publishInstall(stagingDir: string, installDir: string, bin: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await fs.rename(stagingDir, installDir)
+      return true
+    }
+    catch {
+      try {
+        await fs.access(bin)
+        return true
+      }
+      catch {
+        try {
+          await fs.rm(installDir, { force: true, recursive: true })
+        }
+        catch (err) {
+          log.warn({ err, installDir }, 'Failed to remove a broken lua-language-server install')
+          return false
+        }
+      }
+    }
+  }
+  return false
 }
 
 export const LuaLsServer: LSPServerInfo = {
@@ -31,13 +60,15 @@ export const LuaLsServer: LSPServerInfo = {
     const isWindows = process.platform === 'win32'
     const ext = isWindows ? '.exe' : ''
     const resourcesDir = getLuaLsResourcesDir()
+    const installDir = path.join(resourcesDir, `lua-language-server-${process.arch}-${process.platform}`)
 
-    // Check PATH first
+    // Check PATH first, then a previous download
     let bin = Bun.which('lua-language-server', {
-      PATH: `${process.env.PATH}${path.delimiter}${resourcesDir}`,
+      PATH: [process.env.PATH, resourcesDir, path.join(installDir, 'bin')].filter(Boolean).join(path.delimiter),
     })
 
     if (!bin) {
+      if (autoInstallDisabled('lua-ls')) { return undefined }
       log.info('Downloading lua-language-server from GitHub releases')
       await fs.mkdir(resourcesDir, { recursive: true })
 
@@ -68,46 +99,55 @@ export const LuaLsServer: LSPServerInfo = {
         return undefined
       }
 
-      const installDir = path.join(resourcesDir, `lua-language-server-${arch}-${platform}`)
-
-      // Remove old installation
+      // Extract into a per-attempt staging dir and move it into place only once it is
+      // complete, so an interrupted download or a concurrent start never leaves a
+      // half-extracted install that the lookup above would reuse.
+      const stagingDir = await fs.mkdtemp(`${installDir}.partial-`)
+      const archivePath = `${stagingDir}-${assetName}`
+      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
       try {
-        await fs.rm(installDir, { force: true, recursive: true })
-      }
-      catch {
-        // Directory doesn't exist
-      }
-      await fs.mkdir(installDir, { recursive: true })
+        await downloadFile(asset.browser_download_url, archivePath)
 
-      const archivePath = path.join(resourcesDir, assetName)
-      await downloadFile(asset.browser_download_url, archivePath)
+        if (archiveExt === 'zip') {
+          await extractZip(archivePath, stagingDir)
+        }
+        else {
+          const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', stagingDir], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+          })
+          const tarExitCode = await tarProc.exited
+          if (tarExitCode !== 0) {
+            const stderr = await new Response(tarProc.stderr).text()
+            log.error({ tarExitCode, stderr }, 'Failed to extract lua-language-server archive')
+            return undefined
+          }
+        }
 
-      if (archiveExt === 'zip') {
-        await extractZip(archivePath, installDir)
-      }
-      else {
-        const tarProc = Bun.spawn(['tar', '-xzf', archivePath, '-C', installDir], {
-          stdout: 'pipe',
-          stderr: 'pipe',
-        })
-        const tarExitCode = await tarProc.exited
-        if (tarExitCode !== 0) {
-          const stderr = await new Response(tarProc.stderr).text()
-          log.error({ tarExitCode, stderr }, 'Failed to extract lua-language-server archive')
-          await fs.rm(archivePath, { force: true })
+        const stagedBin = path.join(stagingDir, 'bin', `lua-language-server${ext}`)
+        try {
+          await fs.access(stagedBin)
+        }
+        catch {
+          log.error({ bin: stagedBin }, 'lua-language-server binary not found after extraction')
+          return undefined
+        }
+
+        if (!await publishInstall(stagingDir, installDir, bin)) {
+          log.error({ bin }, 'lua-language-server install could not be moved into place')
           return undefined
         }
       }
-
-      await fs.rm(archivePath, { force: true })
-
-      bin = path.join(installDir, 'bin', `lua-language-server${ext}`)
-      try {
-        await fs.access(bin)
-      }
-      catch {
-        log.error({ bin }, 'lua-language-server binary not found after extraction')
-        return undefined
+      finally {
+        const cleanup = await Promise.allSettled([
+          fs.rm(archivePath, { force: true }),
+          fs.rm(stagingDir, { force: true, recursive: true }),
+        ])
+        for (const result of cleanup) {
+          if (result.status === 'rejected') {
+            log.warn({ err: result.reason, archivePath, stagingDir }, 'Failed to clean up lua-language-server download files')
+          }
+        }
       }
 
       if (!isWindows) {

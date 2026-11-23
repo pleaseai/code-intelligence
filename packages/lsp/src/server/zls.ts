@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, downloadFile, extractZip, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, downloadFile, extractZip, log, nearestRoot } from './utils'
 
 function getZlsResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'zls-lsp')
@@ -37,6 +37,7 @@ export const ZlsServer: LSPServerInfo = {
         return undefined
       }
 
+      if (autoInstallDisabled('zls')) { return undefined }
       log.info('Downloading ZLS from GitHub releases')
       await fs.mkdir(resourcesDir, { recursive: true })
 

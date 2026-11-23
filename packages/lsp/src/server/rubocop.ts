@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 function getRubocopResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'rubocop-lsp')
@@ -37,6 +37,8 @@ export const RubocopServer: LSPServerInfo = {
         log.warn('Ruby and gem are required for Rubocop. Install Ruby first.')
         return undefined
       }
+
+      if (autoInstallDisabled('rubocop')) { return undefined }
 
       log.info('Installing Rubocop')
       await fs.mkdir(resourcesDir, { recursive: true })

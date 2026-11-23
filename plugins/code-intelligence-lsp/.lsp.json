@@ -72,6 +72,9 @@
       ".zon": "zig",
       ".zsh": "shellscript"
     },
-    "startupTimeout": 60000
+    "startupTimeout": 60000,
+    "env": {
+      "CODE_LSP_AUTO_INSTALL": "${user_config.auto_install}"
+    }
   }
 }

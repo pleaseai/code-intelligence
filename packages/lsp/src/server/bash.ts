@@ -8,7 +8,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log } from './utils'
 
 const BASH_RUNTIME_DEPS = {
   bashLanguageServer: {
@@ -47,6 +47,8 @@ async function setupBashDependencies(): Promise<string | undefined> {
   catch {
     needsInstall = true
   }
+
+  if (needsInstall && autoInstallDisabled('bash')) { needsInstall = false }
 
   if (needsInstall) {
     log.info('Installing Bash Language Server')

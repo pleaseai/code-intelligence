@@ -14,7 +14,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, findPackageBin, findRunnableBin, log, nearestRoot, prepareSpawnCommand, resolvePackageBin, runsVersion } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, findPackageBin, findRunnableBin, log, nearestRoot, prepareSpawnCommand, resolvePackageBin, runsVersion } from './utils'
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']
 
@@ -261,6 +261,7 @@ export const TypescriptServer: LSPServerInfo = {
         log.warn({ root }, 'typescript-language-server not found. Install with: npm install typescript-language-server typescript')
         return undefined
       }
+      if (autoInstallDisabled('typescript')) { return undefined }
       const proc = spawn(bunx, [`typescript-language-server@${TS_LANGUAGE_SERVER_VERSION}`, '--stdio'], {
         cwd: root,
         env: { ...process.env, BUN_BE_BUN: '1' },

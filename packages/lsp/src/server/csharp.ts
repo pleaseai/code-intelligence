@@ -9,7 +9,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import { attachLSPProcessHandlers, log, nearestRoot } from './utils'
+import { attachLSPProcessHandlers, autoInstallDisabled, log, nearestRoot } from './utils'
 
 function getCsharpResourcesDir(): string {
   return path.join(os.homedir(), '.cache', 'dora', 'csharp-lsp')
@@ -36,6 +36,8 @@ export const CsharpServer: LSPServerInfo = {
         log.warn('.NET SDK is required for csharp-ls. Install .NET SDK first.')
         return undefined
       }
+
+      if (autoInstallDisabled('csharp')) { return undefined }
 
       log.info('Installing csharp-ls via dotnet tool')
       await fs.mkdir(resourcesDir, { recursive: true })
