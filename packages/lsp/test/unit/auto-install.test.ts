@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import { CsharpServer } from '../../src/server/csharp'
 import { LuaLsServer } from '../../src/server/lua'
 import { TerraformServer } from '../../src/server/terraform'
 import { TexlabServer } from '../../src/server/texlab'
@@ -121,6 +122,44 @@ describe('spawn with a stubbed network (auto-install off unless a test turns it 
     expect(fetchCalls).toHaveLength(2)
     await fs.access(path.join(installDir, 'bin', 'lua-language-server'))
     expect((await fs.readdir(resourcesDir)).filter(name => name.includes('.partial-'))).toEqual([])
+    handle?.process.kill()
+  })
+
+  test.skipIf(process.platform === 'win32')('csharp-ls runs a tool already installed in the cache', async () => {
+    const toolPath = path.join(tmp, '.cache', 'dora', 'csharp-lsp')
+    await fs.mkdir(toolPath, { recursive: true })
+    await fs.writeFile(path.join(toolPath, 'csharp-ls'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+
+    const handle = await CsharpServer.spawn(tmp)
+
+    expect(handle).toBeDefined()
+    handle?.process.kill()
+  })
+
+  test.skipIf(process.platform === 'win32')('texlab downloads the release binary when auto-install is on', async () => {
+    process.env[AUTO_INSTALL_ENV] = 'true'
+    const src = path.join(tmp, 'archive-src')
+    await fs.mkdir(src)
+    await fs.writeFile(path.join(src, 'texlab'), '#!/bin/sh\nexit 0\n')
+    const archive = path.join(tmp, 'texlab.tar.gz')
+    expect(Bun.spawnSync(['tar', '-czf', archive, '-C', src, '.']).exitCode).toBe(0)
+    const texArch = process.arch === 'arm64' ? 'aarch64' : 'x86_64'
+    const texPlatform = process.platform === 'darwin' ? 'macos' : 'linux'
+    globalThis.fetch = (async (input: unknown) => {
+      const url = String(input)
+      fetchCalls.push(url)
+      if (url.includes('/releases/latest')) {
+        return Response.json({ tag_name: 'v9.9.9', assets: [{ name: `texlab-${texArch}-${texPlatform}.tar.gz`, browser_download_url: 'https://example.test/texlab.tar.gz' }] })
+      }
+      return new Response(await fs.readFile(archive))
+    }) as unknown as typeof fetch
+
+    const handle = await TexlabServer.spawn(tmp)
+
+    expect(handle).toBeDefined()
+    expect(fetchCalls).toHaveLength(2)
+    const stat = await fs.stat(path.join(tmp, '.cache', 'dora', 'texlab-lsp', 'texlab'))
+    expect(stat.mode & 0o111).not.toBe(0)
     handle?.process.kill()
   })
 })
