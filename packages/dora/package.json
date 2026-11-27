@@ -28,7 +28,7 @@
     "test": "bun test ./test"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@pleaseai/binaries": "workspace:*",
     "@pleaseai/code-lsp": "workspace:*",
     "@pleaseai/logger": "workspace:*",
