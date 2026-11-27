@@ -6,7 +6,7 @@
       "name": "code-please",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.30.0",
-        "vscode-jsonrpc": "^8.2.1",
+        "vscode-jsonrpc": "^10.0.0",
         "vscode-languageserver-types": "^3.18.0",
         "yaml": "^2.9.0",
       },
@@ -142,7 +142,7 @@
         "@pleaseai/binaries": "workspace:*",
         "@pleaseai/code-format": "workspace:*",
         "@pleaseai/logger": "workspace:*",
-        "vscode-jsonrpc": "^8.2.1",
+        "vscode-jsonrpc": "^10.0.0",
         "vscode-languageserver-types": "^3.18.0",
         "zod": "^4.4.3",
       },
@@ -1959,7 +1959,7 @@
 
     "vscode-json-languageservice": ["vscode-json-languageservice@4.1.8", "", { "dependencies": { "jsonc-parser": "^3.0.0", "vscode-languageserver-textdocument": "^1.0.1", "vscode-languageserver-types": "^3.16.0", "vscode-nls": "^5.0.0", "vscode-uri": "^3.0.2" } }, "sha512-0vSpg6Xd9hfV+eZAaYN63xVVMOTmJ4GgHxXnkLCh+9RsQBkWKIghzLhW2B9ebfG+LQQg8uLtsQ2aUKjTgE+QOg=="],
 
-    "vscode-jsonrpc": ["vscode-jsonrpc@8.2.1", "", {}, "sha512-kdjOSJ2lLIn7r1rtrMbbNCHjyMPfRnowdKjBQ+mGq6NAW5QY2bEZC/khaC5OR8svbbjvLEaIXkOq45e2X9BIbQ=="],
+    "vscode-jsonrpc": ["vscode-jsonrpc@10.0.0", "", {}, "sha512-USSfxg0vDIpTQqlQBGxF3mBARyoS8cU7LHLpbYNh6dOJt32dlskxPWB0Irrh5TllTmyf7oNLAvqDqzklbwwnpA=="],
 
     "vscode-languageserver": ["vscode-languageserver@9.0.1", "", { "dependencies": { "vscode-languageserver-protocol": "3.17.5" }, "bin": { "installServerIntoExtension": "bin/installServerIntoExtension" } }, "sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g=="],
 
